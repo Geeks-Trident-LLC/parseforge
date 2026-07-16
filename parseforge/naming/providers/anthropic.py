@@ -2,22 +2,13 @@
 
 from __future__ import annotations
 
-import re
-
 from anthropic import Anthropic
 
 from ..llm import CliContext, build_prompt
 from .models import default_model
+from .text import extract_pattern
 
 DEFAULT_MODEL = default_model("anthropic")
-
-_CODE_FENCE = re.compile(r"^```(?:\w+)?\s*|\s*```$")
-
-
-def _extract_pattern(text: str) -> str:
-    """Strip markdown code fences and surrounding noise from a raw LLM reply."""
-    text = _CODE_FENCE.sub("", text.strip()).strip()
-    return text.splitlines()[0].strip() if text else text
 
 
 class AnthropicRegexBuilder:
@@ -48,8 +39,12 @@ class AnthropicRegexBuilder:
         prompt = build_prompt(command, context)
         response = self._get_client().messages.create(
             model=self.model,
-            max_tokens=256,
+            # Headroom in case a future/opt-in extended-thinking model burns
+            # part of the budget on reasoning before the actual answer — see
+            # the deepseek-v4-flash truncation this guards against in
+            # providers/deepseek.py.
+            max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
         text = "".join(block.text for block in response.content if block.type == "text")
-        return _extract_pattern(text)
+        return extract_pattern(text)
