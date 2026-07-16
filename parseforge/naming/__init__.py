@@ -1,3 +1,4 @@
+from .anthropic_builder import AnthropicRegexBuilder
 from .assemble import pattern_to_cli_name
 from .cache import DEFAULT_INDEX_PATH, NameIndex
 from .llm import CliContext, RegexBuilder, UnimplementedRegexBuilder, build_prompt
@@ -8,6 +9,7 @@ __all__ = [
     "CliContext",
     "RegexBuilder",
     "UnimplementedRegexBuilder",
+    "AnthropicRegexBuilder",
     "build_prompt",
     "NameIndex",
     "DEFAULT_INDEX_PATH",
