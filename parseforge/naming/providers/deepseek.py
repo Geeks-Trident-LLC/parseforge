@@ -19,6 +19,14 @@ DEFAULT_MODEL = default_model("deepseek")
 
 _BASE_URL = "https://api.deepseek.com"
 
+# deepseek-v4-flash defaults to thinking mode ON, which burns the entire
+# max_tokens budget on chain-of-thought (returned separately as
+# reasoning_content) and leaves nothing for the actual answer in
+# `content` — a trivial one-line regex task doesn't need reasoning at
+# all, so it's disabled explicitly. See:
+# https://api-docs.deepseek.com/guides/thinking_mode/
+_THINKING_DISABLED = {"thinking": {"type": "disabled"}}
+
 
 class DeepSeekRegexBuilder:
     """Builds a cli-name regex pattern by prompting a DeepSeek model.
@@ -53,8 +61,9 @@ class DeepSeekRegexBuilder:
         prompt = build_prompt(command, context)
         response = self._get_client().chat.completions.create(
             model=self.model,
-            max_tokens=256,
+            max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
+            extra_body=_THINKING_DISABLED,
         )
         text = response.choices[0].message.content or ""
         return extract_pattern(text)

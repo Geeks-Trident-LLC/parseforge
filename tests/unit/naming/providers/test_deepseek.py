@@ -57,6 +57,11 @@ def test_build_pattern_calls_client_and_extracts_text(
     call = fake.chat.completions.calls[0]
     assert call["model"] == DEFAULT_MODEL
     assert "show version" in call["messages"][0]["content"]
+    # Thinking mode must be off and max_tokens generous — otherwise
+    # deepseek-v4-flash burns the whole budget on reasoning_content and
+    # returns an empty `content` (finish_reason "length").
+    assert call["extra_body"] == {"thinking": {"type": "disabled"}}
+    assert call["max_tokens"] >= 1024
 
 
 def test_client_is_constructed_lazily(monkeypatch: pytest.MonkeyPatch) -> None:

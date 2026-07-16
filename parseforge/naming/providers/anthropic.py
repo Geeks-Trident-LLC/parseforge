@@ -39,7 +39,11 @@ class AnthropicRegexBuilder:
         prompt = build_prompt(command, context)
         response = self._get_client().messages.create(
             model=self.model,
-            max_tokens=256,
+            # Headroom in case a future/opt-in extended-thinking model burns
+            # part of the budget on reasoning before the actual answer — see
+            # the deepseek-v4-flash truncation this guards against in
+            # providers/deepseek.py.
+            max_tokens=1024,
             messages=[{"role": "user", "content": prompt}],
         )
         text = "".join(block.text for block in response.content if block.type == "text")

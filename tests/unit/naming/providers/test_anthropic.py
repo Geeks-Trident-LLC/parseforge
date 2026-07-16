@@ -48,6 +48,7 @@ def test_build_pattern_calls_client_and_extracts_text(
     call = fake.messages.calls[0]
     assert call["model"] == DEFAULT_MODEL
     assert "show version" in call["messages"][0]["content"]
+    assert call["max_tokens"] >= 1024
 
 
 def test_client_is_constructed_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
