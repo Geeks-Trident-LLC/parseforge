@@ -1,0 +1,43 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# Editors
+.vscode/
+.idea/
+
+# Claude Code local session state
+.claude/
+
+# Runtime template store — trials/integration/authoritative are generated
+# data, not source; keep the directory scaffold via .gitkeep only.
+/store/trials/*
+!/store/trials/.gitkeep
+/store/integration/*
+!/store/integration/.gitkeep
+/store/authoritative/*
+!/store/authoritative/.gitkeep
