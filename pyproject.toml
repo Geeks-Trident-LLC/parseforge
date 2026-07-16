@@ -81,6 +81,9 @@ exclude = ["tests*", "store*"]
 addopts = "-ra --cov=parseforge --cov-report=term-missing"
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "integration: marks tests that require real API calls or external services",
+]
 
 [tool.coverage.report]
 # Raise as stub modules (sampling/generation/validation/promotion/pipeline)
