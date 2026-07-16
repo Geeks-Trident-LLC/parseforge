@@ -12,17 +12,17 @@ from typing import Protocol
 PROMPT_TEMPLATE = """\
 This is CLI "{command}" of {vendor} {family} {os} version {version}.
 Create a regex pattern to match it:
-- If a token is fixed text, use it as-is.
+- If a token is fixed text, use it as-is and then convert to lower case.
 - If a token is variable text, use a regex to match it, and name the \
 capture group var1, var2, ... in left-to-right order of appearance.
 - Use \\s+ to match whitespace between tokens.
 
 Example 1: "show version" -> "show" and "version" are fixed text ->
-r"(?i)show\\s+version"
+r"show\\s+version"
 
 Example 2: "show interface Ge1.1 status" -> "show", "interface", and \
 "status" are fixed text ->
-r"(?i)show\\s+interface\\s+(?P<var1>\\S+)\\s+status"
+r"show\\s+interface\\s+(?P<var1>\\S+)\\s+status"
 
 Respond with only the regex pattern, nothing else.
 """

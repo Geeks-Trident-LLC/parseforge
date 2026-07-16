@@ -1,7 +1,7 @@
 """On-disk cli-name -> regex index, so a CLI is only ever sent to the LLM once.
 
 Persisted as a flat JSON dict (SPEC.md naming discussion):
-    {"show-version": "(?i)show\\s+version", ...}
+    {"show-version": "show\\s+version", ...}
 
 The cli-name segment is vendor/OS-agnostic by design — vendor, family, os,
 and version are already distinguishing directory levels in the storage
@@ -32,9 +32,10 @@ class NameIndex:
 
     def match(self, command: str) -> str | None:
         """Return the cli-name of the first stored pattern that fully matches
-        ``command``, or None if this command hasn't been named before."""
+        ``command`` (case-insensitively), or None if this command hasn't
+        been named before."""
         for cli_name, pattern in self._entries.items():
-            if re.fullmatch(pattern, command):
+            if re.fullmatch(pattern, command, re.IGNORECASE):
                 return cli_name
         return None
 
