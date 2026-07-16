@@ -19,7 +19,9 @@ def main() -> None:
 @click.option("--os", "os_", required=True)
 @click.option("--version", required=True)
 @click.argument("command", nargs=-1, required=True)
-def name_cmd(vendor: str, family: str, os_: str, version: str, command: tuple[str, ...]) -> None:
+def name_cmd(
+    vendor: str, family: str, os_: str, version: str, command: tuple[str, ...]
+) -> None:
     """Print the canonical cli-name for a raw CLI COMMAND.
 
     Looked up in the local cache first; only sent to an LLM (via a
@@ -37,7 +39,9 @@ def name_cmd(vendor: str, family: str, os_: str, version: str, command: tuple[st
 @click.option("--os", "os_", required=True)
 @click.option("--version", required=True)
 @click.argument("command", nargs=-1, required=True)
-def run_cmd(vendor: str, family: str, os_: str, version: str, command: tuple[str, ...]) -> None:
+def run_cmd(
+    vendor: str, family: str, os_: str, version: str, command: tuple[str, ...]
+) -> None:
     """Run the pipeline for a single CLI COMMAND against a device (§5)."""
     from parseforge.pipeline import run_command_pipeline
 

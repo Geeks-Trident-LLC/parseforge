@@ -23,8 +23,13 @@ class PromotionGate:
     min_sample_count: int = 1
 
 
-def decide_promotion(match_rate: float, sample_count: int, gate: PromotionGate) -> PromotionDecision:
-    if sample_count >= gate.min_sample_count and match_rate >= gate.match_rate_threshold:
+def decide_promotion(
+    match_rate: float, sample_count: int, gate: PromotionGate
+) -> PromotionDecision:
+    if (
+        sample_count >= gate.min_sample_count
+        and match_rate >= gate.match_rate_threshold
+    ):
         return PromotionDecision.AUTO_PROMOTED
     return PromotionDecision.QUEUED_FOR_REVIEW
 

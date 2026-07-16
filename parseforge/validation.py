@@ -34,7 +34,9 @@ class CandidateScore:
     failed_samples: list[str]
 
 
-def select_common_result(candidates: dict[str, str], samples: dict[str, str]) -> CandidateScore:
+def select_common_result(
+    candidates: dict[str, str], samples: dict[str, str]
+) -> CandidateScore:
     """Cross-validate every candidate template against every known sample.
 
     ``candidates`` maps trial run_id -> template.textfsm text.
