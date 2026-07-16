@@ -21,3 +21,6 @@ mypy>=1.10.0
 mkdocs==1.*
 mkdocs-material==9.*
 mike
+
+# Versioning
+bump2version
