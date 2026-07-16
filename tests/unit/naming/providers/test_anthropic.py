@@ -2,8 +2,12 @@ from dataclasses import dataclass
 
 import pytest
 
-from parseforge.naming.anthropic_builder import AnthropicRegexBuilder, _extract_pattern
 from parseforge.naming.llm import CliContext
+from parseforge.naming.providers.anthropic import (
+    DEFAULT_MODEL,
+    AnthropicRegexBuilder,
+    _extract_pattern,
+)
 
 CONTEXT = CliContext(
     vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"
@@ -51,16 +55,16 @@ def test_build_pattern_calls_client_and_extracts_text(
 ) -> None:
     fake = _FakeAnthropic()
     monkeypatch.setattr(
-        "parseforge.naming.anthropic_builder.Anthropic", lambda **kw: fake
+        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
     )
 
-    builder = AnthropicRegexBuilder(model="claude-haiku-4-5-20251001")
+    builder = AnthropicRegexBuilder()
     pattern = builder.build_pattern("show version", CONTEXT)
 
     assert pattern == r"(?i)show\s+version"
     assert len(fake.messages.calls) == 1
     call = fake.messages.calls[0]
-    assert call["model"] == "claude-haiku-4-5-20251001"
+    assert call["model"] == DEFAULT_MODEL
     assert "show version" in call["messages"][0]["content"]
 
 
@@ -71,7 +75,7 @@ def test_client_is_constructed_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
     def _boom(**kwargs):
         raise AssertionError("Anthropic() should not be constructed eagerly")
 
-    monkeypatch.setattr("parseforge.naming.anthropic_builder.Anthropic", _boom)
+    monkeypatch.setattr("parseforge.naming.providers.anthropic.Anthropic", _boom)
 
     AnthropicRegexBuilder()  # must not raise
 
@@ -83,7 +87,7 @@ def test_api_key_argument_is_passed_through(monkeypatch: pytest.MonkeyPatch) -> 
         captured.update(kwargs)
         return _FakeAnthropic(**kwargs)
 
-    monkeypatch.setattr("parseforge.naming.anthropic_builder.Anthropic", _fake_ctor)
+    monkeypatch.setattr("parseforge.naming.providers.anthropic.Anthropic", _fake_ctor)
 
     builder = AnthropicRegexBuilder(api_key="sk-test-123")
     builder.build_pattern("show version", CONTEXT)

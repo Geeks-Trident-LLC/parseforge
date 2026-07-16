@@ -1,0 +1,17 @@
+# Model registry — one place to update when a provider deprecates or adds a
+# model, instead of hunting for a hardcoded string in provider code.
+#
+# default:    used when no --model is given
+# supported:  currently usable model IDs
+# deprecated: known expired/unsupported IDs, kept here for reference so
+#             nobody has to rediscover "why did this stop working" from
+#             a provider's changelog
+
+anthropic:
+  default: claude-haiku-4-5-20251001
+  supported:
+    - claude-haiku-4-5-20251001
+    - claude-sonnet-5
+    - claude-opus-4-8
+    - claude-fable-5
+  deprecated: []

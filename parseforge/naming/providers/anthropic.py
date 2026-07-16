@@ -6,9 +6,10 @@ import re
 
 from anthropic import Anthropic
 
-from .llm import CliContext, build_prompt
+from ..llm import CliContext, build_prompt
+from .models import default_model
 
-DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+DEFAULT_MODEL = default_model("anthropic")
 
 _CODE_FENCE = re.compile(r"^```(?:\w+)?\s*|\s*```$")
 
