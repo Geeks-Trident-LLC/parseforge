@@ -16,3 +16,8 @@ black>=24.0.0
 
 # Type checking
 mypy>=1.10.0
+
+# Documentation
+mkdocs==1.*
+mkdocs-material==9.*
+mike

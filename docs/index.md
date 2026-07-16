@@ -31,5 +31,5 @@ promotion are stubbed interfaces waiting on a wired-in LLM client.
 
 ## Explore further
 
-- [README](../README.md) — package layout and local development setup
-- [SPEC](../SPEC.md) — full design plan and open questions
+- [README](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md) — package layout and local development setup
+- [SPEC](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/SPEC.md) — full design plan and open questions
