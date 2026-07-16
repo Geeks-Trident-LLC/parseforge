@@ -17,11 +17,11 @@ CONTEXT = CliContext(
 @pytest.mark.parametrize(
     "raw, expected",
     [
-        (r"(?i)show\s+version", r"(?i)show\s+version"),
-        ("```\n" + r"(?i)show\s+version" + "\n```", r"(?i)show\s+version"),
-        ("```regex\n" + r"(?i)show\s+version" + "\n```", r"(?i)show\s+version"),
-        ("  " + r"(?i)show\s+version" + "  \n", r"(?i)show\s+version"),
-        (r"(?i)show\s+version" + "\nsome trailing explanation", r"(?i)show\s+version"),
+        (r"show\s+version", r"show\s+version"),
+        ("```\n" + r"show\s+version" + "\n```", r"show\s+version"),
+        ("```regex\n" + r"show\s+version" + "\n```", r"show\s+version"),
+        ("  " + r"show\s+version" + "  \n", r"show\s+version"),
+        (r"show\s+version" + "\nsome trailing explanation", r"show\s+version"),
     ],
 )
 def test_extract_pattern_strips_fences_and_noise(raw: str, expected: str) -> None:
@@ -47,7 +47,7 @@ class _FakeMessages:
 class _FakeAnthropic:
     def __init__(self, api_key=None):
         self.api_key = api_key
-        self.messages = _FakeMessages(r"(?i)show\s+version")
+        self.messages = _FakeMessages(r"show\s+version")
 
 
 def test_build_pattern_calls_client_and_extracts_text(
@@ -61,7 +61,7 @@ def test_build_pattern_calls_client_and_extracts_text(
     builder = AnthropicRegexBuilder()
     pattern = builder.build_pattern("show version", CONTEXT)
 
-    assert pattern == r"(?i)show\s+version"
+    assert pattern == r"show\s+version"
     assert len(fake.messages.calls) == 1
     call = fake.messages.calls[0]
     assert call["model"] == DEFAULT_MODEL

@@ -25,14 +25,14 @@ CONTEXT = CliContext(
 def test_build_pattern_matches_its_own_command(anthropic_key: str) -> None:
     builder = AnthropicRegexBuilder(api_key=anthropic_key)
     pattern = builder.build_pattern("show version", CONTEXT)
-    assert re.fullmatch(pattern, "show version")
+    assert re.fullmatch(pattern, "show version", re.I)
 
 
 def test_build_pattern_handles_a_variable_token(anthropic_key: str) -> None:
     builder = AnthropicRegexBuilder(api_key=anthropic_key)
     command = "show interface GE1.1 status"
     pattern = builder.build_pattern(command, CONTEXT)
-    assert re.fullmatch(pattern, command)
+    assert re.fullmatch(pattern, command, re.I)
     assert pattern_to_cli_name(pattern) == "show-interface-var1-status"
 
 

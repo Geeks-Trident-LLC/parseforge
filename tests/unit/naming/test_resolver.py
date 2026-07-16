@@ -25,7 +25,7 @@ class FakeRegexBuilder:
 
 def test_cache_miss_calls_builder_and_persists(tmp_path: Path) -> None:
     index_path = tmp_path / ".cli-name.json"
-    builder = FakeRegexBuilder(r"(?i)show\s+version")
+    builder = FakeRegexBuilder(r"show\s+version")
 
     name = cli_name("show version", CONTEXT, builder=builder, index_path=index_path)
 
@@ -36,7 +36,7 @@ def test_cache_miss_calls_builder_and_persists(tmp_path: Path) -> None:
 
 def test_cache_hit_does_not_call_builder(tmp_path: Path) -> None:
     index_path = tmp_path / ".cli-name.json"
-    builder = FakeRegexBuilder(r"(?i)show\s+version")
+    builder = FakeRegexBuilder(r"show\s+version")
 
     cli_name("show version", CONTEXT, builder=builder, index_path=index_path)
     assert builder.calls == 1
@@ -49,7 +49,20 @@ def test_cache_hit_does_not_call_builder(tmp_path: Path) -> None:
 
 def test_pattern_that_does_not_match_its_own_command_raises(tmp_path: Path) -> None:
     index_path = tmp_path / ".cli-name.json"
-    builder = FakeRegexBuilder(r"(?i)show\s+clock")
+    builder = FakeRegexBuilder(r"show\s+clock")
 
     with pytest.raises(ValueError):
         cli_name("show version", CONTEXT, builder=builder, index_path=index_path)
+
+
+def test_builder_output_is_normalized_before_caching(tmp_path: Path) -> None:
+    """A builder returning mixed-case fixed text must still validate (matching
+    is case-insensitive) and get stored in lowercase-normalized form."""
+    index_path = tmp_path / ".cli-name.json"
+    builder = FakeRegexBuilder(r"Show\s+Version")
+
+    name = cli_name("show version", CONTEXT, builder=builder, index_path=index_path)
+
+    assert name == "show-version"
+    index = NameIndex(index_path)
+    assert index._entries["show-version"] == r"show\s+version"
