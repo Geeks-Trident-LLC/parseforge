@@ -10,19 +10,34 @@ from dataclasses import dataclass
 from typing import Protocol
 
 PROMPT_TEMPLATE = """\
-This is CLI "{command}" of {vendor} {family} {os} version {version}.
-Create a regex pattern to match it:
+You are converting one network device CLI command into a regex pattern.
+
+=== DEVICE CONTEXT (reference only) ===
+Vendor: {vendor}
+Family: {family}
+OS: {os}
+OS version: {version}
+This context tells you what kind of device the command below runs on.
+Do NOT include any of it in the regex. Do NOT build a regex for it.
+
+=== COMMAND TO CONVERT ===
+{command}
+
+Build a regex that matches ONLY the command in the COMMAND TO CONVERT \
+section above, and nothing else:
 - If a token is fixed text, use it as-is and then convert to lower case.
 - If a token is variable text, use a regex to match it, and name the \
 capture group var1, var2, ... in left-to-right order of appearance.
 - Use \\s+ to match whitespace between tokens.
+- The vendor, family, OS, and version from the context above are never part \
+of the command and must never appear in the regex.
 
-Example 1: "show version" -> "show" and "version" are fixed text ->
-r"show\\s+version"
+Example 1: command is "show version" -> "show" and "version" are fixed \
+text -> "show\\s+version"
 
-Example 2: "show interface Ge1.1 status" -> "show", "interface", and \
-"status" are fixed text ->
-r"show\\s+interface\\s+(?P<var1>\\S+)\\s+status"
+Example 2: command is "show interface Ge1.1 status" -> "show", \
+"interface", and "status" are fixed text -> \
+"show\\s+interface\\s+(?P<var1>\\S+)\\s+status"
 
 Respond with only the regex pattern, nothing else.
 """
