@@ -43,4 +43,6 @@ class NameIndex:
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self._entries, indent=2, sort_keys=True), encoding="utf-8")
+        self.path.write_text(
+            json.dumps(self._entries, indent=2, sort_keys=True), encoding="utf-8"
+        )

@@ -30,6 +30,9 @@ venv/
 .vscode/
 .idea/
 
+# mkdocs build output
+/site
+
 # Claude Code local session state
 .claude/
 
