@@ -1,17 +1,24 @@
+import pytest
+
 from parseforge.naming.providers.models import (
     default_model,
     deprecated_models,
     supported_models,
 )
 
-
-def test_default_model_is_in_supported_list() -> None:
-    assert default_model("anthropic") in supported_models("anthropic")
+PROVIDERS = ["anthropic", "deepseek"]
 
 
-def test_default_model_is_not_deprecated() -> None:
-    assert default_model("anthropic") not in deprecated_models("anthropic")
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_default_model_is_in_supported_list(provider: str) -> None:
+    assert default_model(provider) in supported_models(provider)
 
 
-def test_deprecated_models_defaults_to_empty_list() -> None:
-    assert deprecated_models("anthropic") == []
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_default_model_is_not_deprecated(provider: str) -> None:
+    assert default_model(provider) not in deprecated_models(provider)
+
+
+@pytest.mark.parametrize("provider", PROVIDERS)
+def test_deprecated_models_defaults_to_empty_list(provider: str) -> None:
+    assert deprecated_models(provider) == []

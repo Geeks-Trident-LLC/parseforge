@@ -1,7 +1,7 @@
 from .assemble import normalize_pattern, pattern_to_cli_name
 from .cache import DEFAULT_INDEX_PATH, NameIndex
 from .llm import CliContext, RegexBuilder, UnimplementedRegexBuilder, build_prompt
-from .providers import AnthropicRegexBuilder
+from .providers import AnthropicRegexBuilder, DeepSeekRegexBuilder
 from .resolver import cli_name
 
 __all__ = [
@@ -10,6 +10,7 @@ __all__ = [
     "RegexBuilder",
     "UnimplementedRegexBuilder",
     "AnthropicRegexBuilder",
+    "DeepSeekRegexBuilder",
     "build_prompt",
     "NameIndex",
     "DEFAULT_INDEX_PATH",

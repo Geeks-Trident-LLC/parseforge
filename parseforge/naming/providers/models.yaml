@@ -15,3 +15,10 @@ anthropic:
     - claude-opus-4-8
     - claude-fable-5
   deprecated: []
+
+deepseek:
+  default: deepseek-v4-flash
+  supported:
+    - deepseek-v4-flash
+    - deepseek-v4-pro
+  deprecated: []

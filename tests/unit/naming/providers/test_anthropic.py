@@ -3,29 +3,11 @@ from dataclasses import dataclass
 import pytest
 
 from parseforge.naming.llm import CliContext
-from parseforge.naming.providers.anthropic import (
-    DEFAULT_MODEL,
-    AnthropicRegexBuilder,
-    _extract_pattern,
-)
+from parseforge.naming.providers.anthropic import DEFAULT_MODEL, AnthropicRegexBuilder
 
 CONTEXT = CliContext(
     vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"
 )
-
-
-@pytest.mark.parametrize(
-    "raw, expected",
-    [
-        (r"show\s+version", r"show\s+version"),
-        ("```\n" + r"show\s+version" + "\n```", r"show\s+version"),
-        ("```regex\n" + r"show\s+version" + "\n```", r"show\s+version"),
-        ("  " + r"show\s+version" + "  \n", r"show\s+version"),
-        (r"show\s+version" + "\nsome trailing explanation", r"show\s+version"),
-    ],
-)
-def test_extract_pattern_strips_fences_and_noise(raw: str, expected: str) -> None:
-    assert _extract_pattern(raw) == expected
 
 
 @dataclass

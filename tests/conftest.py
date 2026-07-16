@@ -38,3 +38,8 @@ def _require_env(name: str) -> str:
 @pytest.fixture(scope="session")
 def anthropic_key(require_real_tests: None) -> str:
     return _require_env("ANTHROPIC_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def deepseek_key(require_real_tests: None) -> str:
+    return _require_env("DEEPSEEK_API_KEY")
