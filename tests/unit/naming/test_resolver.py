@@ -6,7 +6,9 @@ from parseforge.naming.cache import NameIndex
 from parseforge.naming.llm import CliContext
 from parseforge.naming.resolver import cli_name
 
-CONTEXT = CliContext(vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1")
+CONTEXT = CliContext(
+    vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"
+)
 
 
 class FakeRegexBuilder:
