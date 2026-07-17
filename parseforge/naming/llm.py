@@ -7,25 +7,11 @@ is in the index, matching is pure regex and costs no tokens.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
-PROMPT_TEMPLATE = """\
-This is CLI "{command}" of {vendor} {family} {os} version {version}.
-Create a regex pattern to match it:
-- If a token is fixed text, use it as-is.
-- If a token is variable text, use a regex to match it, and name the \
-capture group var1, var2, ... in left-to-right order of appearance.
-- Use \\s+ to match whitespace between tokens.
+from .prompts import load_prompt_template
 
-Example 1: "show version" -> "show" and "version" are fixed text ->
-r"(?i)show\\s+version"
-
-Example 2: "show interface Ge1.1 status" -> "show", "interface", and \
-"status" are fixed text ->
-r"(?i)show\\s+interface\\s+(?P<var1>\\S+)\\s+status"
-
-Respond with only the regex pattern, nothing else.
-"""
+PROMPT_TEMPLATE = load_prompt_template("cli_name_regex")
 
 
 @dataclass(frozen=True)
@@ -46,17 +32,56 @@ def build_prompt(command: str, context: CliContext) -> str:
     )
 
 
-class RegexBuilder(Protocol):
-    """An LLM backend that turns a raw CLI command into a regex pattern."""
+@dataclass(frozen=True)
+class TokenUsage:
+    input_tokens: int
+    output_tokens: int
+    total_tokens: int
 
-    def build_pattern(self, command: str, context: CliContext) -> str: ...
+
+@dataclass(frozen=True)
+class LLMCLIResponse:
+    """Structured result of a single build_pattern() call.
+
+    ``content`` is the extracted, cleaned pattern text (see
+    providers.text.extract_pattern) — what callers actually want.
+    ``raw`` is the untouched SDK response object, kept for
+    debugging/auditing (mirrors SPEC.md's raw-llm-response.txt /
+    usage.txt trial artifacts for a future generation pipeline).
+    ``ready`` is False when the response was cut off before completing
+    (e.g. hit max_tokens) rather than stopping naturally — resolver.py
+    treats a non-ready response as an error rather than trying to use a
+    possibly-truncated pattern.
+    """
+
+    content: str
+    raw: Any
+    usage: TokenUsage
+    duration_ms: float
+    reason: str
+    ready: bool
+
+
+class RegexBuilder(Protocol):
+    """An LLM backend that turns a raw CLI command into a regex pattern.
+
+    Extra ``**kwargs`` (e.g. ``max_tokens``, provider-specific request
+    options) are passed through to the underlying API call, letting a
+    caller override a builder's defaults per-call without subclassing it.
+    """
+
+    def build_pattern(
+        self, command: str, context: CliContext, **kwargs: Any
+    ) -> LLMCLIResponse: ...
 
 
 class UnimplementedRegexBuilder:
     """Default RegexBuilder — no LLM client is wired into the scaffold yet."""
 
-    def build_pattern(self, command: str, context: CliContext) -> str:
+    def build_pattern(
+        self, command: str, context: CliContext, **kwargs: Any
+    ) -> LLMCLIResponse:
         raise NotImplementedError(
             "no RegexBuilder configured — wire an LLM client that sends "
-            "build_prompt(command, context) and returns the regex pattern"
+            "build_prompt(command, context) and returns an LLMCLIResponse"
         )
