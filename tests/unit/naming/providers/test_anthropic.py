@@ -1,9 +1,21 @@
 from dataclasses import dataclass
 
+import anthropic
 import pytest
 
 from parseforge.naming.llm import CliContext
 from parseforge.naming.providers.anthropic import DEFAULT_MODEL, AnthropicRegexBuilder
+
+
+def _make_error(name: str, message: str = "boom") -> anthropic.AnthropicError:
+    """A dynamically-named AnthropicError subclass — real subclasses like
+    RateLimitError require constructing an httpx.Response, which isn't
+    worth the ceremony here; classification only cares about the class
+    name (see providers/errors.py) and the except clause only checks
+    isinstance against the shared AnthropicError base."""
+    cls = type(name, (anthropic.AnthropicError,), {})
+    return cls(message)
+
 
 CONTEXT = CliContext(
     vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"
@@ -98,6 +110,39 @@ def test_truncated_response_is_not_ready(monkeypatch: pytest.MonkeyPatch) -> Non
 
     assert response.reason == "max_tokens"
     assert response.ready is False
+
+
+def test_retryable_error_returns_not_ready_response(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def _raise(**kwargs):
+        raise _make_error("RateLimitError", "slow down")
+
+    fake = _FakeAnthropic()
+    fake.messages.create = _raise
+    monkeypatch.setattr(
+        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
+    )
+
+    response = AnthropicRegexBuilder().build_pattern("show version", CONTEXT)
+
+    assert response.ready is False
+    assert response.reason == "LLM-ERROR-rate_limit-slow down"
+    assert response.content == ""
+
+
+def test_non_retryable_error_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    def _raise(**kwargs):
+        raise _make_error("BadRequestError", "malformed")
+
+    fake = _FakeAnthropic()
+    fake.messages.create = _raise
+    monkeypatch.setattr(
+        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
+    )
+
+    with pytest.raises(anthropic.AnthropicError, match="malformed"):
+        AnthropicRegexBuilder().build_pattern("show version", CONTEXT)
 
 
 def test_client_is_constructed_lazily(monkeypatch: pytest.MonkeyPatch) -> None:

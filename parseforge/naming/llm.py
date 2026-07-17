@@ -36,14 +36,7 @@ def build_prompt(command: str, context: CliContext) -> str:
 class TokenUsage:
     input_tokens: int
     output_tokens: int
-
-    @property
-    def total_tokens(self) -> int:
-        # Computed rather than stored separately, so it can never drift out
-        # of sync with input/output — not every provider's SDK exposes a
-        # total field directly (Anthropic doesn't; OpenAI-compatible ones do,
-        # but it's always just the sum of the two anyway).
-        return self.input_tokens + self.output_tokens
+    total_tokens: int
 
 
 @dataclass(frozen=True)

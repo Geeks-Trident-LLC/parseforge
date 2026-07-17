@@ -5,9 +5,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from anthropic import Anthropic
+from anthropic import Anthropic, AnthropicError
 
 from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
+from .errors import format_llm_error_reason, is_retryable
 from .models import default_model
 from .text import extract_pattern
 
@@ -50,12 +51,26 @@ class AnthropicRegexBuilder:
         max_tokens = kwargs.pop("max_tokens", None) or _DEFAULT_MAX_TOKENS
 
         start = time.monotonic()
-        response = self._get_client().messages.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            messages=[{"role": "user", "content": prompt}],
-            **kwargs,
-        )
+        try:
+            response = self._get_client().messages.create(
+                model=self.model,
+                max_tokens=max_tokens,
+                messages=[{"role": "user", "content": prompt}],
+                **kwargs,
+            )
+        except AnthropicError as exc:
+            if not is_retryable(exc):
+                # Same request would fail the same way again — stop rather
+                # than let a caller burn another attempt on it.
+                raise
+            return LLMCLIResponse(
+                content="",
+                raw=exc,
+                usage=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0),
+                duration_ms=(time.monotonic() - start) * 1000,
+                reason=format_llm_error_reason(exc),
+                ready=False,
+            )
         duration_ms = (time.monotonic() - start) * 1000
 
         text = "".join(block.text for block in response.content if block.type == "text")
@@ -65,6 +80,11 @@ class AnthropicRegexBuilder:
             usage=TokenUsage(
                 input_tokens=response.usage.input_tokens,
                 output_tokens=response.usage.output_tokens,
+                # Anthropic's API has no total field of its own — sum it,
+                # unlike DeepSeek/OpenAI-compatible responses, which supply
+                # total_tokens directly and may account for it differently
+                # (e.g. cached-token pricing) than a simple input+output sum.
+                total_tokens=response.usage.input_tokens + response.usage.output_tokens,
             ),
             duration_ms=duration_ms,
             reason=response.stop_reason or "",
