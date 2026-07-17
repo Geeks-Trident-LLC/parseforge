@@ -14,8 +14,12 @@ from __future__ import annotations
 
 import pytest
 
-from parseforge.sampling import DeviceConnection, sample
-from parseforge.sampling.backends import NetmikoSampler
+pytest.importorskip(
+    "netmiko", reason="netmiko is an optional extra (parseforge[sampling])"
+)
+
+from parseforge.sampling import DeviceConnection, sample  # noqa: E402
+from parseforge.sampling.backends import NetmikoSampler  # noqa: E402
 
 pytestmark = pytest.mark.integration
 

@@ -1,7 +1,11 @@
 import pytest
 
-from parseforge.sampling.backends.netmiko import NetmikoSampler
-from parseforge.sampling.core import DeviceConnection
+pytest.importorskip(
+    "netmiko", reason="netmiko is an optional extra (parseforge[sampling])"
+)
+
+from parseforge.sampling.backends.netmiko import NetmikoSampler  # noqa: E402
+from parseforge.sampling.core import DeviceConnection  # noqa: E402
 
 CONNECTION = DeviceConnection(
     host="10.0.0.1", username="admin", password="secret", device_type="cisco_ios"
