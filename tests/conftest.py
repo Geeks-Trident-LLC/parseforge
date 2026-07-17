@@ -50,9 +50,30 @@ def deepseek_key(require_real_tests: None) -> str:
 
 @pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
+    """Generic sandbox connection — any vendor.
+
+    No sensible default device_type exists without knowing the vendor,
+    so SANDBOX_DEVICE_TYPE is required here (unlike the Cisco-specific
+    fixture below, which can default it).
+    """
     return DeviceConnection(
         host=_require_env("SANDBOX_HOST"),
         username=_require_env("SANDBOX_USERNAME"),
         password=_require_env("SANDBOX_PASSWORD"),
-        device_type=os.environ.get("SANDBOX_DEVICE_TYPE", "cisco_ios"),
+        device_type=_require_env("SANDBOX_DEVICE_TYPE"),
+    )
+
+
+@pytest.fixture(scope="session")
+def cisco_sandbox_connection(require_real_tests: None) -> DeviceConnection:
+    """Cisco-specific sandbox connection (e.g. a DevNet sandbox) — kept
+    separate from the generic sandbox_connection above since other
+    vendors (Juniper vLabs, Arista, ...) offer free sandboxes too, and
+    tests that assert on Cisco-specific output shouldn't silently run
+    against whatever vendor happens to be configured generically."""
+    return DeviceConnection(
+        host=_require_env("CISCO_SANDBOX_HOST"),
+        username=_require_env("CISCO_SANDBOX_USERNAME"),
+        password=_require_env("CISCO_SANDBOX_PASSWORD"),
+        device_type=os.environ.get("CISCO_SANDBOX_DEVICE_TYPE", "cisco_ios"),
     )
