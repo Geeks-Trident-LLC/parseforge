@@ -1,0 +1,40 @@
+"""Live integration test for NetmikoSampler against a real device.
+
+Skipped by default — run with `pytest --real` and SANDBOX_HOST /
+SANDBOX_USERNAME / SANDBOX_PASSWORD set (SANDBOX_DEVICE_TYPE optional,
+defaults to "cisco_ios"). Opens a real SSH connection — e.g. a Cisco
+DevNet sandbox (https://developer.cisco.com/site/sandbox/).
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from parseforge.sampling import DeviceConnection, sample
+from parseforge.sampling.backends import NetmikoSampler
+
+pytestmark = pytest.mark.integration
+
+
+def test_run_command_show_version(sandbox_connection: DeviceConnection) -> None:
+    output = sample(NetmikoSampler(), sandbox_connection, "show version")
+    assert output
+    assert "cisco" in output.lower()
+
+
+def test_run_command_show_clock(sandbox_connection: DeviceConnection) -> None:
+    output = sample(NetmikoSampler(), sandbox_connection, "show clock")
+    assert output.strip()
+
+
+def test_separate_calls_open_independent_connections(
+    sandbox_connection: DeviceConnection,
+) -> None:
+    """NetmikoSampler holds no session state between calls (see its
+    docstring) — two calls in a row must both succeed independently,
+    not rely on a connection left open by the first."""
+    sampler = NetmikoSampler()
+    first = sample(sampler, sandbox_connection, "show version")
+    second = sample(sampler, sandbox_connection, "show clock")
+    assert first
+    assert second
