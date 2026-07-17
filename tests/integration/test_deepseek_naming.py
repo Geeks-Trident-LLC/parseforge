@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -24,16 +25,18 @@ CONTEXT = CliContext(
 
 def test_build_pattern_matches_its_own_command(deepseek_key: str) -> None:
     builder = DeepSeekRegexBuilder(api_key=deepseek_key)
-    pattern = builder.build_pattern("show version", CONTEXT)
-    assert re.fullmatch(pattern, "show version", re.I)
+    response = builder.build_pattern("show version", CONTEXT)
+    assert response.ready
+    assert re.fullmatch(response.content, "show version", re.I)
 
 
 def test_build_pattern_handles_a_variable_token(deepseek_key: str) -> None:
     builder = DeepSeekRegexBuilder(api_key=deepseek_key)
     command = "show interface GE1.1 status"
-    pattern = builder.build_pattern(command, CONTEXT)
-    assert re.fullmatch(pattern, command, re.I)
-    assert pattern_to_cli_name(pattern) == "show-interface-var1-status"
+    response = builder.build_pattern(command, CONTEXT)
+    assert response.ready
+    assert re.fullmatch(response.content, command, re.I)
+    assert pattern_to_cli_name(response.content) == "show-interface-var1-status"
 
 
 def test_cli_name_end_to_end_fixed_command(deepseek_key: str, tmp_path: Path) -> None:
@@ -56,7 +59,7 @@ def test_cli_name_end_to_end_is_cached_on_second_call(
 
     # Second call for the same command must hit the on-disk cache, not the
     # LLM again — pass a builder that raises if it's ever called.
-    def _boom(command: str, context: CliContext) -> str:
+    def _boom(command: str, context: CliContext, **kwargs: Any):
         raise AssertionError("cache hit should not call the LLM")
 
     class _FailingBuilder:

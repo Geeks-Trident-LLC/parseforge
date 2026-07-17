@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+import time
+from typing import Any
+
 from anthropic import Anthropic
 
-from ..llm import CliContext, build_prompt
+from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
 from .models import default_model
 from .text import extract_pattern
 
 DEFAULT_MODEL = default_model("anthropic")
+
+# Headroom in case a future/opt-in extended-thinking model burns part of
+# the budget on reasoning before the actual answer — see the
+# deepseek-v4-flash truncation this guards against in providers/deepseek.py.
+_DEFAULT_MAX_TOKENS = 1024
 
 
 class AnthropicRegexBuilder:
@@ -35,16 +43,30 @@ class AnthropicRegexBuilder:
             )
         return self._client
 
-    def build_pattern(self, command: str, context: CliContext) -> str:
+    def build_pattern(
+        self, command: str, context: CliContext, **kwargs: Any
+    ) -> LLMCLIResponse:
         prompt = build_prompt(command, context)
+        max_tokens = kwargs.pop("max_tokens", None) or _DEFAULT_MAX_TOKENS
+
+        start = time.monotonic()
         response = self._get_client().messages.create(
             model=self.model,
-            # Headroom in case a future/opt-in extended-thinking model burns
-            # part of the budget on reasoning before the actual answer — see
-            # the deepseek-v4-flash truncation this guards against in
-            # providers/deepseek.py.
-            max_tokens=1024,
+            max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}],
+            **kwargs,
         )
+        duration_ms = (time.monotonic() - start) * 1000
+
         text = "".join(block.text for block in response.content if block.type == "text")
-        return extract_pattern(text)
+        return LLMCLIResponse(
+            content=extract_pattern(text),
+            raw=response,
+            usage=TokenUsage(
+                input_tokens=response.usage.input_tokens,
+                output_tokens=response.usage.output_tokens,
+            ),
+            duration_ms=duration_ms,
+            reason=response.stop_reason or "",
+            ready=response.stop_reason == "end_turn",
+        )

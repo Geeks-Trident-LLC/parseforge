@@ -8,10 +8,12 @@ base URL rather than a dedicated DeepSeek client.
 from __future__ import annotations
 
 import os
+import time
+from typing import Any
 
 from openai import OpenAI
 
-from ..llm import CliContext, build_prompt
+from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
 from .models import default_model
 from .text import extract_pattern
 
@@ -19,11 +21,13 @@ DEFAULT_MODEL = default_model("deepseek")
 
 _BASE_URL = "https://api.deepseek.com"
 
+_DEFAULT_MAX_TOKENS = 1024
+
 # deepseek-v4-flash defaults to thinking mode ON, which burns the entire
 # max_tokens budget on chain-of-thought (returned separately as
 # reasoning_content) and leaves nothing for the actual answer in
 # `content` — a trivial one-line regex task doesn't need reasoning at
-# all, so it's disabled explicitly. See:
+# all, so it's disabled explicitly by default. See:
 # https://api-docs.deepseek.com/guides/thinking_mode/
 _THINKING_DISABLED = {"thinking": {"type": "disabled"}}
 
@@ -57,13 +61,35 @@ class DeepSeekRegexBuilder:
             self._client = OpenAI(api_key=api_key, base_url=_BASE_URL)
         return self._client
 
-    def build_pattern(self, command: str, context: CliContext) -> str:
+    def build_pattern(
+        self, command: str, context: CliContext, **kwargs: Any
+    ) -> LLMCLIResponse:
         prompt = build_prompt(command, context)
+        # Callers can override either of these per-call (e.g. re-enable
+        # thinking mode, raise max_tokens further); anything else in
+        # kwargs — temperature, top_p, etc. — passes through untouched.
+        max_tokens = kwargs.pop("max_tokens", None) or _DEFAULT_MAX_TOKENS
+        extra_body = kwargs.pop("extra_body", None) or _THINKING_DISABLED
+
+        start = time.monotonic()
         response = self._get_client().chat.completions.create(
             model=self.model,
-            max_tokens=1024,
+            max_tokens=max_tokens,
             messages=[{"role": "user", "content": prompt}],
-            extra_body=_THINKING_DISABLED,
+            extra_body=extra_body,
+            **kwargs,
         )
-        text = response.choices[0].message.content or ""
-        return extract_pattern(text)
+        duration_ms = (time.monotonic() - start) * 1000
+
+        choice = response.choices[0]
+        return LLMCLIResponse(
+            content=extract_pattern(choice.message.content or ""),
+            raw=response,
+            usage=TokenUsage(
+                input_tokens=response.usage.prompt_tokens,
+                output_tokens=response.usage.completion_tokens,
+            ),
+            duration_ms=duration_ms,
+            reason=choice.finish_reason or "",
+            ready=choice.finish_reason == "stop",
+        )

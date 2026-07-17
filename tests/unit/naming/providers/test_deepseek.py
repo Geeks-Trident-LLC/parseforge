@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import pytest
 
 from parseforge.naming.llm import CliContext
@@ -8,36 +10,59 @@ CONTEXT = CliContext(
 )
 
 
+@dataclass
 class _FakeMessage:
-    def __init__(self, content: str) -> None:
-        self.content = content
+    content: str
 
 
+@dataclass
 class _FakeChoice:
-    def __init__(self, content: str) -> None:
-        self.message = _FakeMessage(content)
+    message: _FakeMessage
+    finish_reason: str = "stop"
+
+
+@dataclass
+class _FakeUsage:
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+
+@dataclass
+class _FakeCompletionResponse:
+    choices: list
+    usage: _FakeUsage
 
 
 class _FakeCompletions:
-    def __init__(self, reply_text: str) -> None:
+    def __init__(self, reply_text: str, finish_reason: str = "stop") -> None:
         self.reply_text = reply_text
+        self.finish_reason = finish_reason
         self.calls: list[dict] = []
 
-    def create(self, **kwargs):
+    def create(self, **kwargs) -> _FakeCompletionResponse:
         self.calls.append(kwargs)
-        return type("Resp", (), {"choices": [_FakeChoice(self.reply_text)]})()
+        return _FakeCompletionResponse(
+            choices=[
+                _FakeChoice(
+                    message=_FakeMessage(self.reply_text),
+                    finish_reason=self.finish_reason,
+                )
+            ],
+            usage=_FakeUsage(prompt_tokens=33, completion_tokens=9, total_tokens=42),
+        )
 
 
 class _FakeChat:
-    def __init__(self, reply_text: str) -> None:
-        self.completions = _FakeCompletions(reply_text)
+    def __init__(self, reply_text: str, finish_reason: str = "stop") -> None:
+        self.completions = _FakeCompletions(reply_text, finish_reason=finish_reason)
 
 
 class _FakeOpenAI:
-    def __init__(self, api_key=None, base_url=None):
+    def __init__(self, api_key=None, base_url=None, finish_reason: str = "stop"):
         self.api_key = api_key
         self.base_url = base_url
-        self.chat = _FakeChat(r"show\s+version")
+        self.chat = _FakeChat(r"show\s+version", finish_reason=finish_reason)
 
 
 def test_build_pattern_calls_client_and_extracts_text(
@@ -50,9 +75,9 @@ def test_build_pattern_calls_client_and_extracts_text(
     )
 
     builder = DeepSeekRegexBuilder()
-    pattern = builder.build_pattern("show version", CONTEXT)
+    response = builder.build_pattern("show version", CONTEXT)
 
-    assert pattern == r"show\s+version"
+    assert response.content == r"show\s+version"
     assert len(fake.chat.completions.calls) == 1
     call = fake.chat.completions.calls[0]
     assert call["model"] == DEFAULT_MODEL
@@ -62,6 +87,39 @@ def test_build_pattern_calls_client_and_extracts_text(
     # returns an empty `content` (finish_reason "length").
     assert call["extra_body"] == {"thinking": {"type": "disabled"}}
     assert call["max_tokens"] >= 1024
+
+
+def test_response_carries_usage_reason_and_ready(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-key")
+    fake = _FakeOpenAI()
+    monkeypatch.setattr(
+        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
+    )
+
+    response = DeepSeekRegexBuilder().build_pattern("show version", CONTEXT)
+
+    assert response.usage.input_tokens == 33
+    assert response.usage.output_tokens == 9
+    assert response.usage.total_tokens == 42
+    assert response.reason == "stop"
+    assert response.ready is True
+    assert response.raw is not None
+    assert response.duration_ms >= 0
+
+
+def test_truncated_response_is_not_ready(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-key")
+    fake = _FakeOpenAI(finish_reason="length")
+    monkeypatch.setattr(
+        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
+    )
+
+    response = DeepSeekRegexBuilder().build_pattern("show version", CONTEXT)
+
+    assert response.reason == "length"
+    assert response.ready is False
 
 
 def test_client_is_constructed_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -101,3 +159,27 @@ def test_missing_api_key_raises_clear_error(monkeypatch: pytest.MonkeyPatch) -> 
 
     with pytest.raises(RuntimeError, match="DEEPSEEK_API_KEY"):
         builder.build_pattern("show version", CONTEXT)
+
+
+def test_kwargs_override_max_tokens_and_extra_body_and_pass_through_extras(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-key")
+    fake = _FakeOpenAI()
+    monkeypatch.setattr(
+        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
+    )
+
+    builder = DeepSeekRegexBuilder()
+    builder.build_pattern(
+        "show version",
+        CONTEXT,
+        max_tokens=2048,
+        extra_body={"thinking": {"type": "enabled"}},
+        temperature=0.1,
+    )
+
+    call = fake.chat.completions.calls[0]
+    assert call["max_tokens"] == 2048
+    assert call["extra_body"] == {"thinking": {"type": "enabled"}}
+    assert call["temperature"] == 0.1
