@@ -24,6 +24,7 @@ dependencies = [
     "textfsm>=1.1.0",
     "anthropic>=0.40.0",
     "openai>=1.0.0",
+    "textfsm-ai>=0.5.1",
 ]
 
 classifiers = [
