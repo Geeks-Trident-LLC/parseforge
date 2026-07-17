@@ -86,6 +86,10 @@ pythonpath = ["."]
 markers = [
     "integration: marks tests that require real API calls or external services",
 ]
+filterwarnings = [
+    "ignore::DeprecationWarning:google\\.genai\\.",
+    "ignore::DeprecationWarning:cohere\\.",
+]
 
 [tool.coverage.report]
 # Raise as stub modules (sampling/generation/validation/promotion/pipeline)
