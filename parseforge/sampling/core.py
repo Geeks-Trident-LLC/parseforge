@@ -24,8 +24,9 @@ class DeviceConnection:
 class Sampler(Protocol):
     """A backend capable of running a command on a device and returning raw text.
 
-    A Netmiko-backed implementation is the expected default; see the
-    optional ``sampling`` extra in pyproject.toml.
+    See :mod:`parseforge.sampling.backends` for concrete implementations
+    (e.g. Netmiko-backed) — none of them are required just to import this
+    module, since backends carry their own optional dependencies.
     """
 
     def run_command(self, connection: DeviceConnection, command: str) -> str: ...
