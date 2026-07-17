@@ -24,6 +24,7 @@ dependencies = [
     "textfsm>=1.1.0",
     "anthropic>=0.40.0",
     "openai>=1.0.0",
+    "textfsm-ai>=0.5.1",
 ]
 
 classifiers = [
@@ -84,6 +85,10 @@ testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "integration: marks tests that require real API calls or external services",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:google\\.genai\\.",
+    "ignore::DeprecationWarning:cohere\\.",
 ]
 
 [tool.coverage.report]
