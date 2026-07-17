@@ -14,10 +14,18 @@ from pathlib import Path
 
 import pytest
 
-from parseforge.naming import AnthropicRegexBuilder, CliContext
-from parseforge.pipeline import LLMProviderConfig, TrialMetadata, run_command_pipeline
-from parseforge.sampling import DeviceConnection
-from parseforge.sampling.backends import NetmikoSampler
+pytest.importorskip(
+    "netmiko", reason="netmiko is an optional extra (parseforge[sampling])"
+)
+
+from parseforge.naming import AnthropicRegexBuilder, CliContext  # noqa: E402
+from parseforge.pipeline import (  # noqa: E402
+    LLMProviderConfig,
+    TrialMetadata,
+    run_command_pipeline,
+)
+from parseforge.sampling import DeviceConnection  # noqa: E402
+from parseforge.sampling.backends import NetmikoSampler  # noqa: E402
 
 pytestmark = pytest.mark.integration
 
