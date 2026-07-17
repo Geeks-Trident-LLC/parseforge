@@ -17,8 +17,18 @@ pytestmark = pytest.mark.integration
 
 MODEL = "deepseek-v4-flash"
 
-# Real "show clock" output from a Cisco IOS/IOS-XE device.
-SAMPLE = "*17:42:39.125 UTC Fri Jul 17 2026"
+# Real "show clock" output from a Cisco IOS/IOS-XE device, plus a
+# "SAMPLE REFERENCE SOURCE" annotation describing it. Note: textfsm-ai's
+# own prompt has no closing delimiter on its Sample section, so this
+# annotation isn't guaranteed to be excluded from the generated
+# template — see the discussion around this file's history.
+SAMPLE = """
+*17:42:39.125 UTC Fri Jul 17 2026
+
+SAMPLE REFERENCE SOURCE
+=============================
+a real "show clock" output from a Cisco IOS/IOS-XE device
+"""
 
 
 def test_generate_show_clock(deepseek_key: str) -> None:
