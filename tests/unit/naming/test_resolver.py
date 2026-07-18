@@ -5,7 +5,7 @@ import pytest
 
 from parseforge.naming.cache import NameIndex
 from parseforge.naming.llm import CliContext, LLMCLIResponse, TokenUsage
-from parseforge.naming.resolver import cli_name
+from parseforge.naming.resolver import cli_name, resolve_cli_name
 
 CONTEXT = CliContext(
     vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"
@@ -113,3 +113,33 @@ def test_kwargs_pass_through_to_builder(tmp_path: Path) -> None:
     )
 
     assert builder.last_kwargs == {"max_tokens": 2048, "temperature": 0.1}
+
+
+def test_resolve_cli_name_returns_response_on_cache_miss(tmp_path: Path) -> None:
+    index_path = tmp_path / ".cli-name.json"
+    builder = FakeRegexBuilder(r"show\s+version")
+
+    resolution = resolve_cli_name(
+        "show version", CONTEXT, builder=builder, index_path=index_path
+    )
+
+    assert resolution.name == "show-version"
+    assert resolution.response is not None
+    assert resolution.response.content == r"show\s+version"
+    assert resolution.response.usage.total_tokens == 15
+
+
+def test_resolve_cli_name_returns_no_response_on_cache_hit(tmp_path: Path) -> None:
+    index_path = tmp_path / ".cli-name.json"
+    builder = FakeRegexBuilder(r"show\s+version")
+
+    resolve_cli_name("show version", CONTEXT, builder=builder, index_path=index_path)
+    assert builder.calls == 1
+
+    resolution = resolve_cli_name(
+        "show version", CONTEXT, builder=builder, index_path=index_path
+    )
+
+    assert resolution.name == "show-version"
+    assert resolution.response is None
+    assert builder.calls == 1
