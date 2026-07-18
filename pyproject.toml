@@ -84,7 +84,7 @@ addopts = "-ra --cov=parseforge --cov-report=term-missing"
 testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
-    "integration: marks tests that require real API calls or external services",
+    "real: marks tests that require real API calls or external services",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:google\\.genai\\.",

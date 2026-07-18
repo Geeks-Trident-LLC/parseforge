@@ -21,7 +21,7 @@ pytest.importorskip(
 from parseforge.sampling import DeviceConnection, sample  # noqa: E402
 from parseforge.sampling.backends import NetmikoSampler  # noqa: E402
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.real
 
 
 def test_run_command_show_version(cisco_sandbox_connection: DeviceConnection) -> None:
