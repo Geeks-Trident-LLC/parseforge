@@ -9,10 +9,12 @@ from .llm import (
     build_prompt,
 )
 from .providers import AnthropicRegexBuilder, DeepSeekRegexBuilder
-from .resolver import cli_name
+from .resolver import NamingResolution, cli_name, resolve_cli_name
 
 __all__ = [
     "cli_name",
+    "resolve_cli_name",
+    "NamingResolution",
     "CliContext",
     "RegexBuilder",
     "UnimplementedRegexBuilder",

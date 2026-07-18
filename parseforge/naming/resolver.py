@@ -21,26 +21,37 @@ Flow:
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from .assemble import normalize_pattern, pattern_to_cli_name
 from .cache import DEFAULT_INDEX_PATH, NameIndex
-from .llm import CliContext, RegexBuilder, UnimplementedRegexBuilder
+from .llm import CliContext, LLMCLIResponse, RegexBuilder, UnimplementedRegexBuilder
 
 
-def cli_name(
+@dataclass(frozen=True)
+class NamingResolution:
+    """Result of resolving a command to its cli-name, plus the LLM call
+    that produced it — if any. ``response`` is None on a cache hit, since
+    no LLM call happens at all in that case (see resolve_cli_name)."""
+
+    name: str
+    response: LLMCLIResponse | None
+
+
+def resolve_cli_name(
     command: str,
     context: CliContext,
     builder: RegexBuilder = UnimplementedRegexBuilder(),
     index_path: Path = DEFAULT_INDEX_PATH,
     **kwargs: Any,
-) -> str:
+) -> NamingResolution:
     index = NameIndex(index_path)
 
     cached = index.match(command)
     if cached is not None:
-        return cached
+        return NamingResolution(name=cached, response=None)
 
     response = builder.build_pattern(command, context, **kwargs)
     if not response.ready:
@@ -58,4 +69,14 @@ def cli_name(
     name = pattern_to_cli_name(pattern)
     index.add(name, pattern)
     index.save()
-    return name
+    return NamingResolution(name=name, response=response)
+
+
+def cli_name(
+    command: str,
+    context: CliContext,
+    builder: RegexBuilder = UnimplementedRegexBuilder(),
+    index_path: Path = DEFAULT_INDEX_PATH,
+    **kwargs: Any,
+) -> str:
+    return resolve_cli_name(command, context, builder, index_path, **kwargs).name

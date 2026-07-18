@@ -19,6 +19,8 @@ TRIALS = "trials"
 INTEGRATION = "integration"
 AUTHORITATIVE = "authoritative"
 
+DEFAULT_STORE_ROOT = Path.home() / ".parseforge" / "tests"
+
 
 @dataclass(frozen=True)
 class DeviceKey:
