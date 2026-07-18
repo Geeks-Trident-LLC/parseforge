@@ -1,7 +1,15 @@
 """Storage layout — three-tier promotion path resolution (SPEC.md §3).
 
 Shared path prefix under all three tiers:
-    <vendor>/<device-family>/<os>/<version>/<cli-name>/
+    <vendor>/<device-family>/<os>/<cli-name>/
+
+Deliberately no ``<version>`` segment: a cli-name's output structure
+usually doesn't change across minor OS versions, and when it does, that's
+exactly the variance :mod:`parseforge.integration`'s group clustering is
+built to catch — lumping versions together gives more evidence per group
+instead of silently fragmenting it across per-version directories. The
+version a trial was sampled from is recorded in that trial's
+``summary.json`` (``command_info.version``) instead.
 
 Use hyphenated OS family names (``ios-xe``, ``nx-os``) once multiple
 Cisco OS families share the tree, per §3's note.
@@ -24,16 +32,15 @@ DEFAULT_STORE_ROOT = Path.home() / ".parseforge" / "tests"
 
 @dataclass(frozen=True)
 class DeviceKey:
-    """Identifies a template family: vendor/device-family/os/version/cli-name."""
+    """Identifies a template family: vendor/device-family/os/cli-name."""
 
     vendor: str
     family: str
     os: str
-    version: str
     cli_name: str
 
     def relative_path(self) -> Path:
-        return Path(self.vendor, self.family, self.os, self.version, self.cli_name)
+        return Path(self.vendor, self.family, self.os, self.cli_name)
 
 
 def tier_root(store_root: Path, tier: str) -> Path:

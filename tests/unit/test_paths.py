@@ -8,15 +8,12 @@ KEY = paths.DeviceKey(
     vendor="cisco",
     family="catalyst9200",
     os="ios-xe",
-    version="17.9.1",
     cli_name="show-clock",
 )
 
 
 def test_device_key_relative_path() -> None:
-    assert KEY.relative_path() == Path(
-        "cisco", "catalyst9200", "ios-xe", "17.9.1", "show-clock"
-    )
+    assert KEY.relative_path() == Path("cisco", "catalyst9200", "ios-xe", "show-clock")
 
 
 def test_tier_path_resolves_under_store_root(tmp_path: Path) -> None:

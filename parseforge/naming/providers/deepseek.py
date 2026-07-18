@@ -47,6 +47,8 @@ class DeepSeekRegexBuilder:
     so this is resolved explicitly rather than left to the SDK).
     """
 
+    provider = "deepseek"
+
     def __init__(self, model: str = DEFAULT_MODEL, api_key: str | None = None) -> None:
         self.model = model
         self._api_key = api_key

@@ -19,7 +19,6 @@ KEY = paths.DeviceKey(
     vendor="cisco",
     family="catalyst9200",
     os="ios-xe",
-    version="17.9.1",
     cli_name="show-clock",
 )
 

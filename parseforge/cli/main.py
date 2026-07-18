@@ -130,7 +130,7 @@ def name_cmd(
     help="Root directory for trial output. Defaults to ~/.parseforge/tests.",
 )
 @click.option("--project", default=None)
-@click.option("--username-ref", "user_reference", default=None)
+@click.option("--email", default=None)
 @click.option("--description", default=None)
 @click.argument("command", nargs=-1, required=True)
 def run_cmd(
@@ -150,7 +150,7 @@ def run_cmd(
     generation_model: str,
     store_root: str | None,
     project: str | None,
-    user_reference: str | None,
+    email: str | None,
     description: str | None,
     command: tuple[str, ...],
 ) -> None:
@@ -179,7 +179,7 @@ def run_cmd(
     metadata = TrialMetadata(
         project=project,
         username=username,
-        user_reference=user_reference,
+        email=email,
         description=description,
     )
 
