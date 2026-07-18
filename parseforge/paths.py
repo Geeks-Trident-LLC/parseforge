@@ -60,11 +60,20 @@ def trial_run_dir(store_root: Path, key: DeviceKey, run_id: str | None = None) -
     return tier_path(store_root, TRIALS, key) / run_id
 
 
-def integration_result_dir(store_root: Path, key: DeviceKey) -> Path:
-    """The single common-result candidate directory for a cli-name (§3.2)."""
-    return tier_path(store_root, INTEGRATION, key) / "common-result"
+def integration_dir(store_root: Path, key: DeviceKey) -> Path:
+    """Integration tier directory for a cli-name (§3.2) — holds
+    reference.json and the clustered template<I>-group<J>.textfsm files
+    (see :mod:`parseforge.integration`)."""
+    return tier_path(store_root, INTEGRATION, key)
 
 
 def authoritative_dir(store_root: Path, key: DeviceKey) -> Path:
     """The approved, in-production directory for a cli-name (§3.3)."""
     return tier_path(store_root, AUTHORITATIVE, key)
+
+
+def authoritative_group_dir(store_root: Path, key: DeviceKey, group_id: str) -> Path:
+    """Directory for one promoted group variant under a cli-name — multiple
+    groups can coexist per cli-name when output legitimately varies by
+    hardware/firmware (§6)."""
+    return authoritative_dir(store_root, key) / group_id
