@@ -13,7 +13,7 @@ import textfsm
 
 from parseforge.generation import generate
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.real
 
 MODEL = "claude-haiku-4-5-20251001"
 

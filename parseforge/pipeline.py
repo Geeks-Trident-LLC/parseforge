@@ -85,7 +85,7 @@ def _build_sample_for_prompt(
     the unannotated ``sample`` text.
 
     Caveat carried over from where this format was worked out (see
-    tests/integration/generation/): textfsm-ai's own prompt has no
+    tests/real/generation/): textfsm-ai's own prompt has no
     closing delimiter on its Sample section, so this annotation isn't
     guaranteed to be excluded from what the LLM treats as data.
     """
