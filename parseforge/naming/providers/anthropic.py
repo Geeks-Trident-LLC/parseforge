@@ -32,6 +32,8 @@ class AnthropicRegexBuilder:
     ``ANTHROPIC_API_KEY`` environment variable (the SDK's own default).
     """
 
+    provider = "anthropic"
+
     def __init__(self, model: str = DEFAULT_MODEL, api_key: str | None = None) -> None:
         self.model = model
         self._api_key = api_key

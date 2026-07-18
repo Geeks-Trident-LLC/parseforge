@@ -48,16 +48,18 @@ This mirrors the candidate → staging → production pattern used for ML model 
 
 Shared path prefix under all three tiers:
 ```
-<vendor>/<device-family>/<os>/<version>/<cli-name>/
+<vendor>/<device-family>/<os>/<cli-name>/
 ```
-e.g. `cisco/catalyst9200/ios-xe/17.9.1/show-interface-var1-status/`
+e.g. `cisco/catalyst9200/ios-xe/show-interface-var1-status/`
 
 Note: use `ios-xe` / `nx-os` (hyphenated) rather than `xe` / `ios` alone once multiple Cisco OS families share the tree — `xe` alone is ambiguous without the `ios-` prefix once IOS classic, IOS XE, and IOS XR all live under `cisco/`.
+
+Deliberately no `<version>` segment in the path: a cli-name's output structure usually doesn't change across minor OS versions, and when it legitimately does, that's exactly the variance §5 step 8's group clustering is built to catch — lumping versions together under one path gives more evidence per group instead of silently fragmenting it across per-version directories. The OS version a trial was sampled from is recorded per trial instead, in that trial's `summary.json` (`command_info.version`).
 
 ### 3.1 `trials/`
 
 ```
-trials/<vendor>/<family>/<os>/<version>/<cli-name>/
+trials/<vendor>/<family>/<os>/<cli-name>/
   <yyyymmdd-HHMMSS-shortid>/
     input.txt
     raw-llm-response.txt
@@ -90,7 +92,7 @@ Keep the timestamp+shortid directories (not `result1..N`) — chronological orde
 ### 3.2 `integration/` (no human review yet)
 
 ```
-integration/<vendor>/<family>/<os>/<version>/<cli-name>/
+integration/<vendor>/<family>/<os>/<cli-name>/
   common-result/
     template.textfsm       ← the winning candidate, copied from trials/
     selection-report.json  ← which trials were considered, why this one won
@@ -106,7 +108,7 @@ integration/<vendor>/<family>/<os>/<version>/<cli-name>/
 ### 3.3 `authoritative/` (approved via human review, or confidence-gated auto-promotion)
 
 ```
-authoritative/<vendor>/<family>/<os>/<version>/<cli-name>/
+authoritative/<vendor>/<family>/<os>/<cli-name>/
   template.textfsm          ← current approved template
   artifact/                  ← carried over from the winning integration candidate
   history/
@@ -139,7 +141,7 @@ Promotion from `integration/common-result` to `authoritative/` should default to
 
 1. **Input intake** — device OS/version/family, auth, command list, mode selection.
 2. **Name generation** — tokenize each command → canonical `cli-name` per §2.
-3. **Path resolution** — compute `<vendor>/<device-family>/<os>/<version>/<cli-name>/` per §3.
+3. **Path resolution** — compute `<vendor>/<device-family>/<os>/<cli-name>/` per §3.
 4. **Sampling** — connect (Netmiko/similar), run command(s), capture raw output → `trials/.../<run-id>/input.txt`.
 5. **Generation** — send `input.txt` (+ prior context if Mode 1) to LLM → `raw-llm-response.txt`, `usage.txt`.
 6. **Extraction & cleanup** — pull template from response → `raw-template` → cleaned `template.textfsm`.
@@ -167,7 +169,7 @@ Where a fourth tier is tempting but better handled as **metadata instead of a ne
 
 ## 7. Open Questions for Next Iteration
 
-- Do you want a **registry/index file** (e.g. `catalog.json`) at the repo root listing every `<vendor>/<family>/<os>/<version>/<cli-name>` combination that exists, plus its authoritative status, for fast lookup without walking the filesystem?
+- Do you want a **registry/index file** (e.g. `catalog.json`) at the repo root listing every `<vendor>/<family>/<os>/<cli-name>` combination that exists, plus its authoritative status, for fast lookup without walking the filesystem?
 - What **confidence threshold** (match-rate %, sample count minimum) should gate auto-promotion vs. human review in step 9 — worth making this configurable per-project rather than hardcoded?
 - Should `recognizers.txt` support **one-of-many matching** from day one (per the multi-variant note in §6), or is that a v2 concern?
 - What's the **LLM provider/model** for generation — worth pinning per-project so `usage.txt` costs are comparable across runs?

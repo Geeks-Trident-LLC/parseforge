@@ -99,15 +99,10 @@ def test_run_command_pipeline_writes_expected_files(
     assert result.cli_name == "show-clock"
     assert result.passed is True
     assert result.duration_ms > 0
+    assert isinstance(result.duration_ms, int)
 
     expected_run_dir = (
-        tmp_path
-        / "trials"
-        / "cisco"
-        / "catalyst9200"
-        / "ios-xe"
-        / "17.9.1"
-        / "show-clock"
+        tmp_path / "trials" / "cisco" / "catalyst9200" / "ios-xe" / "show-clock"
     )
     assert result.run_dir.parent == expected_run_dir
 
@@ -245,7 +240,10 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         store_root=tmp_path,
         naming_index_path=tmp_path / ".cli-name.json",
         metadata=TrialMetadata(
-            project="acme", username="tuyen", user_reference="ref-1", description="desc"
+            project="acme",
+            username="tuyen",
+            email="tuyen@example.com",
+            description="desc",
         ),
     )
 
@@ -256,8 +254,16 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
     assert summary["metadata"] == {
         "project": "acme",
         "username": "tuyen",
-        "user_reference": "ref-1",
+        "email": "tuyen@example.com",
         "description": "desc",
+    }
+    assert summary["command_info"] == {
+        "vendor": "cisco",
+        "family": "catalyst9200",
+        "os": "ios-xe",
+        "version": "17.9.1",
+        "device_type": "cisco_ios",
+        "command": "show clock",
     }
     assert summary["usage"]["naming_usage"] == {
         "input_tokens": 10,
@@ -270,7 +276,7 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         "total_tokens": 28,
         "estimated_cost": 0.001,
     }
-    assert summary["provider_info"]["naming"]["backend"] == "FakeRegexBuilder"
+    assert summary["provider_info"]["naming"]["provider"] == "FakeRegexBuilder"
     assert summary["provider_info"]["generation"] == {
         "provider": "anthropic",
         "model": "claude-haiku-4-5-20251001",
@@ -278,6 +284,7 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
     assert "created_at" in summary
     assert "ended_at" in summary
     assert summary["duration_ms"] > 0
+    assert isinstance(summary["duration_ms"], int)
 
 
 def test_passed_is_false_when_generation_not_ready(

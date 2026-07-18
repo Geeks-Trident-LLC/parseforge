@@ -11,7 +11,8 @@ Steps 1-7 of SPEC.md §5, wired to what each already does:
 2. Name resolution — :func:`parseforge.naming.resolve_cli_name`
    (LLM-backed, cached; only costs tokens on a cache miss).
 3. Path resolution — :mod:`parseforge.paths` (trials/<vendor>/<family>/
-   <os>/<version>/<cli-name>/<run-id>/).
+   <os>/<cli-name>/<run-id>/). The OS version isn't part of the path (see
+   paths.py) — it's recorded per trial in summary.json's ``command_info``.
 4. Sampling — :mod:`parseforge.sampling`, written to samples/sample.txt
    and samples/sample-for-prompt.txt (the latter with a
    "SAMPLE REFERENCE SOURCE" annotation — see _build_sample_for_prompt).
@@ -65,7 +66,7 @@ class TrialMetadata:
 
     project: str | None = None
     username: str | None = None
-    user_reference: str | None = None
+    email: str | None = None
     description: str | None = None
 
 
@@ -74,7 +75,7 @@ class TrialResult:
     run_dir: Path
     cli_name: str
     passed: bool
-    duration_ms: float
+    duration_ms: int
 
 
 def _build_sample_for_prompt(
@@ -142,7 +143,6 @@ def run_command_pipeline(
         vendor=context.vendor,
         family=context.family,
         os=context.os,
-        version=context.version,
         cli_name=naming_resolution.name,
     )
     run_dir = paths.trial_run_dir(store_root, key)
@@ -182,7 +182,7 @@ def run_command_pipeline(
     passed = gen_result.ready and _self_validate(gen_result.template, sample_text)
 
     ended_at = datetime.now(timezone.utc)
-    duration_ms = (time.monotonic() - start) * 1000
+    duration_ms = round((time.monotonic() - start) * 1000)
 
     summary = {
         "created_at": started_at.isoformat(),
@@ -191,6 +191,14 @@ def run_command_pipeline(
         "passed": passed,
         "mode": mode.value,
         "metadata": asdict(metadata),
+        "command_info": {
+            "vendor": context.vendor,
+            "family": context.family,
+            "os": context.os,
+            "version": context.version,
+            "device_type": connection.device_type,
+            "command": command,
+        },
         "usage": {
             "naming_usage": _usage_dict(
                 naming_resolution.response.usage if naming_resolution.response else None
@@ -199,7 +207,9 @@ def run_command_pipeline(
         },
         "provider_info": {
             "naming": {
-                "backend": type(naming_builder).__name__,
+                "provider": getattr(
+                    naming_builder, "provider", type(naming_builder).__name__
+                ),
                 "model": getattr(naming_builder, "model", None),
             },
             "generation": {
