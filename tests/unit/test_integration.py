@@ -3,14 +3,27 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from parseforge import paths
-from parseforge.integration import _load_reference, build_integration
+from parseforge.integration import (
+    _load_reference,
+    build_integration,
+    build_reference_summary,
+    write_reference_summary,
+)
 
 KEY = paths.DeviceKey(
     vendor="cisco",
     family="catalyst9200",
     os="ios-xe",
     cli_name="show-clock",
+)
+OTHER_KEY = paths.DeviceKey(
+    vendor="cisco",
+    family="catalyst9200",
+    os="ios-xe",
+    cli_name="show-version",
 )
 
 _TEMPLATE_A = "Value LINE (.+)\n\nStart\n  ^${LINE} -> Record\n"
@@ -21,8 +34,14 @@ _TEMPLATE_B = (
 _TEMPLATE_BROKEN = "this is not a valid textfsm template !!!"
 
 
-def _write_trial(store_root: Path, run_id: str, template: str, sample: str) -> Path:
-    run_dir = paths.trial_run_dir(store_root, KEY, run_id=run_id)
+def _write_trial(
+    store_root: Path,
+    run_id: str,
+    template: str,
+    sample: str,
+    key: paths.DeviceKey = KEY,
+) -> Path:
+    run_dir = paths.trial_run_dir(store_root, key, run_id=run_id)
     (run_dir / "derive").mkdir(parents=True, exist_ok=True)
     (run_dir / "samples").mkdir(parents=True, exist_ok=True)
     (run_dir / "derive" / "template.textfsm").write_text(template, encoding="utf-8")
@@ -72,8 +91,12 @@ def test_build_integration_clusters_by_schema_and_variant(tmp_path: Path) -> Non
     reference_json = integration_dir / "reference.json"
     assert reference_json.exists()
     on_disk = json.loads(reference_json.read_text(encoding="utf-8"))
-    assert set(on_disk) == {"group1", "group2"}
-
+    # 5 trial dirs total (including the one whose broken template never
+    # clustered into any group) -- total_case_count counts all of them.
+    assert on_disk["total_case_count"] == 5
+    assert set(on_disk["groups"]) == {"group1", "group2"}
+    assert on_disk["groups"]["group1"]["group_case_count"] == 3
+    assert on_disk["groups"]["group2"]["group_case_count"] == 1
     reloaded = _load_reference(reference_json)
     assert reloaded == reference
 
@@ -85,10 +108,10 @@ def test_build_integration_with_no_trials_writes_empty_reference(
 
     assert reference == {}
     integration_dir = paths.integration_dir(tmp_path, KEY)
-    assert (
-        json.loads((integration_dir / "reference.json").read_text(encoding="utf-8"))
-        == {}
+    on_disk = json.loads(
+        (integration_dir / "reference.json").read_text(encoding="utf-8")
     )
+    assert on_disk == {"total_case_count": 0, "groups": {}}
 
 
 def test_build_integration_is_idempotent_full_rebuild(tmp_path: Path) -> None:
@@ -99,3 +122,68 @@ def test_build_integration_is_idempotent_full_rebuild(tmp_path: Path) -> None:
 
     assert first == second
     assert first["group1"].variants["1"].exact_template_count == 1
+
+
+def test_build_reference_summary_computes_ratios(tmp_path: Path) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE_A, "hello world\n")
+    _write_trial(tmp_path, "20260101-000002-aaa002", _TEMPLATE_A, "goodbye world\n")
+    _write_trial(tmp_path, "20260101-000003-aaa003", _TEMPLATE_A2, "third line\n")
+    build_integration(tmp_path, KEY)
+
+    summary = build_reference_summary(tmp_path)
+
+    assert summary["trial_project"] == str(paths.tier_root(tmp_path, paths.TRIALS))
+    case = summary["cases"]["cisco/catalyst9200/ios-xe/show-clock"]
+    assert case["total_case_count"] == 3
+
+    group1 = case["groups"]["group1"]
+    assert group1["keys"] == ["LINE"]
+    assert group1["case_count"] == 3
+    assert group1["ratio"] == pytest.approx(1.0)
+    assert group1["variants"]["1"]["ratio_of_group"] == pytest.approx(2 / 3)
+    assert group1["variants"]["1"]["ratio_of_total"] == pytest.approx(2 / 3)
+    assert group1["variants"]["2"]["ratio_of_group"] == pytest.approx(1 / 3)
+    assert group1["variants"]["2"]["ratio_of_total"] == pytest.approx(1 / 3)
+
+
+def test_build_reference_summary_covers_multiple_cases(tmp_path: Path) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE_A, "hello world\n")
+    build_integration(tmp_path, KEY)
+
+    _write_trial(
+        tmp_path,
+        "20260101-000001-bbb001",
+        _TEMPLATE_B,
+        "2024-01-01 10:00:00\n",
+        key=OTHER_KEY,
+    )
+    build_integration(tmp_path, OTHER_KEY)
+
+    summary = build_reference_summary(tmp_path)
+
+    assert set(summary["cases"]) == {
+        "cisco/catalyst9200/ios-xe/show-clock",
+        "cisco/catalyst9200/ios-xe/show-version",
+    }
+
+
+def test_build_reference_summary_with_no_integration_dir_is_empty(
+    tmp_path: Path,
+) -> None:
+    summary = build_reference_summary(tmp_path)
+
+    assert summary == {
+        "trial_project": str(paths.tier_root(tmp_path, paths.TRIALS)),
+        "cases": {},
+    }
+
+
+def test_write_reference_summary_writes_file(tmp_path: Path) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE_A, "hello world\n")
+    build_integration(tmp_path, KEY)
+
+    path = write_reference_summary(tmp_path)
+
+    assert path == paths.reference_summary_path(tmp_path)
+    on_disk = json.loads(path.read_text(encoding="utf-8"))
+    assert "cisco/catalyst9200/ios-xe/show-clock" in on_disk["cases"]

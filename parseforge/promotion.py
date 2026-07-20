@@ -73,7 +73,7 @@ def decide_group_promotions(
     """Pure decision pass: one :func:`decide_promotion` call per group."""
     results = []
     for group_id, group in reference.items():
-        sample_count = sum(v.exact_template_count for v in group.variants.values())
+        sample_count = group.group_case_count
         match_rate = sample_count / total_cases if total_cases else 0.0
         decision = decide_promotion(match_rate, sample_count, gate)
         results.append(
