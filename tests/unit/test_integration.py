@@ -40,12 +40,16 @@ def _write_trial(
     template: str,
     sample: str,
     key: paths.DeviceKey = KEY,
+    passed: bool = True,
 ) -> Path:
     run_dir = paths.trial_run_dir(store_root, key, run_id=run_id)
     (run_dir / "derive").mkdir(parents=True, exist_ok=True)
     (run_dir / "samples").mkdir(parents=True, exist_ok=True)
     (run_dir / "derive" / "template.textfsm").write_text(template, encoding="utf-8")
     (run_dir / "samples" / "sample.txt").write_text(sample, encoding="utf-8")
+    (run_dir / "summary.json").write_text(
+        json.dumps({"passed": passed}), encoding="utf-8"
+    )
     return run_dir
 
 
@@ -56,7 +60,11 @@ def test_build_integration_clusters_by_schema_and_variant(tmp_path: Path) -> Non
     _write_trial(
         tmp_path, "20260101-000004-aaa004", _TEMPLATE_B, "2024-01-01 10:00:00\n"
     )
-    _write_trial(tmp_path, "20260101-000005-aaa005", _TEMPLATE_BROKEN, "anything\n")
+    # A broken template genuinely wouldn't self-validate in the real
+    # pipeline, so its own trial would be recorded as failed.
+    _write_trial(
+        tmp_path, "20260101-000005-aaa005", _TEMPLATE_BROKEN, "anything\n", passed=False
+    )
 
     reference = build_integration(tmp_path, KEY)
 
@@ -99,6 +107,55 @@ def test_build_integration_clusters_by_schema_and_variant(tmp_path: Path) -> Non
     assert on_disk["groups"]["group2"]["group_case_count"] == 1
     reloaded = _load_reference(reference_json)
     assert reloaded == reference
+
+
+def test_build_integration_excludes_failed_trial_even_if_template_self_parses(
+    tmp_path: Path,
+) -> None:
+    """A trial whose own summary.json says passed: false must never be
+    clustered, even when its template happens to parse its own sample --
+    e.g. a truncated (not-ready) generation whose partial output still
+    self-validates. This can't be caught by re-parsing template.textfsm
+    against sample.txt alone, only by trusting the trial's own verdict."""
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE_A, "hello world\n")
+    _write_trial(
+        tmp_path,
+        "20260101-000002-aaa002",
+        _TEMPLATE_A,
+        "goodbye world\n",
+        passed=False,
+    )
+
+    reference = build_integration(tmp_path, KEY)
+
+    assert set(reference) == {"group1"}
+    assert reference["group1"].variants["1"].exact_template_count == 1
+
+    integration_dir = paths.integration_dir(tmp_path, KEY)
+    on_disk = json.loads(
+        (integration_dir / "reference.json").read_text(encoding="utf-8")
+    )
+    # Both trials count toward total_case_count (the failed one lowers the
+    # achievable match rate); only the passed one clusters into a group.
+    assert on_disk["total_case_count"] == 2
+    assert on_disk["groups"]["group1"]["group_case_count"] == 1
+
+
+def test_build_integration_excludes_trial_with_no_summary_json(
+    tmp_path: Path,
+) -> None:
+    """A trial dir missing summary.json entirely (e.g. the pipeline never
+    got far enough to write it) is treated the same as a failed trial --
+    not eligible for clustering."""
+    run_dir = paths.trial_run_dir(tmp_path, KEY, run_id="20260101-000001-aaa001")
+    (run_dir / "derive").mkdir(parents=True)
+    (run_dir / "samples").mkdir(parents=True)
+    (run_dir / "derive" / "template.textfsm").write_text(_TEMPLATE_A, encoding="utf-8")
+    (run_dir / "samples" / "sample.txt").write_text("hello world\n", encoding="utf-8")
+
+    reference = build_integration(tmp_path, KEY)
+
+    assert reference == {}
 
 
 def test_build_integration_with_no_trials_writes_empty_reference(
