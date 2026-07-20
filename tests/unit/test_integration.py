@@ -97,7 +97,6 @@ def test_build_integration_clusters_by_schema_and_variant(tmp_path: Path) -> Non
     assert set(on_disk["groups"]) == {"group1", "group2"}
     assert on_disk["groups"]["group1"]["group_case_count"] == 3
     assert on_disk["groups"]["group2"]["group_case_count"] == 1
-    breakpoint()
     reloaded = _load_reference(reference_json)
     assert reloaded == reference
 
