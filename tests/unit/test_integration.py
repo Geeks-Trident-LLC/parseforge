@@ -187,3 +187,21 @@ def test_write_reference_summary_writes_file(tmp_path: Path) -> None:
     assert path == paths.reference_summary_path(tmp_path)
     on_disk = json.loads(path.read_text(encoding="utf-8"))
     assert "cisco/catalyst9200/ios-xe/show-clock" in on_disk["cases"]
+
+
+def test_write_reference_summary_lands_at_integration_project_root(
+    tmp_path: Path,
+) -> None:
+    """reference-summary.json sits directly under integration/ (the
+    "integration-project" root) -- a sibling of every cli-name's own
+    integration directory, not nested inside one of them."""
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE_A, "hello world\n")
+    build_integration(tmp_path, KEY)
+
+    path = write_reference_summary(tmp_path)
+
+    # Hardcoded, independent of paths.reference_summary_path() itself,
+    # so this fails if that helper's own path resolution ever regresses.
+    assert path == tmp_path / "integration" / "reference-summary.json"
+    assert paths.integration_dir(tmp_path, KEY).is_relative_to(path.parent)
+    assert path.exists()
