@@ -68,7 +68,8 @@ def test_full_trial_pipeline_show_clock(
 
     sample = (samples_dir / "sample.txt").read_text(encoding="utf-8")
     assert sample.strip()
-    assert (samples_dir / "sample-for-prompt.txt").exists()
+    # sample-for-prompt.txt isn't written to disk — nothing reads it back.
+    assert not (samples_dir / "sample-for-prompt.txt").exists()
 
     template = (derive_dir / "template.textfsm").read_text(encoding="utf-8")
     assert template.strip()
@@ -79,12 +80,13 @@ def test_full_trial_pipeline_show_clock(
     summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
     assert summary["passed"] is True
     assert summary["metadata"]["project"] == "parseforge-integration-test"
-    assert summary["usage"]["generation_usage"]["total_tokens"] > 0
-    assert summary["provider_info"]["generation"] == {
+    assert summary["usage"]["generation"]["total_tokens"] > 0
+    assert summary["provider_info"] == {
         "provider": "anthropic",
         "model": MODEL,
     }
-    # naming_usage is None on a cache hit; this is a fresh tmp_path index,
+    # naming is None on a cache hit; this is a fresh tmp_path index,
     # so this run must be a genuine cache miss (real LLM call happened).
-    assert summary["usage"]["naming_usage"] is not None
-    assert summary["usage"]["naming_usage"]["total_tokens"] > 0
+    assert summary["usage"]["naming"] is not None
+    assert summary["usage"]["naming"]["total_tokens"] > 0
+    assert summary["usage"]["naming"]["estimated_cost"] > 0

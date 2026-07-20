@@ -13,9 +13,10 @@ Steps 1-7 of SPEC.md §5, wired to what each already does:
 3. Path resolution — :mod:`parseforge.paths` (trials/<vendor>/<family>/
    <os>/<cli-name>/<run-id>/). The OS version isn't part of the path (see
    paths.py) — it's recorded per trial in summary.json's ``command_info``.
-4. Sampling — :mod:`parseforge.sampling`, written to samples/sample.txt
-   and samples/sample-for-prompt.txt (the latter with a
-   "SAMPLE REFERENCE SOURCE" annotation — see _build_sample_for_prompt).
+4. Sampling — :mod:`parseforge.sampling`, written to samples/sample.txt.
+   The annotated version sent to generation (see _build_sample_for_prompt)
+   is built in memory only — not written to disk, since nothing reads it
+   back.
 5-6. Generation — :mod:`parseforge.generation`, written to derive/.
 7. Self-validation — :func:`parseforge.validation.parse` runs the
    generated template against the *raw* sample (not the annotated
@@ -144,9 +145,6 @@ def run_command_pipeline(
     (samples_dir / "sample.txt").write_text(sample_text, encoding="utf-8")
 
     sample_for_prompt = _build_sample_for_prompt(sample_text, command, context)
-    (samples_dir / "sample-for-prompt.txt").write_text(
-        sample_for_prompt, encoding="utf-8"
-    )
 
     # 5-6. Generation
     gen_result = generation.generate(

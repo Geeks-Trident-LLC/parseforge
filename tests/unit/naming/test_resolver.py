@@ -16,7 +16,9 @@ def _response(content: str, ready: bool = True, reason: str = "stop") -> LLMCLIR
     return LLMCLIResponse(
         content=content,
         raw=None,
-        usage=TokenUsage(input_tokens=10, output_tokens=5, total_tokens=15),
+        usage=TokenUsage(
+            input_tokens=10, output_tokens=5, total_tokens=15, estimated_cost=0.001
+        ),
         duration_ms=1.0,
         reason=reason,
         ready=ready,
