@@ -40,7 +40,9 @@ class FakeRegexBuilder:
         return LLMCLIResponse(
             content=self.pattern,
             raw=None,
-            usage=NamingTokenUsage(input_tokens=10, output_tokens=5, total_tokens=15),
+            usage=NamingTokenUsage(
+                input_tokens=10, output_tokens=5, total_tokens=15, estimated_cost=0.002
+            ),
             duration_ms=1.0,
             reason="stop",
             ready=True,
@@ -126,9 +128,16 @@ def test_run_command_pipeline_writes_expected_files(
 def test_sample_for_prompt_includes_reference_annotation(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setattr(
-        "parseforge.generation.generate", lambda *a, **k: _fake_generation_result()
-    )
+    """sample-for-prompt.txt isn't written to disk (nothing reads it back) —
+    the annotated text only ever exists in memory, passed straight to
+    generation.generate(). Verify its content via that call instead."""
+    captured = {}
+
+    def _fake_generate(sample, *a, **k):
+        captured["sample"] = sample
+        return _fake_generation_result()
+
+    monkeypatch.setattr("parseforge.generation.generate", _fake_generate)
     naming_builder = FakeRegexBuilder(r"show\s+clock")
     sampler = FakeSampler("hello world")
 
@@ -143,14 +152,13 @@ def test_sample_for_prompt_includes_reference_annotation(
         naming_index_path=tmp_path / ".cli-name.json",
     )
 
-    sample_for_prompt = (
-        result.run_dir / "samples" / "sample-for-prompt.txt"
-    ).read_text(encoding="utf-8")
+    sample_for_prompt = captured["sample"]
     assert sample_for_prompt.startswith("hello world")
     assert "SAMPLE REFERENCE SOURCE" in sample_for_prompt
     assert 'a real "show clock" output from a cisco catalyst9200 ios-xe device' in (
         sample_for_prompt
     )
+    assert not (result.run_dir / "samples" / "sample-for-prompt.txt").exists()
 
 
 def test_generation_receives_sample_for_prompt_not_raw_sample(
@@ -270,6 +278,7 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         "input_tokens": 10,
         "output_tokens": 5,
         "total_tokens": 15,
+        "estimated_cost": 0.002,
     }
     assert summary["usage"]["generation"] == {
         "input_tokens": 20,
