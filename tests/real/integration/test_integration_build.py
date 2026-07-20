@@ -12,6 +12,7 @@ clustering needs real (non-fixture) variance to exercise.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -21,7 +22,10 @@ pytest.importorskip(
 )
 
 from parseforge import paths  # noqa: E402
-from parseforge.integration import build_integration  # noqa: E402
+from parseforge.integration import (  # noqa: E402
+    build_integration,
+    write_reference_summary,
+)
 from parseforge.naming import CliContext, DeepSeekRegexBuilder  # noqa: E402
 from parseforge.pipeline import (  # noqa: E402
     LLMProviderConfig,
@@ -79,14 +83,17 @@ def test_build_integration_clusters_real_trials(
     # group (real generations sharing an output schema get grouped
     # together), and can never split into more groups than trials.
     assert 1 <= len(reference) <= 2
-
-    total_hits = sum(
-        variant.exact_template_count
-        for group in reference.values()
-        for variant in group.variants.values()
-    )
-    assert total_hits == 2
+    assert sum(group.group_case_count for group in reference.values()) == 2
 
     integration_dir = paths.integration_dir(tmp_path, key)
-    assert (integration_dir / "reference.json").exists()
+    reference_json = json.loads(
+        (integration_dir / "reference.json").read_text(encoding="utf-8")
+    )
+    assert reference_json["total_case_count"] == 2
     assert list(integration_dir.glob("group*-template*.textfsm"))
+
+    summary_path = write_reference_summary(tmp_path)
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    case_key = key.relative_path().as_posix()
+    assert case_key in summary["cases"]
+    assert summary["cases"][case_key]["total_case_count"] == 2

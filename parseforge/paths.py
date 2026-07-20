@@ -84,3 +84,10 @@ def authoritative_group_dir(store_root: Path, key: DeviceKey, group_id: str) -> 
     groups can coexist per cli-name when output legitimately varies by
     hardware/firmware (§6)."""
     return authoritative_dir(store_root, key) / group_id
+
+
+def reference_summary_path(store_root: Path) -> Path:
+    """Cross-cli-name ratio report aggregating every reference.json under
+    the integration tier (see
+    :func:`parseforge.integration.write_reference_summary`)."""
+    return tier_root(store_root, INTEGRATION) / "reference-summary.json"

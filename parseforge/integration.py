@@ -16,6 +16,15 @@ trial is only ever compared against the (small) set of distinct groups
 already found, not every past trial, so this costs the same either way and
 avoids partial-state bugs. Group/variant numbering stays deterministic
 because trial run-dirs are iterated in chronological run-id order.
+
+``reference.json`` is ``{total_case_count, groups: {group_id: {keys,
+sample_path, group_case_count, variants}}}`` — ``total_case_count`` and
+each group's ``group_case_count`` are snapshots from that same rebuild
+(as fresh as everything else in the file), included so match rate is
+readable without re-globbing trials/. :func:`build_reference_summary`
+turns those counts into ratios across every cli-name in one report;
+:mod:`parseforge.promotion` still recomputes its own count independently
+at decision time rather than trusting either snapshot.
 """
 
 from __future__ import annotations
@@ -23,6 +32,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Any
 
 from parseforge import paths, validation
 
@@ -40,6 +50,13 @@ class ReferenceGroup:
     sample_path: str
     variants: dict[str, ReferenceVariant] = field(default_factory=dict)
 
+    @property
+    def group_case_count(self) -> int:
+        """Total trials belonging to this group — the sum of every
+        variant's exact_template_count. A property (not a stored field) so
+        it can never drift out of sync with ``variants``."""
+        return sum(v.exact_template_count for v in self.variants.values())
+
 
 Reference = dict[str, ReferenceGroup]
 
@@ -49,7 +66,7 @@ def _load_reference(path: Path) -> Reference:
         return {}
     raw = json.loads(path.read_text(encoding="utf-8"))
     reference: Reference = {}
-    for group_id, group_raw in raw.items():
+    for group_id, group_raw in raw.get("groups", {}).items():
         variants = {
             variant_id: ReferenceVariant(**variant_raw)
             for variant_id, variant_raw in group_raw["variants"].items()
@@ -62,9 +79,32 @@ def _load_reference(path: Path) -> Reference:
     return reference
 
 
-def _save_reference(path: Path, reference: Reference) -> None:
+def _save_reference(path: Path, reference: Reference, total_case_count: int) -> None:
+    """Write reference.json as ``{total_case_count, groups}``.
+
+    ``total_case_count`` is a snapshot from the same trial scan that
+    produced ``groups`` below it — as fresh as the rest of this file, and
+    included purely so a reader (or :func:`build_reference_summary`) can
+    compute match rate without re-globbing trials/. Promotion decisions
+    still recompute their own count independently at decision time (see
+    :mod:`parseforge.promotion`) rather than trusting this snapshot.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    serializable = {group_id: asdict(group) for group_id, group in reference.items()}
+    serializable = {
+        "total_case_count": total_case_count,
+        "groups": {
+            group_id: {
+                "keys": group.keys,
+                "sample_path": group.sample_path,
+                "group_case_count": group.group_case_count,
+                "variants": {
+                    variant_id: asdict(variant)
+                    for variant_id, variant in group.variants.items()
+                },
+            }
+            for group_id, group in reference.items()
+        },
+    }
     path.write_text(
         json.dumps(serializable, indent=2, sort_keys=True), encoding="utf-8"
     )
@@ -81,7 +121,9 @@ def build_integration(store_root: Path, key: paths.DeviceKey) -> Reference:
 
     reference: Reference = {}
     if not trials_dir.exists():
-        _save_reference(integration_dir / "reference.json", reference)
+        _save_reference(
+            integration_dir / "reference.json", reference, total_case_count=0
+        )
         return reference
 
     run_dirs = sorted(d for d in trials_dir.iterdir() if d.is_dir())
@@ -126,7 +168,9 @@ def build_integration(store_root: Path, key: paths.DeviceKey) -> Reference:
             dest_name = f"{group_id}-template{variant_id}.textfsm"
             (integration_dir / dest_name).write_text(template_text, encoding="utf-8")
 
-    _save_reference(integration_dir / "reference.json", reference)
+    _save_reference(
+        integration_dir / "reference.json", reference, total_case_count=len(run_dirs)
+    )
     return reference
 
 
@@ -143,3 +187,63 @@ def _find_matching_variant(group: ReferenceGroup, template_text: str) -> str | N
         if existing_text == template_text:
             return variant_id
     return None
+
+
+def build_reference_summary(store_root: Path) -> dict[str, Any]:
+    """Aggregate every reference.json under the integration tier into one
+    cross-cli-name match-rate report — a read-only transform of whatever
+    build_integration() has already written, no filesystem rescan of
+    trials/. Ratios are 0.0 for any cli-name with total_case_count == 0
+    (nothing has been integrated for it yet), rather than dividing by zero.
+    """
+    integration_root = paths.tier_root(store_root, paths.INTEGRATION)
+    cases: dict[str, Any] = {}
+
+    if integration_root.exists():
+        for reference_path in sorted(integration_root.rglob("reference.json")):
+            case_key = reference_path.parent.relative_to(integration_root).as_posix()
+            raw = json.loads(reference_path.read_text(encoding="utf-8"))
+            total_case_count = raw.get("total_case_count", 0)
+
+            groups_summary = {}
+            for group_id, group_raw in raw.get("groups", {}).items():
+                group_case_count = group_raw.get("group_case_count", 0)
+                variants_summary = {}
+                for variant_id, variant_raw in group_raw.get("variants", {}).items():
+                    exact = variant_raw.get("exact_template_count", 0)
+                    variants_summary[variant_id] = {
+                        "ratio_of_group": (
+                            exact / group_case_count if group_case_count else 0.0
+                        ),
+                        "ratio_of_total": (
+                            exact / total_case_count if total_case_count else 0.0
+                        ),
+                    }
+                groups_summary[group_id] = {
+                    "keys": group_raw.get("keys", []),
+                    "case_count": group_case_count,
+                    "ratio": (
+                        group_case_count / total_case_count if total_case_count else 0.0
+                    ),
+                    "variants": variants_summary,
+                }
+
+            cases[case_key] = {
+                "total_case_count": total_case_count,
+                "groups": groups_summary,
+            }
+
+    return {
+        "trial_project": str(paths.tier_root(store_root, paths.TRIALS)),
+        "cases": cases,
+    }
+
+
+def write_reference_summary(store_root: Path) -> Path:
+    """Write build_reference_summary()'s report to
+    integration/reference-summary.json and return its path."""
+    summary = build_reference_summary(store_root)
+    path = paths.reference_summary_path(store_root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(summary, indent=2, sort_keys=True), encoding="utf-8")
+    return path
