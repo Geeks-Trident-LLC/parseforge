@@ -9,6 +9,12 @@ variants from divergent ones. This is pure evidence gathering — no
 promotion decision is made or stored here (see :mod:`parseforge.promotion`
 for that, which reads ``reference.json`` back out).
 
+Only trials whose own summary.json says ``passed: true`` are eligible —
+see :func:`_trial_passed`. A trial can fail for reasons a template/sample
+re-parse alone wouldn't catch (e.g. a truncated, not-ready generation
+whose partial output still happens to self-parse), so that stored verdict
+is trusted rather than re-derived.
+
 ``build_integration`` is a full rebuild each call: every trial run-dir for
 the cli-name is rescanned and ``reference.json`` is regenerated from
 scratch, rather than incrementally diffed against its prior contents. A new
@@ -129,6 +135,9 @@ def build_integration(store_root: Path, key: paths.DeviceKey) -> Reference:
     run_dirs = sorted(d for d in trials_dir.iterdir() if d.is_dir())
 
     for run_dir in run_dirs:
+        if not _trial_passed(run_dir):
+            continue
+
         template_path = run_dir / "derive" / "template.textfsm"
         sample_path = run_dir / "samples" / "sample.txt"
         if not template_path.exists() or not sample_path.exists():
@@ -172,6 +181,21 @@ def build_integration(store_root: Path, key: paths.DeviceKey) -> Reference:
         integration_dir / "reference.json", reference, total_case_count=len(run_dirs)
     )
     return reference
+
+
+def _trial_passed(run_dir: Path) -> bool:
+    """A trial is only clustering material if its own summary.json says it
+    passed. This isn't re-derivable from template.textfsm + sample.txt
+    alone: a template can be truncated (generation not ready) yet still
+    happen to parse its own sample, which the record-schema re-parse below
+    wouldn't catch on its own — unlike total_case_count, "did this specific
+    past trial succeed" isn't something that goes stale, so trusting the
+    stored verdict here is correct, not a shortcut."""
+    summary_path = run_dir / "summary.json"
+    if not summary_path.exists():
+        return False
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    return bool(summary.get("passed"))
 
 
 def _find_matching_group(reference: Reference, keys: list[str]) -> str | None:
