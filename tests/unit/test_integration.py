@@ -100,8 +100,10 @@ def test_build_integration_clusters_by_schema_and_variant(tmp_path: Path) -> Non
     assert reference_json.exists()
     on_disk = json.loads(reference_json.read_text(encoding="utf-8"))
     # 5 trial dirs total (including the one whose broken template never
-    # clustered into any group) -- total_case_count counts all of them.
+    # clustered into any group) -- total_case_count counts all of them,
+    # total_passed_case_count only the 4 that actually passed.
     assert on_disk["total_case_count"] == 5
+    assert on_disk["total_passed_case_count"] == 4
     assert set(on_disk["groups"]) == {"group1", "group2"}
     assert on_disk["groups"]["group1"]["group_case_count"] == 3
     assert on_disk["groups"]["group2"]["group_case_count"] == 1
@@ -138,6 +140,7 @@ def test_build_integration_excludes_failed_trial_even_if_template_self_parses(
     # Both trials count toward total_case_count (the failed one lowers the
     # achievable match rate); only the passed one clusters into a group.
     assert on_disk["total_case_count"] == 2
+    assert on_disk["total_passed_case_count"] == 1
     assert on_disk["groups"]["group1"]["group_case_count"] == 1
 
 
@@ -168,7 +171,11 @@ def test_build_integration_with_no_trials_writes_empty_reference(
     on_disk = json.loads(
         (integration_dir / "reference.json").read_text(encoding="utf-8")
     )
-    assert on_disk == {"total_case_count": 0, "groups": {}}
+    assert on_disk == {
+        "total_case_count": 0,
+        "total_passed_case_count": 0,
+        "groups": {},
+    }
 
 
 def test_build_integration_is_idempotent_full_rebuild(tmp_path: Path) -> None:
@@ -192,15 +199,45 @@ def test_build_reference_summary_computes_ratios(tmp_path: Path) -> None:
     assert summary["trial_project"] == str(paths.tier_root(tmp_path, paths.TRIALS))
     case = summary["cases"]["cisco/catalyst9200/ios-xe/show-clock"]
     assert case["total_case_count"] == 3
+    assert case["total_passed_case_count"] == 3
 
     group1 = case["groups"]["group1"]
     assert group1["keys"] == ["LINE"]
     assert group1["case_count"] == 3
-    assert group1["ratio"] == pytest.approx(1.0)
+    assert group1["ratio_of_total"] == pytest.approx(1.0)
+    assert group1["ratio_of_passed"] == pytest.approx(1.0)
     assert group1["variants"]["1"]["ratio_of_group"] == pytest.approx(2 / 3)
     assert group1["variants"]["1"]["ratio_of_total"] == pytest.approx(2 / 3)
+    assert group1["variants"]["1"]["ratio_of_passed"] == pytest.approx(2 / 3)
     assert group1["variants"]["2"]["ratio_of_group"] == pytest.approx(1 / 3)
     assert group1["variants"]["2"]["ratio_of_total"] == pytest.approx(1 / 3)
+    assert group1["variants"]["2"]["ratio_of_passed"] == pytest.approx(1 / 3)
+
+
+def test_build_reference_summary_ratio_of_passed_diverges_from_ratio_of_total(
+    tmp_path: Path,
+) -> None:
+    """ratio_of_total is diluted by raw generation failures; ratio_of_passed
+    isolates consistency among only the trials that actually succeeded."""
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE_A, "hello world\n")
+    _write_trial(tmp_path, "20260101-000002-aaa002", _TEMPLATE_A, "goodbye world\n")
+    _write_trial(
+        tmp_path, "20260101-000003-aaa003", _TEMPLATE_A, "third line\n", passed=False
+    )
+    build_integration(tmp_path, KEY)
+
+    summary = build_reference_summary(tmp_path)
+
+    case = summary["cases"]["cisco/catalyst9200/ios-xe/show-clock"]
+    assert case["total_case_count"] == 3
+    assert case["total_passed_case_count"] == 2
+
+    group1 = case["groups"]["group1"]
+    assert group1["case_count"] == 2
+    # Both passed trials landed in the one group -- perfect consistency
+    # among successes, but the failure still dilutes ratio_of_total.
+    assert group1["ratio_of_total"] == pytest.approx(2 / 3)
+    assert group1["ratio_of_passed"] == pytest.approx(1.0)
 
 
 def test_build_reference_summary_covers_multiple_cases(tmp_path: Path) -> None:

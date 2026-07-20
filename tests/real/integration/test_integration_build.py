@@ -90,6 +90,8 @@ def test_build_integration_clusters_real_trials(
         (integration_dir / "reference.json").read_text(encoding="utf-8")
     )
     assert reference_json["total_case_count"] == 2
+    # Both trials asserted result.passed above, so both count as passed.
+    assert reference_json["total_passed_case_count"] == 2
     assert list(integration_dir.glob("group*-template*.textfsm"))
 
     summary_path = write_reference_summary(tmp_path)
@@ -97,3 +99,4 @@ def test_build_integration_clusters_real_trials(
     case_key = key.relative_path().as_posix()
     assert case_key in summary["cases"]
     assert summary["cases"][case_key]["total_case_count"] == 2
+    assert summary["cases"][case_key]["total_passed_case_count"] == 2

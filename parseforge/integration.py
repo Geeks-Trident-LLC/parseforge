@@ -23,12 +23,12 @@ already found, not every past trial, so this costs the same either way and
 avoids partial-state bugs. Group/variant numbering stays deterministic
 because trial run-dirs are iterated in chronological run-id order.
 
-``reference.json`` is ``{total_case_count, groups: {group_id: {keys,
-sample_path, group_case_count, variants}}}`` — ``total_case_count`` and
-each group's ``group_case_count`` are snapshots from that same rebuild
-(as fresh as everything else in the file), included so match rate is
-readable without re-globbing trials/. :func:`build_reference_summary`
-turns those counts into ratios across every cli-name in one report;
+``reference.json`` is ``{total_case_count, total_passed_case_count,
+groups: {group_id: {keys, sample_path, group_case_count, variants}}}`` —
+every one of those counts is a snapshot from that same rebuild (as fresh
+as everything else in the file), included so match rate is readable
+without re-globbing trials/. :func:`build_reference_summary` turns those
+counts into ratios across every cli-name in one report;
 :mod:`parseforge.promotion` still recomputes its own count independently
 at decision time rather than trusting either snapshot.
 """
@@ -85,19 +85,33 @@ def _load_reference(path: Path) -> Reference:
     return reference
 
 
-def _save_reference(path: Path, reference: Reference, total_case_count: int) -> None:
-    """Write reference.json as ``{total_case_count, groups}``.
+def _save_reference(
+    path: Path,
+    reference: Reference,
+    total_case_count: int,
+    total_passed_case_count: int,
+) -> None:
+    """Write reference.json as
+    ``{total_case_count, total_passed_case_count, groups}``.
 
-    ``total_case_count`` is a snapshot from the same trial scan that
-    produced ``groups`` below it — as fresh as the rest of this file, and
+    Both counts are snapshots from the same trial scan that produced
+    ``groups`` below them — as fresh as the rest of this file, and
     included purely so a reader (or :func:`build_reference_summary`) can
     compute match rate without re-globbing trials/. Promotion decisions
     still recompute their own count independently at decision time (see
-    :mod:`parseforge.promotion`) rather than trusting this snapshot.
+    :mod:`parseforge.promotion`) rather than trusting either snapshot.
+
+    ``total_passed_case_count`` (trials whose own summary.json says
+    passed) is normally close to the sum of every group's
+    group_case_count, but isn't guaranteed identical to it — a passed
+    trial can still fall out of clustering if its derive/samples files
+    are missing or its template unexpectedly fails to re-parse. Reporting
+    both numbers surfaces that gap instead of hiding it.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     serializable = {
         "total_case_count": total_case_count,
+        "total_passed_case_count": total_passed_case_count,
         "groups": {
             group_id: {
                 "keys": group.keys,
@@ -128,15 +142,20 @@ def build_integration(store_root: Path, key: paths.DeviceKey) -> Reference:
     reference: Reference = {}
     if not trials_dir.exists():
         _save_reference(
-            integration_dir / "reference.json", reference, total_case_count=0
+            integration_dir / "reference.json",
+            reference,
+            total_case_count=0,
+            total_passed_case_count=0,
         )
         return reference
 
     run_dirs = sorted(d for d in trials_dir.iterdir() if d.is_dir())
+    total_passed_case_count = 0
 
     for run_dir in run_dirs:
         if not _trial_passed(run_dir):
             continue
+        total_passed_case_count += 1
 
         template_path = run_dir / "derive" / "template.textfsm"
         sample_path = run_dir / "samples" / "sample.txt"
@@ -178,7 +197,10 @@ def build_integration(store_root: Path, key: paths.DeviceKey) -> Reference:
             (integration_dir / dest_name).write_text(template_text, encoding="utf-8")
 
     _save_reference(
-        integration_dir / "reference.json", reference, total_case_count=len(run_dirs)
+        integration_dir / "reference.json",
+        reference,
+        total_case_count=len(run_dirs),
+        total_passed_case_count=total_passed_case_count,
     )
     return reference
 
@@ -217,8 +239,15 @@ def build_reference_summary(store_root: Path) -> dict[str, Any]:
     """Aggregate every reference.json under the integration tier into one
     cross-cli-name match-rate report — a read-only transform of whatever
     build_integration() has already written, no filesystem rescan of
-    trials/. Ratios are 0.0 for any cli-name with total_case_count == 0
-    (nothing has been integrated for it yet), rather than dividing by zero.
+    trials/. Ratios are 0.0 for any cli-name with total_case_count (or
+    total_passed_case_count) == 0, rather than dividing by zero.
+
+    Every ratio comes in two flavors: ``ratio_of_total`` (share of *every*
+    trial attempted, pass or fail) and ``ratio_of_passed`` (share of only
+    the trials that actually passed — the only trials group_case_count
+    can ever include, since a failed trial can never join a group). The
+    "of_total" figure is diluted by raw generation failures; "of_passed"
+    isolates template-consistency among the runs that succeeded.
     """
     integration_root = paths.tier_root(store_root, paths.INTEGRATION)
     cases: dict[str, Any] = {}
@@ -228,6 +257,7 @@ def build_reference_summary(store_root: Path) -> dict[str, Any]:
             case_key = reference_path.parent.relative_to(integration_root).as_posix()
             raw = json.loads(reference_path.read_text(encoding="utf-8"))
             total_case_count = raw.get("total_case_count", 0)
+            total_passed_case_count = raw.get("total_passed_case_count", 0)
 
             groups_summary = {}
             for group_id, group_raw in raw.get("groups", {}).items():
@@ -242,18 +272,29 @@ def build_reference_summary(store_root: Path) -> dict[str, Any]:
                         "ratio_of_total": (
                             exact / total_case_count if total_case_count else 0.0
                         ),
+                        "ratio_of_passed": (
+                            exact / total_passed_case_count
+                            if total_passed_case_count
+                            else 0.0
+                        ),
                     }
                 groups_summary[group_id] = {
                     "keys": group_raw.get("keys", []),
                     "case_count": group_case_count,
-                    "ratio": (
+                    "ratio_of_total": (
                         group_case_count / total_case_count if total_case_count else 0.0
+                    ),
+                    "ratio_of_passed": (
+                        group_case_count / total_passed_case_count
+                        if total_passed_case_count
+                        else 0.0
                     ),
                     "variants": variants_summary,
                 }
 
             cases[case_key] = {
                 "total_case_count": total_case_count,
+                "total_passed_case_count": total_passed_case_count,
                 "groups": groups_summary,
             }
 
