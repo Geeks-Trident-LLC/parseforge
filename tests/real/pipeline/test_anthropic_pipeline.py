@@ -54,7 +54,7 @@ def test_full_trial_pipeline_show_clock(
         store_root=tmp_path,
         naming_index_path=tmp_path / ".cli-name.json",
         metadata=TrialMetadata(
-            project="parseforge-integration-test",
+            project="parseforge-trial-test",
             description="live full-pipeline test via Anthropic",
         ),
     )

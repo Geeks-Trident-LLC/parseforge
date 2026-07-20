@@ -44,9 +44,6 @@ def test_full_trial_pipeline_show_clock(
         provider="deepseek", api_key=deepseek_key, model=MODEL
     )
 
-    breakpoint()
-    from pathlib import Path
-
     result = run_command_pipeline(
         "show clock",
         CONTEXT,
@@ -54,15 +51,13 @@ def test_full_trial_pipeline_show_clock(
         naming_builder,
         NetmikoSampler(),
         generation_config,
-        store_root=Path("./abc"),
+        store_root=tmp_path,
         naming_index_path=tmp_path / ".cli-name.json",
         metadata=TrialMetadata(
-            project="parseforge-integration-test",
+            project="parseforge-trial-test",
             description="live full-pipeline test via DeepSeek",
         ),
     )
-
-    breakpoint()
 
     assert result.cli_name == "show-clock"
     assert result.passed is True
