@@ -123,7 +123,7 @@ def build_integration(store_root: Path, key: paths.DeviceKey) -> Reference:
                 exact_template_count=1,
                 exact_records_count=len(parsed.records),
             )
-            dest_name = f"template{variant_id}-{group_id}.textfsm"
+            dest_name = f"{group_id}-template{variant_id}.textfsm"
             (integration_dir / dest_name).write_text(template_text, encoding="utf-8")
 
     _save_reference(integration_dir / "reference.json", reference)

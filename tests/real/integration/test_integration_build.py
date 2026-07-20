@@ -89,4 +89,4 @@ def test_build_integration_clusters_real_trials(
 
     integration_dir = paths.integration_dir(tmp_path, key)
     assert (integration_dir / "reference.json").exists()
-    assert list(integration_dir.glob("template*-group*.textfsm"))
+    assert list(integration_dir.glob("group*-template*.textfsm"))
