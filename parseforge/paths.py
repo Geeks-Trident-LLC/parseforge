@@ -69,7 +69,7 @@ def trial_run_dir(store_root: Path, key: DeviceKey, run_id: str | None = None) -
 
 def integration_dir(store_root: Path, key: DeviceKey) -> Path:
     """Integration tier directory for a cli-name (§3.2) — holds
-    reference.json and the clustered template<I>-group<J>.textfsm files
+    reference.json and the clustered group<J>-template<I>.textfsm files
     (see :mod:`parseforge.integration`)."""
     return tier_path(store_root, INTEGRATION, key)
 

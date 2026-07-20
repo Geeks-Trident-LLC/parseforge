@@ -57,17 +57,17 @@ def test_build_integration_clusters_by_schema_and_variant(tmp_path: Path) -> Non
     assert group2.variants["1"].exact_template_count == 1
 
     integration_dir = paths.integration_dir(tmp_path, KEY)
-    assert (integration_dir / "template1-group1.textfsm").read_text(
+    assert (integration_dir / "group1-template1.textfsm").read_text(
         encoding="utf-8"
     ) == _TEMPLATE_A
-    assert (integration_dir / "template2-group1.textfsm").read_text(
+    assert (integration_dir / "group1-template2.textfsm").read_text(
         encoding="utf-8"
     ) == _TEMPLATE_A2
-    assert (integration_dir / "template1-group2.textfsm").read_text(
+    assert (integration_dir / "group2-template1.textfsm").read_text(
         encoding="utf-8"
     ) == _TEMPLATE_B
     # The broken trial's template never produced a group, so no group3 file.
-    assert not (integration_dir / "template1-group3.textfsm").exists()
+    assert not (integration_dir / "group3-template1.textfsm").exists()
 
     reference_json = integration_dir / "reference.json"
     assert reference_json.exists()
