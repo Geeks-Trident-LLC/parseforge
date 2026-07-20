@@ -220,8 +220,8 @@ def test_naming_cache_hit_has_no_naming_usage_in_summary(
     assert naming_builder.calls == 1
 
     summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
-    assert summary["usage"]["naming_usage"] is None
-    assert summary["usage"]["generation_usage"]["total_tokens"] == 28
+    assert summary["usage"]["naming"] is None
+    assert summary["usage"]["generation"]["total_tokens"] == 28
 
 
 def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -250,7 +250,8 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
     summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
 
     assert summary["passed"] is True
-    assert summary["mode"] == "loop"
+    assert summary["error"] is None
+    assert "mode" not in summary
     assert summary["metadata"] == {
         "project": "acme",
         "username": "tuyen",
@@ -265,19 +266,18 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         "device_type": "cisco_ios",
         "command": "show clock",
     }
-    assert summary["usage"]["naming_usage"] == {
+    assert summary["usage"]["naming"] == {
         "input_tokens": 10,
         "output_tokens": 5,
         "total_tokens": 15,
     }
-    assert summary["usage"]["generation_usage"] == {
+    assert summary["usage"]["generation"] == {
         "input_tokens": 20,
         "output_tokens": 8,
         "total_tokens": 28,
         "estimated_cost": 0.001,
     }
-    assert summary["provider_info"]["naming"]["provider"] == "FakeRegexBuilder"
-    assert summary["provider_info"]["generation"] == {
+    assert summary["provider_info"] == {
         "provider": "anthropic",
         "model": "claude-haiku-4-5-20251001",
     }
@@ -307,6 +307,8 @@ def test_passed_is_false_when_generation_not_ready(
     )
 
     assert result.passed is False
+    summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
+    assert summary["error"] == "generation not ready"
 
 
 def test_passed_is_false_when_template_does_not_parse_sample(
@@ -329,3 +331,5 @@ def test_passed_is_false_when_template_does_not_parse_sample(
     )
 
     assert result.passed is False
+    summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
+    assert summary["error"]
