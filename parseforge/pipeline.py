@@ -17,13 +17,16 @@ Steps 1-7 of SPEC.md §5, wired to what each already does:
    and samples/sample-for-prompt.txt (the latter with a
    "SAMPLE REFERENCE SOURCE" annotation — see _build_sample_for_prompt).
 5-6. Generation — :mod:`parseforge.generation`, written to derive/.
-7. Self-validation — the generated template is loaded via the real
-   textfsm library and run against the *raw* sample (not the annotated
-   prompt version) to confirm it actually parses.
+7. Self-validation — :func:`parseforge.validation.parse` runs the
+   generated template against the *raw* sample (not the annotated
+   prompt version) to confirm it actually parses, independent of
+   whatever textfsm-ai's own pipeline already reported as ``.ready``.
 
 Everything is written to summary.json alongside a created/ended
-timestamp, duration, naming + generation token usage, and provider
-info for both LLM calls.
+timestamp, duration, an ``error`` message when ``passed`` is false,
+naming + generation token usage, and the generation provider/model
+(the one that actually produced the template — naming's own provider
+only matters on a cache miss and isn't tracked here).
 
 Steps 8-11 (integration selection, authoritative promotion, drift
 monitoring, repeat/loop) run out-of-band across all trials for a
@@ -33,7 +36,6 @@ cli-name, not per single pipeline invocation — see
 
 from __future__ import annotations
 
-import io
 import json
 import time
 from dataclasses import asdict, dataclass
@@ -42,9 +44,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-import textfsm
-
-from parseforge import generation, naming, paths, sampling
+from parseforge import generation, naming, paths, sampling, validation
 
 
 class Mode(str, Enum):
@@ -97,18 +97,6 @@ def _build_sample_for_prompt(
         f'a real "{command}" output from a '
         f"{context.vendor} {context.family} {context.os} device"
     )
-
-
-def _self_validate(template: str, sample: str) -> bool:
-    """Run the generated template against its own raw sample via the
-    real textfsm library (SPEC.md §5 step 7) — independent of whatever
-    textfsm-ai's own pipeline already reported as .ready."""
-    try:
-        fsm = textfsm.TextFSM(io.StringIO(template))
-        records = fsm.ParseText(sample)
-    except Exception:
-        return False
-    return len(records) >= 1
 
 
 def _usage_dict(usage: Any | None) -> dict[str, Any] | None:
@@ -179,7 +167,19 @@ def run_command_pipeline(
     )
 
     # 7. Self-validation — against the raw sample, not the annotated one.
-    passed = gen_result.ready and _self_validate(gen_result.template, sample_text)
+    parsed = validation.parse(gen_result.template, sample_text)
+    self_validated = parsed.passed and bool(parsed.records)
+    passed = gen_result.ready and self_validated
+
+    error: str | None = None
+    if not gen_result.ready:
+        error = gen_result.reason or "generation not ready"
+    elif not self_validated:
+        error = (
+            "; ".join(parsed.errors)
+            if parsed.errors
+            else "template produced no records against its own sample"
+        )
 
     ended_at = datetime.now(timezone.utc)
     duration_ms = round((time.monotonic() - start) * 1000)
@@ -189,7 +189,7 @@ def run_command_pipeline(
         "ended_at": ended_at.isoformat(),
         "duration_ms": duration_ms,
         "passed": passed,
-        "mode": mode.value,
+        "error": error,
         "metadata": asdict(metadata),
         "command_info": {
             "vendor": context.vendor,
@@ -200,22 +200,14 @@ def run_command_pipeline(
             "command": command,
         },
         "usage": {
-            "naming_usage": _usage_dict(
+            "naming": _usage_dict(
                 naming_resolution.response.usage if naming_resolution.response else None
             ),
-            "generation_usage": _usage_dict(gen_result.usage),
+            "generation": _usage_dict(gen_result.usage),
         },
         "provider_info": {
-            "naming": {
-                "provider": getattr(
-                    naming_builder, "provider", type(naming_builder).__name__
-                ),
-                "model": getattr(naming_builder, "model", None),
-            },
-            "generation": {
-                "provider": generation_config.provider,
-                "model": generation_config.model,
-            },
+            "provider": generation_config.provider,
+            "model": generation_config.model,
         },
     }
     (run_dir / "summary.json").write_text(
