@@ -122,6 +122,21 @@ def promoted_data_dir(store_root: Path, key: DeviceKey) -> Path:
     return authoritative_dir(store_root, key) / "data"
 
 
+def golden_hash_path(store_root: Path, key: DeviceKey) -> Path:
+    """sha256 of whichever template was most recently promoted for this
+    cli-name — a single, unsuffixed file (not one per variant), always
+    reflecting the latest promotion regardless of which group/suffix
+    triggered it. The baseline future drift checks compare against."""
+    return authoritative_dir(store_root, key) / "golden.hash"
+
+
+def artifact_path(store_root: Path, key: DeviceKey) -> Path:
+    """Snapshot describing the most recent promotion for this cli-name —
+    a single, unsuffixed file (not one per variant), mirroring
+    golden.hash's "always latest" semantics."""
+    return authoritative_dir(store_root, key) / "artifact.json"
+
+
 def authoritative_summary_path(store_root: Path) -> Path:
     """Project-wide snapshot of the most recent promotion run — what got
     promoted, what didn't clear its gate, and (for USER_REVIEWED) any
