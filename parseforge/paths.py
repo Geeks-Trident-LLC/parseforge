@@ -91,3 +91,61 @@ def reference_summary_path(store_root: Path) -> Path:
     the integration tier (see
     :func:`parseforge.integration.write_reference_summary`)."""
     return tier_root(store_root, INTEGRATION) / "reference-summary.json"
+
+
+def discover_device_keys(store_root: Path) -> list[DeviceKey]:
+    """Every (vendor, family, os, cli-name) that currently has a trials/
+    directory — walks trials/ four levels deep. Used by promotion to find
+    every case worth refreshing, not just ones already integrated."""
+    trials_root = tier_root(store_root, TRIALS)
+    if not trials_root.exists():
+        return []
+
+    keys = []
+    for vendor_dir in sorted(d for d in trials_root.iterdir() if d.is_dir()):
+        for family_dir in sorted(d for d in vendor_dir.iterdir() if d.is_dir()):
+            for os_dir in sorted(d for d in family_dir.iterdir() if d.is_dir()):
+                for cli_name_dir in sorted(d for d in os_dir.iterdir() if d.is_dir()):
+                    keys.append(
+                        DeviceKey(
+                            vendor=vendor_dir.name,
+                            family=family_dir.name,
+                            os=os_dir.name,
+                            cli_name=cli_name_dir.name,
+                        )
+                    )
+    return keys
+
+
+def promoted_data_dir(store_root: Path, key: DeviceKey, group_id: str) -> Path:
+    """Where a promoted group's sample(-suffix).txt / records(-suffix).json
+    live, alongside (not inside) template(-suffix).textfsm."""
+    return authoritative_group_dir(store_root, key, group_id) / "data"
+
+
+def golden_hash_path(store_root: Path, key: DeviceKey, group_id: str) -> Path:
+    """sha256 of the currently-promoted template.textfsm content, updated on
+    every promotion into this group (regardless of mode/suffix) — the
+    baseline future drift checks compare production samples against."""
+    return authoritative_group_dir(store_root, key, group_id) / "golden.hash"
+
+
+def artifact_path(store_root: Path, key: DeviceKey, group_id: str) -> Path:
+    """Snapshot describing the most recent promotion into this group (who,
+    when, mode, match rate, source trial) — distinct from promotion-log.json,
+    which is the append-only history across every promotion event."""
+    return authoritative_group_dir(store_root, key, group_id) / "artifact.json"
+
+
+def promotion_log_path(store_root: Path, key: DeviceKey) -> Path:
+    """Append-only promotion history for a cli-name, shared across all of
+    its groups (each entry records its own group_id)."""
+    return authoritative_dir(store_root, key) / "promotion-log.json"
+
+
+def authoritative_summary_path(store_root: Path) -> Path:
+    """Project-wide snapshot of the most recent promotion run — what got
+    promoted, what didn't clear its gate, and (for USER_REVIEWED) any
+    requested case that doesn't exist. Overwritten every run; history lives
+    in each cli-name's own promotion-log.json instead."""
+    return tier_root(store_root, AUTHORITATIVE) / "authoritative-summary.json"
