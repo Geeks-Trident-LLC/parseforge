@@ -3,11 +3,25 @@
 Two entry points, mirroring integration.py's whole-project shape
 (build_integration() per case, build_reference_summary() across every
 case): :func:`promote_auto` walks every case in the project and promotes
-every group that clears its gate, unsuffixed — always "the current
-version". :func:`promote_user_reviewed` is scoped to a caller-supplied
-list of ``(case, suffix)`` for promotions a human has already reviewed,
-writing suffixed files alongside the unsuffixed current ones rather than
-replacing them.
+every group that clears its gate. :func:`promote_user_reviewed` is scoped
+to a caller-supplied list of ``(case, suffix)`` for promotions a human
+has already reviewed, writing suffixed files alongside the unsuffixed
+current ones rather than replacing them.
+
+``authoritative/<vendor>/<family>/<os>/<cli-name>/`` is flat — final,
+delivery-ready content only, no per-group subdirectory. Every
+simultaneously-valid variant for a cli-name (hardware/firmware variance,
+§6) is distinguished by filename instead: the first group discovered for
+a case (``group1``) owns the unsuffixed "current version" names
+(``template.textfsm``, ``recognizers.txt``, ``data/sample.txt``,
+``artifact.json``, ``golden.hash``); each additional group owns
+``template-v2.textfsm``, ``template-v3.textfsm``, etc. — a stable,
+permanent tag derived from the group's own id, never renumbered as
+other groups gain or lose their gate. A USER_REVIEWED promotion layers
+the caller's own minor suffix onto that same major tag
+(``template-v2-<suffix>.textfsm``), so it never collides with — or
+silently overwrites — whichever file currently represents that group's
+auto-promoted version.
 
 Both still gate on the same primitive (:class:`PromotionGate` /
 :func:`decide_promotion` — match-rate threshold + minimum sample count),
@@ -25,11 +39,12 @@ stale snapshot would contradict promotion being high-stakes enough to
 need current numbers. This costs nothing but filesystem I/O — no LLM
 calls happen during integration.
 
-Per group, three complementary artifacts: ``golden.hash`` (sha256 of the
-promoted template, the baseline future drift checks compare against),
-``artifact.json`` (a snapshot of *this* promotion — who/when/mode/match
-rate/source), and ``promotion-log.json`` (append-only history across
-every promotion event ever, shared by all of a cli-name's groups).
+Per promoted variant, two complementary artifacts: ``golden(-suffix).hash``
+(sha256 of that variant's promoted template, the baseline future drift
+checks compare against) and ``artifact(-suffix).json`` (a snapshot of
+*this* promotion — who/when/mode/match rate/source). ``authoritative-log.json``
+is one project-wide append-only history across every promotion event ever
+(each entry records its own case/group/suffix), and
 ``authoritative-summary.json`` is a project-wide snapshot of the most
 recent run — overwritten every call, not accumulated.
 """
@@ -42,7 +57,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from parseforge import integration, paths, validation
 from parseforge.integration import Reference, ReferenceGroup, ReferenceVariant
@@ -73,7 +88,7 @@ class PromotionGate:
 @dataclass(frozen=True)
 class PromotionMetadata:
     """Who/why for a promotion run, recorded into every artifact.json and
-    promotion-log.json entry written by that run."""
+    authoritative-log.json entry written by that run."""
 
     user: str
     email: str | None = None
@@ -84,8 +99,10 @@ class PromotionMetadata:
 @dataclass(frozen=True)
 class UserReviewedRequest:
     """One case a human has already reviewed and wants promoted, tagged
-    with a caller-supplied version suffix (e.g. "v2") — parseforge doesn't
-    generate suffixes itself."""
+    with a caller-supplied minor revision marker (e.g. "2", "beta") —
+    parseforge combines it with the group's own major version tag
+    (v1, v2, ...) rather than using it as the whole suffix, so it can
+    never collide with another group's auto-promoted identity."""
 
     case_key: str
     suffix: str
@@ -103,7 +120,7 @@ class GroupEvaluation:
 
 @dataclass(frozen=True)
 class PromotionRunResult:
-    promoted: list[Path]
+    promoted: list[Path]  # template files actually written this run
     unqualified: list[GroupEvaluation]
     unmatched_cases: list[str]
 
@@ -165,6 +182,27 @@ def _representative_variant_id(group_variants: dict[str, ReferenceVariant]) -> s
     )
 
 
+def _group_ordinal(group_id: str) -> int:
+    return int(group_id.removeprefix("group"))
+
+
+def _auto_suffix(group_id: str) -> str | None:
+    """group1 is the primary/unsuffixed variant; group2, group3, ... get
+    template-v2.textfsm, template-v3.textfsm, etc. Stable and permanent —
+    derived purely from the group's own id, never renumbered based on
+    which groups currently qualify."""
+    n = _group_ordinal(group_id)
+    return None if n == 1 else f"v{n}"
+
+
+def _version_tag(group_id: str) -> str:
+    """Always-present major version tag (v1, v2, ...) — combined with a
+    USER_REVIEWED request's own minor suffix so a reviewed promotion never
+    collides with (or silently overwrites) the file that currently
+    represents this group's auto-promoted version."""
+    return f"v{_group_ordinal(group_id)}"
+
+
 def _write_promoted_version(
     store_root: Path,
     key: paths.DeviceKey,
@@ -176,11 +214,12 @@ def _write_promoted_version(
     *,
     suffix: str | None,
 ) -> Path:
-    """Copy the group's representative variant into authoritative/, write
-    its data/ (sample + parsed records), and (re)write golden.hash,
-    artifact.json, and promotion-log.json. ``suffix=None`` writes the
-    unsuffixed "current version" filenames; a suffix writes alongside them
-    without replacing them."""
+    """Copy the group's representative variant into the flat
+    authoritative/<cli-name>/ directory, write its data/ (sample + parsed
+    records), and (re)write golden(-suffix).hash, artifact(-suffix).json,
+    and authoritative-log.json. ``suffix=None`` writes the unsuffixed
+    "current version" filenames; a suffix writes alongside them without
+    replacing them. Returns the template file path written."""
     variant_id = _representative_variant_id(reference_group.variants)
     variant = reference_group.variants[variant_id]
 
@@ -192,9 +231,9 @@ def _write_promoted_version(
     sample_text = source_sample.read_text(encoding="utf-8")
     suffix_part = f"-{suffix}" if suffix else ""
 
-    dest_dir = paths.authoritative_group_dir(store_root, key, group_id)
+    dest_dir = paths.authoritative_dir(store_root, key)
     dest_dir.mkdir(parents=True, exist_ok=True)
-    data_dir = paths.promoted_data_dir(store_root, key, group_id)
+    data_dir = paths.promoted_data_dir(store_root, key)
     data_dir.mkdir(parents=True, exist_ok=True)
 
     template_dest = dest_dir / f"template{suffix_part}.textfsm"
@@ -212,9 +251,7 @@ def _write_promoted_version(
     )
 
     golden_hash = hashlib.sha256(template_dest.read_bytes()).hexdigest()
-    paths.golden_hash_path(store_root, key, group_id).write_text(
-        golden_hash, encoding="utf-8"
-    )
+    (dest_dir / f"golden{suffix_part}.hash").write_text(golden_hash, encoding="utf-8")
 
     artifact = {
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -230,14 +267,15 @@ def _write_promoted_version(
         "match_rate": evaluation.match_rate,
         "sample_count": evaluation.sample_count,
     }
-    paths.artifact_path(store_root, key, group_id).write_text(
+    (dest_dir / f"artifact{suffix_part}.json").write_text(
         json.dumps(artifact, indent=2, sort_keys=True), encoding="utf-8"
     )
 
-    log_path = paths.promotion_log_path(store_root, key)
+    log_path = paths.authoritative_log_path(store_root)
     log = json.loads(log_path.read_text(encoding="utf-8")) if log_path.exists() else []
     log.append(
         {
+            "case": evaluation.case_key,
             "group_id": group_id,
             "mode": mode.value,
             "suffix": suffix,
@@ -251,7 +289,7 @@ def _write_promoted_version(
     log_path.parent.mkdir(parents=True, exist_ok=True)
     log_path.write_text(json.dumps(log, indent=2), encoding="utf-8")
 
-    return dest_dir
+    return template_dest
 
 
 def _refresh_and_summarize(
@@ -301,7 +339,7 @@ def _promote_qualifying(
     evaluations: list[GroupEvaluation],
     keys_by_case: dict[str, paths.DeviceKey],
     references: dict[str, Reference],
-    suffix_for_case: dict[str, str],
+    suffix_resolver: Callable[[str, str], str | None],
 ) -> tuple[list[Path], list[GroupEvaluation]]:
     promoted: list[Path] = []
     unqualified: list[GroupEvaluation] = []
@@ -311,7 +349,7 @@ def _promote_qualifying(
             continue
         key = keys_by_case[evaluation.case_key]
         reference_group = references[evaluation.case_key][evaluation.group_id]
-        dest_dir = _write_promoted_version(
+        dest = _write_promoted_version(
             store_root,
             key,
             evaluation.group_id,
@@ -319,9 +357,9 @@ def _promote_qualifying(
             metadata,
             evaluation,
             mode,
-            suffix=suffix_for_case.get(evaluation.case_key),
+            suffix=suffix_resolver(evaluation.case_key, evaluation.group_id),
         )
-        promoted.append(dest_dir)
+        promoted.append(dest)
     return promoted, unqualified
 
 
@@ -332,7 +370,8 @@ def promote_auto(
     case_gates: dict[str, PromotionGate] | None = None,
 ) -> PromotionRunResult:
     """Walk every case in the project; promote every group that clears its
-    gate (unsuffixed); write authoritative-summary.json."""
+    gate — group1 unsuffixed, group2/group3/... as template-v2/v3/...;
+    write authoritative-summary.json."""
     keys_by_case, references, summary = _refresh_and_summarize(store_root)
     evaluations = evaluate_cases(references, summary, default_gate, case_gates)
 
@@ -343,7 +382,7 @@ def promote_auto(
         evaluations,
         keys_by_case,
         references,
-        suffix_for_case={},
+        suffix_resolver=lambda _case_key, group_id: _auto_suffix(group_id),
     )
 
     result = PromotionRunResult(
@@ -362,7 +401,9 @@ def promote_user_reviewed(
     """Same refresh as promote_auto, but scoped to requested cases; a
     case_key with no matching trials at all is reported in
     unmatched_cases instead of being evaluated. Each qualifying group in a
-    requested case is promoted under that case's suffix."""
+    requested case is promoted under "v<group's major>-<request's minor>"
+    (e.g. "v2-3"), alongside whatever that group's current auto-promoted
+    files already are."""
     keys_by_case, references, summary = _refresh_and_summarize(store_root)
 
     unmatched_cases = [r.case_key for r in requests if r.case_key not in references]
@@ -381,9 +422,10 @@ def promote_user_reviewed(
         only_cases=set(matched_requests),
     )
 
-    suffix_for_case = {
-        case_key: request.suffix for case_key, request in matched_requests.items()
-    }
+    def _resolve_suffix(case_key: str, group_id: str) -> str:
+        minor = matched_requests[case_key].suffix
+        return f"{_version_tag(group_id)}-{minor}"
+
     promoted, unqualified = _promote_qualifying(
         store_root,
         metadata,
@@ -391,7 +433,7 @@ def promote_user_reviewed(
         evaluations,
         keys_by_case,
         references,
-        suffix_for_case,
+        suffix_resolver=_resolve_suffix,
     )
 
     result = PromotionRunResult(
