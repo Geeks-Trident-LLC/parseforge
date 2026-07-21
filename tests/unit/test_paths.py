@@ -42,3 +42,47 @@ def test_authoritative_group_dir_nests_under_authoritative_dir(
     assert paths.authoritative_group_dir(tmp_path, KEY, "group1") == (
         paths.authoritative_dir(tmp_path, KEY) / "group1"
     )
+
+
+def test_promoted_data_dir_nests_under_authoritative_group_dir(tmp_path: Path) -> None:
+    assert paths.promoted_data_dir(tmp_path, KEY, "group1") == (
+        paths.authoritative_group_dir(tmp_path, KEY, "group1") / "data"
+    )
+
+
+def test_golden_hash_and_artifact_paths_sit_in_group_dir(tmp_path: Path) -> None:
+    group_dir = paths.authoritative_group_dir(tmp_path, KEY, "group1")
+    assert paths.golden_hash_path(tmp_path, KEY, "group1") == group_dir / "golden.hash"
+    assert paths.artifact_path(tmp_path, KEY, "group1") == group_dir / "artifact.json"
+
+
+def test_promotion_log_path_sits_at_cli_name_level(tmp_path: Path) -> None:
+    assert paths.promotion_log_path(tmp_path, KEY) == (
+        paths.authoritative_dir(tmp_path, KEY) / "promotion-log.json"
+    )
+
+
+def test_authoritative_summary_path_sits_at_authoritative_tier_root(
+    tmp_path: Path,
+) -> None:
+    assert paths.authoritative_summary_path(tmp_path) == (
+        tmp_path / "authoritative" / "authoritative-summary.json"
+    )
+
+
+def test_discover_device_keys_with_no_trials_dir_is_empty(tmp_path: Path) -> None:
+    assert paths.discover_device_keys(tmp_path) == []
+
+
+def test_discover_device_keys_finds_every_cli_name(tmp_path: Path) -> None:
+    other_key = paths.DeviceKey(
+        vendor="cisco", family="catalyst9200", os="ios-xe", cli_name="show-version"
+    )
+    paths.trial_run_dir(tmp_path, KEY, run_id="20260101-000001-aaa001").mkdir(
+        parents=True
+    )
+    paths.trial_run_dir(tmp_path, other_key, run_id="20260101-000001-bbb001").mkdir(
+        parents=True
+    )
+
+    assert paths.discover_device_keys(tmp_path) == [KEY, other_key]

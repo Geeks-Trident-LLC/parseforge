@@ -1,18 +1,22 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
 from parseforge import paths
 from parseforge.integration import ReferenceGroup, ReferenceVariant
 from parseforge.promotion import (
-    GroupPromotion,
+    GroupEvaluation,
     PromotionDecision,
     PromotionGate,
-    apply_promotions,
-    decide_group_promotions,
+    PromotionMetadata,
+    PromotionRunResult,
+    UserReviewedRequest,
     decide_promotion,
-    total_case_count,
+    evaluate_cases,
+    promote_auto,
+    promote_user_reviewed,
 )
 
 KEY = paths.DeviceKey(
@@ -21,6 +25,37 @@ KEY = paths.DeviceKey(
     os="ios-xe",
     cli_name="show-clock",
 )
+OTHER_KEY = paths.DeviceKey(
+    vendor="cisco",
+    family="catalyst9200",
+    os="ios-xe",
+    cli_name="show-version",
+)
+
+_TEMPLATE = "Value LINE (.+)\n\nStart\n  ^${LINE} -> Record\n"
+_TEMPLATE_B = (
+    "Value DATE (\\S+)\nValue TIME (\\S+)\n\nStart\n  ^${DATE}\\s+${TIME} -> Record\n"
+)
+
+
+def _write_trial(
+    store_root: Path,
+    run_id: str,
+    template: str,
+    sample: str,
+    key: paths.DeviceKey = KEY,
+    passed: bool = True,
+) -> Path:
+    run_dir = paths.trial_run_dir(store_root, key, run_id=run_id)
+    (run_dir / "derive").mkdir(parents=True, exist_ok=True)
+    (run_dir / "samples").mkdir(parents=True, exist_ok=True)
+    (run_dir / "derive" / "template.textfsm").write_text(template, encoding="utf-8")
+    (run_dir / "derive" / "recognizers.txt").write_text("r1\nr2", encoding="utf-8")
+    (run_dir / "samples" / "sample.txt").write_text(sample, encoding="utf-8")
+    (run_dir / "summary.json").write_text(
+        json.dumps({"passed": passed}), encoding="utf-8"
+    )
+    return run_dir
 
 
 def test_decide_promotion_auto_promotes_when_gate_cleared() -> None:
@@ -38,128 +73,261 @@ def test_decide_promotion_queues_when_sample_count_below_minimum() -> None:
     assert decide_promotion(1.0, 1, gate) is PromotionDecision.QUEUED_FOR_REVIEW
 
 
-def test_total_case_count_counts_trial_run_dirs(tmp_path: Path) -> None:
-    for run_id in ["20260101-000001-aaa001", "20260101-000002-aaa002"]:
-        paths.trial_run_dir(tmp_path, KEY, run_id=run_id).mkdir(parents=True)
-
-    assert total_case_count(tmp_path, KEY) == 2
-
-
-def test_total_case_count_with_no_trials_dir_is_zero(tmp_path: Path) -> None:
-    assert total_case_count(tmp_path, KEY) == 0
-
-
-def _reference() -> dict:
+def _fake_reference() -> dict[str, ReferenceGroup]:
     return {
         "group1": ReferenceGroup(
             keys=["LINE"],
-            sample_path="sample1.txt",
+            sample_path="s1.txt",
             variants={"1": ReferenceVariant("t1.textfsm", 8, 8)},
         ),
-        "group2": ReferenceGroup(
-            keys=["DATE", "TIME"],
-            sample_path="sample2.txt",
-            variants={"1": ReferenceVariant("t2.textfsm", 2, 2)},
-        ),
     }
 
 
-def test_decide_group_promotions_scores_by_prevalence() -> None:
-    reference = _reference()
+def test_evaluate_cases_applies_default_gate() -> None:
+    references = {"case-a": _fake_reference()}
+    summary = {
+        "cases": {
+            "case-a": {"groups": {"group1": {"case_count": 8, "ratio_of_passed": 0.8}}}
+        }
+    }
     gate = PromotionGate(match_rate_threshold=0.7, min_sample_count=1)
 
-    decisions = decide_group_promotions(reference, total_cases=10, gate=gate)
-    by_group = {d.group_id: d for d in decisions}
+    evaluations = evaluate_cases(references, summary, gate)
 
-    assert by_group["group1"].match_rate == 0.8
-    assert by_group["group1"].decision is PromotionDecision.AUTO_PROMOTED
-    assert by_group["group2"].match_rate == 0.2
-    assert by_group["group2"].decision is PromotionDecision.QUEUED_FOR_REVIEW
-
-
-def test_decide_group_promotions_with_zero_total_cases_is_zero_rate() -> None:
-    reference = _reference()
-    gate = PromotionGate()
-
-    decisions = decide_group_promotions(reference, total_cases=0, gate=gate)
-
-    assert all(d.match_rate == 0.0 for d in decisions)
-    assert all(d.decision is PromotionDecision.QUEUED_FOR_REVIEW for d in decisions)
-
-
-def test_apply_promotions_copies_representative_variant_and_logs(
-    tmp_path: Path,
-) -> None:
-    trial_derive = tmp_path / "trials" / "some-run" / "derive"
-    trial_derive.mkdir(parents=True)
-    (trial_derive / "template.textfsm").write_text("Value X (.+)\n", encoding="utf-8")
-    (trial_derive / "recognizers.txt").write_text("r1\nr2", encoding="utf-8")
-
-    other_derive = tmp_path / "trials" / "other-run" / "derive"
-    other_derive.mkdir(parents=True)
-    (other_derive / "template.textfsm").write_text("Value X (.+)\n", encoding="utf-8")
-
-    reference = {
-        "group1": ReferenceGroup(
-            keys=["X"],
-            sample_path="sample1.txt",
-            variants={
-                # Higher exact_template_count wins as the representative.
-                "1": ReferenceVariant(str(trial_derive / "template.textfsm"), 5, 5),
-                "2": ReferenceVariant(str(other_derive / "template.textfsm"), 1, 1),
-            },
-        ),
-        "group2": ReferenceGroup(keys=["Y"], sample_path="sample2.txt", variants={}),
-    }
-    decisions = [
-        GroupPromotion("group1", PromotionDecision.AUTO_PROMOTED, 0.9, 6),
-        GroupPromotion("group2", PromotionDecision.QUEUED_FOR_REVIEW, 0.1, 1),
+    assert evaluations == [
+        GroupEvaluation("case-a", "group1", PromotionDecision.AUTO_PROMOTED, 0.8, 8)
     ]
 
-    written = apply_promotions(tmp_path, KEY, reference, decisions)
 
-    expected_dir = paths.authoritative_group_dir(tmp_path, KEY, "group1")
-    assert written == [expected_dir]
-    assert (expected_dir / "template.textfsm").read_text(
+def test_evaluate_cases_uses_per_case_gate_override() -> None:
+    references = {"case-a": _fake_reference()}
+    summary = {
+        "cases": {
+            "case-a": {"groups": {"group1": {"case_count": 8, "ratio_of_passed": 0.8}}}
+        }
+    }
+    default_gate = PromotionGate(match_rate_threshold=0.9, min_sample_count=1)
+    override = PromotionGate(match_rate_threshold=0.7, min_sample_count=1)
+
+    evaluations = evaluate_cases(
+        references, summary, default_gate, case_gates={"case-a": override}
+    )
+
+    assert evaluations[0].decision is PromotionDecision.AUTO_PROMOTED
+
+
+def test_evaluate_cases_only_cases_filters() -> None:
+    references = {"case-a": _fake_reference(), "case-b": _fake_reference()}
+    summary = {
+        "cases": {
+            "case-a": {"groups": {"group1": {"case_count": 8, "ratio_of_passed": 1.0}}},
+            "case-b": {"groups": {"group1": {"case_count": 8, "ratio_of_passed": 1.0}}},
+        }
+    }
+
+    evaluations = evaluate_cases(
+        references, summary, PromotionGate(), only_cases={"case-a"}
+    )
+
+    assert {e.case_key for e in evaluations} == {"case-a"}
+
+
+def test_promote_auto_with_no_trials_returns_empty_result(tmp_path: Path) -> None:
+    result = promote_auto(tmp_path, PromotionMetadata(user="tuyen"))
+
+    assert result == PromotionRunResult(promoted=[], unqualified=[], unmatched_cases=[])
+
+
+def test_promote_auto_promotes_qualifying_group_and_reports_unqualified(
+    tmp_path: Path,
+) -> None:
+    # KEY's case: two passed trials, identical schema/template -> group1's
+    # ratio_of_passed is 1.0, clearing the default gate.
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    _write_trial(tmp_path, "20260101-000002-aaa002", _TEMPLATE, "goodbye world\n")
+
+    # OTHER_KEY's case: two passed trials with two different schemas -> two
+    # groups, each with ratio_of_passed 0.5 -- neither clears the default
+    # 1.0 threshold, so both are reported unqualified.
+    _write_trial(
+        tmp_path, "20260101-000001-bbb001", _TEMPLATE, "hello world\n", key=OTHER_KEY
+    )
+    _write_trial(
+        tmp_path,
+        "20260101-000002-bbb002",
+        _TEMPLATE_B,
+        "2024-01-01 10:00:00\n",
+        key=OTHER_KEY,
+    )
+
+    metadata = PromotionMetadata(user="tuyen", email="tuyen@example.com")
+    result = promote_auto(tmp_path, metadata)
+
+    assert len(result.promoted) == 1
+    dest_dir = result.promoted[0]
+    assert dest_dir == paths.authoritative_group_dir(tmp_path, KEY, "group1")
+
+    assert (dest_dir / "template.textfsm").read_text(encoding="utf-8") == _TEMPLATE
+    assert (dest_dir / "recognizers.txt").read_text(encoding="utf-8") == "r1\nr2"
+
+    data_dir = paths.promoted_data_dir(tmp_path, KEY, "group1")
+    assert (data_dir / "sample.txt").exists()
+    records = json.loads((data_dir / "records.json").read_text(encoding="utf-8"))
+    assert records
+
+    golden_hash = paths.golden_hash_path(tmp_path, KEY, "group1").read_text(
         encoding="utf-8"
-    ) == "Value X (.+)\n"
-    assert (expected_dir / "recognizers.txt").read_text(encoding="utf-8") == "r1\nr2"
+    )
+    expected_hash = hashlib.sha256(
+        (dest_dir / "template.textfsm").read_bytes()
+    ).hexdigest()
+    assert golden_hash == expected_hash
 
-    # group2 (queued for review) is left untouched.
-    assert not paths.authoritative_group_dir(tmp_path, KEY, "group2").exists()
+    artifact = json.loads(
+        paths.artifact_path(tmp_path, KEY, "group1").read_text(encoding="utf-8")
+    )
+    assert artifact["created_by"] == "tuyen"
+    assert artifact["email"] == "tuyen@example.com"
+    assert artifact["mode"] == "auto_promoted"
+    assert artifact["suffix"] is None
+    assert artifact["case"] == "cisco/catalyst9200/ios-xe/show-clock"
 
     log = json.loads(
-        (paths.authoritative_dir(tmp_path, KEY) / "promotion-log.json").read_text(
-            encoding="utf-8"
-        )
+        paths.promotion_log_path(tmp_path, KEY).read_text(encoding="utf-8")
     )
     assert len(log) == 1
     assert log[0]["group_id"] == "group1"
-    assert log[0]["sample_count"] == 6
+    assert log[0]["mode"] == "auto_promoted"
 
-
-def test_apply_promotions_appends_to_existing_log(tmp_path: Path) -> None:
-    trial_derive = tmp_path / "trials" / "some-run" / "derive"
-    trial_derive.mkdir(parents=True)
-    (trial_derive / "template.textfsm").write_text("Value X (.+)\n", encoding="utf-8")
-
-    reference = {
-        "group1": ReferenceGroup(
-            keys=["X"],
-            sample_path="sample1.txt",
-            variants={
-                "1": ReferenceVariant(str(trial_derive / "template.textfsm"), 1, 1)
-            },
-        ),
+    assert len(result.unqualified) == 2
+    assert {e.case_key for e in result.unqualified} == {
+        "cisco/catalyst9200/ios-xe/show-version"
     }
-    decisions = [GroupPromotion("group1", PromotionDecision.AUTO_PROMOTED, 1.0, 1)]
+    assert result.unmatched_cases == []
 
-    apply_promotions(tmp_path, KEY, reference, decisions)
-    apply_promotions(tmp_path, KEY, reference, decisions)
+    summary = json.loads(
+        paths.authoritative_summary_path(tmp_path).read_text(encoding="utf-8")
+    )
+    assert summary["mode"] == "auto_promoted"
+    assert len(summary["promoted"]) == 1
+    assert len(summary["unqualified"]) == 2
+
+
+def test_promote_auto_promotes_multiple_qualifying_groups_independently(
+    tmp_path: Path,
+) -> None:
+    """Two legitimately different schemas for the same cli-name each get
+    their own independent promotion when both clear the gate -- no
+    collapse to a single winner per case (SPEC §6 multi-variant)."""
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    _write_trial(
+        tmp_path, "20260101-000002-aaa002", _TEMPLATE_B, "2024-01-01 10:00:00\n"
+    )
+
+    gate = PromotionGate(match_rate_threshold=0.4, min_sample_count=1)
+    result = promote_auto(tmp_path, PromotionMetadata(user="tuyen"), default_gate=gate)
+
+    assert len(result.promoted) == 2
+    assert paths.authoritative_group_dir(tmp_path, KEY, "group1") in result.promoted
+    assert paths.authoritative_group_dir(tmp_path, KEY, "group2") in result.promoted
+
+
+def test_promote_auto_appends_promotion_log_across_repeated_runs(
+    tmp_path: Path,
+) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    metadata = PromotionMetadata(user="tuyen")
+
+    promote_auto(tmp_path, metadata)
+    promote_auto(tmp_path, metadata)
 
     log = json.loads(
-        (paths.authoritative_dir(tmp_path, KEY) / "promotion-log.json").read_text(
-            encoding="utf-8"
-        )
+        paths.promotion_log_path(tmp_path, KEY).read_text(encoding="utf-8")
     )
     assert len(log) == 2
+
+
+def test_promote_user_reviewed_writes_suffixed_files_and_reports_unmatched(
+    tmp_path: Path,
+) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    _write_trial(tmp_path, "20260101-000002-aaa002", _TEMPLATE, "goodbye world\n")
+
+    metadata = PromotionMetadata(user="tuyen", note="reviewed in standup")
+    requests = [
+        UserReviewedRequest(
+            case_key="cisco/catalyst9200/ios-xe/show-clock", suffix="v2"
+        ),
+        UserReviewedRequest(
+            case_key="cisco/catalyst9200/ios-xe/does-not-exist", suffix="v1"
+        ),
+    ]
+
+    result = promote_user_reviewed(tmp_path, metadata, requests)
+
+    assert len(result.promoted) == 1
+    dest_dir = result.promoted[0]
+    assert (dest_dir / "template-v2.textfsm").exists()
+    assert (dest_dir / "recognizers-v2.txt").exists()
+
+    data_dir = paths.promoted_data_dir(tmp_path, KEY, "group1")
+    assert (data_dir / "sample-v2.txt").exists()
+    assert (data_dir / "records-v2.json").exists()
+
+    artifact = json.loads(
+        paths.artifact_path(tmp_path, KEY, "group1").read_text(encoding="utf-8")
+    )
+    assert artifact["mode"] == "user_reviewed"
+    assert artifact["suffix"] == "v2"
+    assert artifact["note"] == "reviewed in standup"
+
+    assert result.unmatched_cases == ["cisco/catalyst9200/ios-xe/does-not-exist"]
+
+    summary = json.loads(
+        paths.authoritative_summary_path(tmp_path).read_text(encoding="utf-8")
+    )
+    assert summary["unmatched_cases"] == ["cisco/catalyst9200/ios-xe/does-not-exist"]
+
+
+def test_promote_user_reviewed_only_considers_requested_cases(
+    tmp_path: Path,
+) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    _write_trial(
+        tmp_path, "20260101-000001-bbb001", _TEMPLATE, "hello world\n", key=OTHER_KEY
+    )
+
+    requests = [
+        UserReviewedRequest(case_key=OTHER_KEY.relative_path().as_posix(), suffix="v1")
+    ]
+    result = promote_user_reviewed(tmp_path, PromotionMetadata(user="tuyen"), requests)
+
+    assert len(result.promoted) == 1
+    assert result.promoted[0] == paths.authoritative_group_dir(
+        tmp_path, OTHER_KEY, "group1"
+    )
+    # KEY's case would have cleared the default gate too, but was never
+    # requested, so it must stay untouched.
+    assert not paths.authoritative_group_dir(tmp_path, KEY, "group1").exists()
+
+
+def test_promote_user_reviewed_uses_per_request_gate_override(tmp_path: Path) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    _write_trial(
+        tmp_path, "20260101-000002-aaa002", _TEMPLATE_B, "2024-01-01 10:00:00\n"
+    )
+
+    loose_gate = PromotionGate(match_rate_threshold=0.4, min_sample_count=1)
+    requests = [
+        UserReviewedRequest(
+            case_key="cisco/catalyst9200/ios-xe/show-clock",
+            suffix="v1",
+            gate=loose_gate,
+        )
+    ]
+
+    result = promote_user_reviewed(tmp_path, PromotionMetadata(user="tuyen"), requests)
+
+    # Both group1 and group2 have ratio_of_passed 0.5 -- fails the default
+    # 1.0 gate but clears the request's own 0.4 override.
+    assert len(result.promoted) == 2
