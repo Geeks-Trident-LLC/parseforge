@@ -13,15 +13,15 @@ delivery-ready content only, no per-group subdirectory. Every
 simultaneously-valid variant for a cli-name (hardware/firmware variance,
 §6) is distinguished by filename instead: the first group discovered for
 a case (``group1``) owns the unsuffixed "current version" names
-(``template.textfsm``, ``recognizers.txt``, ``data/sample.txt``,
-``artifact.json``, ``golden.hash``); each additional group owns
-``template-v2.textfsm``, ``template-v3.textfsm``, etc. — a stable,
-permanent tag derived from the group's own id, never renumbered as
-other groups gain or lose their gate. A USER_REVIEWED promotion layers
-the caller's own minor suffix onto that same major tag
+(``template.textfsm``, ``recognizers.txt``, ``data/sample.txt``); each
+additional group owns ``template-v2.textfsm``, ``template-v3.textfsm``,
+etc. — a stable, permanent tag derived from the group's own id, never
+renumbered as other groups gain or lose their gate. A USER_REVIEWED
+promotion layers the caller's own minor suffix onto that same major tag
 (``template-v2-<suffix>.textfsm``), so it never collides with — or
 silently overwrites — whichever file currently represents that group's
-auto-promoted version.
+auto-promoted version. ``golden.hash`` and ``artifact.json`` are the one
+exception to per-variant filenames — see below.
 
 Both still gate on the same primitive (:class:`PromotionGate` /
 :func:`decide_promotion` — match-rate threshold + minimum sample count),
@@ -39,14 +39,20 @@ stale snapshot would contradict promotion being high-stakes enough to
 need current numbers. This costs nothing but filesystem I/O — no LLM
 calls happen during integration.
 
-Per promoted variant, two complementary artifacts: ``golden(-suffix).hash``
-(sha256 of that variant's promoted template, the baseline future drift
-checks compare against) and ``artifact(-suffix).json`` (a snapshot of
-*this* promotion — who/when/mode/match rate/source). ``authoritative-log.json``
-is one project-wide append-only history across every promotion event ever
-(each entry records its own case/group/suffix), and
-``authoritative-summary.json`` is a project-wide snapshot of the most
+Per cli-name, two complementary artifacts, both singular and unsuffixed
+regardless of which group/variant/suffix wrote them: ``golden.hash``
+(sha256 of whichever template was most recently promoted, the baseline
+future drift checks compare against) and ``artifact.json`` (a snapshot of
+that most recent promotion — who/when/mode/match rate/source).
+``authoritative-log.json`` is one project-wide append-only history across
+every promotion event ever (each entry records its own case/group/suffix),
+and ``authoritative-summary.json`` is a project-wide snapshot of the most
 recent run — overwritten every call, not accumulated.
+
+A USER_REVIEWED request with no usable suffix (missing or blank) is never
+written — that would collide with (or silently pass as) an auto-promoted
+"current version" file. Such requests are reported in
+``PromotionRunResult.invalid_requests`` instead of being promoted.
 """
 
 from __future__ import annotations
@@ -102,10 +108,11 @@ class UserReviewedRequest:
     with a caller-supplied minor revision marker (e.g. "2", "beta") —
     parseforge combines it with the group's own major version tag
     (v1, v2, ...) rather than using it as the whole suffix, so it can
-    never collide with another group's auto-promoted identity."""
+    never collide with another group's auto-promoted identity. A missing
+    or blank suffix is never promoted — see PromotionRunResult.invalid_requests."""
 
     case_key: str
-    suffix: str
+    suffix: str | None = None
     gate: PromotionGate | None = None
 
 
@@ -123,6 +130,7 @@ class PromotionRunResult:
     promoted: list[Path]  # template files actually written this run
     unqualified: list[GroupEvaluation]
     unmatched_cases: list[str]
+    invalid_requests: list[str]  # USER_REVIEWED requests with no usable suffix
 
 
 def decide_promotion(
@@ -216,10 +224,12 @@ def _write_promoted_version(
 ) -> Path:
     """Copy the group's representative variant into the flat
     authoritative/<cli-name>/ directory, write its data/ (sample + parsed
-    records), and (re)write golden(-suffix).hash, artifact(-suffix).json,
-    and authoritative-log.json. ``suffix=None`` writes the unsuffixed
-    "current version" filenames; a suffix writes alongside them without
-    replacing them. Returns the template file path written."""
+    records), and (re)write golden.hash, artifact.json (both singular,
+    unsuffixed — always the most recent promotion for this cli-name), and
+    append to authoritative-log.json. ``suffix=None`` writes the unsuffixed
+    "current version" filenames for template/recognizers/data; a suffix
+    writes those alongside them without replacing them. Returns the
+    template file path written."""
     variant_id = _representative_variant_id(reference_group.variants)
     variant = reference_group.variants[variant_id]
 
@@ -250,8 +260,11 @@ def _write_promoted_version(
         json.dumps(parsed.records, indent=2), encoding="utf-8"
     )
 
+    # golden.hash and artifact.json are singular, unsuffixed -- always
+    # reflect the most recent promotion for this cli-name, regardless of
+    # which group/variant/suffix triggered it.
     golden_hash = hashlib.sha256(template_dest.read_bytes()).hexdigest()
-    (dest_dir / f"golden{suffix_part}.hash").write_text(golden_hash, encoding="utf-8")
+    paths.golden_hash_path(store_root, key).write_text(golden_hash, encoding="utf-8")
 
     artifact = {
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -267,7 +280,7 @@ def _write_promoted_version(
         "match_rate": evaluation.match_rate,
         "sample_count": evaluation.sample_count,
     }
-    (dest_dir / f"artifact{suffix_part}.json").write_text(
+    paths.artifact_path(store_root, key).write_text(
         json.dumps(artifact, indent=2, sort_keys=True), encoding="utf-8"
     )
 
@@ -325,6 +338,7 @@ def _write_authoritative_summary(
             for e in result.unqualified
         ],
         "unmatched_cases": result.unmatched_cases,
+        "invalid_requests": result.invalid_requests,
     }
     path = paths.authoritative_summary_path(store_root)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -386,7 +400,10 @@ def promote_auto(
     )
 
     result = PromotionRunResult(
-        promoted=promoted, unqualified=unqualified, unmatched_cases=[]
+        promoted=promoted,
+        unqualified=unqualified,
+        unmatched_cases=[],
+        invalid_requests=[],
     )
     _write_authoritative_summary(store_root, PromotionMode.AUTO_PROMOTED, result)
     return result
@@ -400,14 +417,28 @@ def promote_user_reviewed(
 ) -> PromotionRunResult:
     """Same refresh as promote_auto, but scoped to requested cases; a
     case_key with no matching trials at all is reported in
-    unmatched_cases instead of being evaluated. Each qualifying group in a
-    requested case is promoted under "v<group's major>-<request's minor>"
-    (e.g. "v2-3"), alongside whatever that group's current auto-promoted
-    files already are."""
+    unmatched_cases instead of being evaluated, and a request with no
+    usable suffix is reported in invalid_requests instead of being
+    written — a blank/missing suffix would collide with (or silently pass
+    as) an auto-promoted "current version" file. Each qualifying group in
+    a requested case is promoted under "v<group's major>-<request's
+    minor>" (e.g. "v2-3"), alongside whatever that group's current
+    auto-promoted files already are."""
     keys_by_case, references, summary = _refresh_and_summarize(store_root)
 
     unmatched_cases = [r.case_key for r in requests if r.case_key not in references]
-    matched_requests = {r.case_key: r for r in requests if r.case_key in references}
+    candidate_requests = {r.case_key: r for r in requests if r.case_key in references}
+
+    invalid_requests = [
+        case_key
+        for case_key, request in candidate_requests.items()
+        if not request.suffix or not request.suffix.strip()
+    ]
+    matched_requests = {
+        case_key: request
+        for case_key, request in candidate_requests.items()
+        if case_key not in invalid_requests
+    }
 
     case_gates = {
         case_key: request.gate
@@ -437,7 +468,10 @@ def promote_user_reviewed(
     )
 
     result = PromotionRunResult(
-        promoted=promoted, unqualified=unqualified, unmatched_cases=unmatched_cases
+        promoted=promoted,
+        unqualified=unqualified,
+        unmatched_cases=unmatched_cases,
+        invalid_requests=invalid_requests,
     )
     _write_authoritative_summary(store_root, PromotionMode.USER_REVIEWED, result)
     return result

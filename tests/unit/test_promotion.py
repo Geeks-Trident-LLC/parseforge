@@ -135,7 +135,9 @@ def test_evaluate_cases_only_cases_filters() -> None:
 def test_promote_auto_with_no_trials_returns_empty_result(tmp_path: Path) -> None:
     result = promote_auto(tmp_path, PromotionMetadata(user="tuyen"))
 
-    assert result == PromotionRunResult(promoted=[], unqualified=[], unmatched_cases=[])
+    assert result == PromotionRunResult(
+        promoted=[], unqualified=[], unmatched_cases=[], invalid_requests=[]
+    )
 
 
 def test_promote_auto_promotes_qualifying_group_and_reports_unqualified(
@@ -229,6 +231,14 @@ def test_promote_auto_promotes_multiple_qualifying_groups_independently(
     assert dest_dir / "template.textfsm" in result.promoted
     assert dest_dir / "template-v2.textfsm" in result.promoted
 
+    # golden.hash / artifact.json are singular and unsuffixed -- never
+    # golden-v2.hash / artifact-v2.json -- and end up reflecting whichever
+    # group was promoted last (group2, since group1 always processes first).
+    assert not (dest_dir / "golden-v2.hash").exists()
+    assert not (dest_dir / "artifact-v2.json").exists()
+    artifact = json.loads((dest_dir / "artifact.json").read_text(encoding="utf-8"))
+    assert artifact["group_id"] == "group2"
+
 
 def test_promote_auto_appends_authoritative_log_across_repeated_runs(
     tmp_path: Path,
@@ -274,17 +284,59 @@ def test_promote_user_reviewed_writes_suffixed_files_and_reports_unmatched(
     assert (data_dir / "sample-v1-2.txt").exists()
     assert (data_dir / "records-v1-2.json").exists()
 
-    artifact = json.loads((dest_dir / "artifact-v1-2.json").read_text(encoding="utf-8"))
+    # artifact.json/golden.hash are singular and unsuffixed even though
+    # the template/recognizers/data files themselves are suffixed.
+    assert not (dest_dir / "artifact-v1-2.json").exists()
+    artifact = json.loads((dest_dir / "artifact.json").read_text(encoding="utf-8"))
     assert artifact["mode"] == "user_reviewed"
     assert artifact["suffix"] == "v1-2"
     assert artifact["note"] == "reviewed in standup"
 
     assert result.unmatched_cases == ["cisco/catalyst9200/ios-xe/does-not-exist"]
-
+    assert result.invalid_requests == []
     summary = json.loads(
         paths.authoritative_summary_path(tmp_path).read_text(encoding="utf-8")
     )
     assert summary["unmatched_cases"] == ["cisco/catalyst9200/ios-xe/does-not-exist"]
+
+
+def test_promote_user_reviewed_skips_requests_with_no_usable_suffix(
+    tmp_path: Path,
+) -> None:
+    """A missing or blank suffix would collide with (or silently pass as)
+    an auto-promoted "current version" file, so it must never be written
+    -- reported in invalid_requests instead."""
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    _write_trial(
+        tmp_path, "20260101-000001-bbb001", _TEMPLATE, "hello world\n", key=OTHER_KEY
+    )
+
+    requests = [
+        UserReviewedRequest(
+            case_key="cisco/catalyst9200/ios-xe/show-clock", suffix=None
+        ),
+        UserReviewedRequest(
+            case_key="cisco/catalyst9200/ios-xe/show-version", suffix="   "
+        ),
+    ]
+    result = promote_user_reviewed(tmp_path, PromotionMetadata(user="tuyen"), requests)
+
+    assert result.promoted == []
+    assert set(result.invalid_requests) == {
+        "cisco/catalyst9200/ios-xe/show-clock",
+        "cisco/catalyst9200/ios-xe/show-version",
+    }
+    assert result.unmatched_cases == []
+    assert not paths.authoritative_dir(tmp_path, KEY).exists()
+    assert not paths.authoritative_dir(tmp_path, OTHER_KEY).exists()
+
+    summary = json.loads(
+        paths.authoritative_summary_path(tmp_path).read_text(encoding="utf-8")
+    )
+    assert set(summary["invalid_requests"]) == {
+        "cisco/catalyst9200/ios-xe/show-clock",
+        "cisco/catalyst9200/ios-xe/show-version",
+    }
 
 
 def test_promote_user_reviewed_only_considers_requested_cases(
