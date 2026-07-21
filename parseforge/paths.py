@@ -75,15 +75,13 @@ def integration_dir(store_root: Path, key: DeviceKey) -> Path:
 
 
 def authoritative_dir(store_root: Path, key: DeviceKey) -> Path:
-    """The approved, in-production directory for a cli-name (§3.3)."""
+    """The approved, in-production directory for a cli-name (§3.3) — final,
+    delivery-ready content only. Every simultaneously-valid variant for a
+    cli-name (hardware/firmware variance, §6) lives directly in this one
+    flat directory, distinguished by filename (template.textfsm,
+    template-v2.textfsm, ...) rather than a per-variant subdirectory — see
+    :mod:`parseforge.promotion`."""
     return tier_path(store_root, AUTHORITATIVE, key)
-
-
-def authoritative_group_dir(store_root: Path, key: DeviceKey, group_id: str) -> Path:
-    """Directory for one promoted group variant under a cli-name — multiple
-    groups can coexist per cli-name when output legitimately varies by
-    hardware/firmware (§6)."""
-    return authoritative_dir(store_root, key) / group_id
 
 
 def reference_summary_path(store_root: Path) -> Path:
@@ -117,35 +115,25 @@ def discover_device_keys(store_root: Path) -> list[DeviceKey]:
     return keys
 
 
-def promoted_data_dir(store_root: Path, key: DeviceKey, group_id: str) -> Path:
-    """Where a promoted group's sample(-suffix).txt / records(-suffix).json
-    live, alongside (not inside) template(-suffix).textfsm."""
-    return authoritative_group_dir(store_root, key, group_id) / "data"
-
-
-def golden_hash_path(store_root: Path, key: DeviceKey, group_id: str) -> Path:
-    """sha256 of the currently-promoted template.textfsm content, updated on
-    every promotion into this group (regardless of mode/suffix) — the
-    baseline future drift checks compare production samples against."""
-    return authoritative_group_dir(store_root, key, group_id) / "golden.hash"
-
-
-def artifact_path(store_root: Path, key: DeviceKey, group_id: str) -> Path:
-    """Snapshot describing the most recent promotion into this group (who,
-    when, mode, match rate, source trial) — distinct from promotion-log.json,
-    which is the append-only history across every promotion event."""
-    return authoritative_group_dir(store_root, key, group_id) / "artifact.json"
-
-
-def promotion_log_path(store_root: Path, key: DeviceKey) -> Path:
-    """Append-only promotion history for a cli-name, shared across all of
-    its groups (each entry records its own group_id)."""
-    return authoritative_dir(store_root, key) / "promotion-log.json"
+def promoted_data_dir(store_root: Path, key: DeviceKey) -> Path:
+    """Where a promoted variant's sample(-suffix).txt /
+    records(-suffix).json live, alongside (not inside) each cli-name's
+    template(-suffix).textfsm."""
+    return authoritative_dir(store_root, key) / "data"
 
 
 def authoritative_summary_path(store_root: Path) -> Path:
     """Project-wide snapshot of the most recent promotion run — what got
     promoted, what didn't clear its gate, and (for USER_REVIEWED) any
     requested case that doesn't exist. Overwritten every run; history lives
-    in each cli-name's own promotion-log.json instead."""
+    in authoritative-log.json instead."""
     return tier_root(store_root, AUTHORITATIVE) / "authoritative-summary.json"
+
+
+def authoritative_log_path(store_root: Path) -> Path:
+    """Append-only promotion history across every cli-name and every
+    promotion event ever — one project-wide file (mirroring
+    reference-summary.json's one-file pattern) rather than one log per
+    cli-name, since each entry already records which case/variant it
+    belongs to."""
+    return tier_root(store_root, AUTHORITATIVE) / "authoritative-log.json"

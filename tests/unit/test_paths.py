@@ -36,29 +36,9 @@ def test_integration_dir_resolves_under_integration_tier(tmp_path: Path) -> None
     )
 
 
-def test_authoritative_group_dir_nests_under_authoritative_dir(
-    tmp_path: Path,
-) -> None:
-    assert paths.authoritative_group_dir(tmp_path, KEY, "group1") == (
-        paths.authoritative_dir(tmp_path, KEY) / "group1"
-    )
-
-
-def test_promoted_data_dir_nests_under_authoritative_group_dir(tmp_path: Path) -> None:
-    assert paths.promoted_data_dir(tmp_path, KEY, "group1") == (
-        paths.authoritative_group_dir(tmp_path, KEY, "group1") / "data"
-    )
-
-
-def test_golden_hash_and_artifact_paths_sit_in_group_dir(tmp_path: Path) -> None:
-    group_dir = paths.authoritative_group_dir(tmp_path, KEY, "group1")
-    assert paths.golden_hash_path(tmp_path, KEY, "group1") == group_dir / "golden.hash"
-    assert paths.artifact_path(tmp_path, KEY, "group1") == group_dir / "artifact.json"
-
-
-def test_promotion_log_path_sits_at_cli_name_level(tmp_path: Path) -> None:
-    assert paths.promotion_log_path(tmp_path, KEY) == (
-        paths.authoritative_dir(tmp_path, KEY) / "promotion-log.json"
+def test_promoted_data_dir_nests_under_authoritative_dir(tmp_path: Path) -> None:
+    assert paths.promoted_data_dir(tmp_path, KEY) == (
+        paths.authoritative_dir(tmp_path, KEY) / "data"
     )
 
 
@@ -67,6 +47,14 @@ def test_authoritative_summary_path_sits_at_authoritative_tier_root(
 ) -> None:
     assert paths.authoritative_summary_path(tmp_path) == (
         tmp_path / "authoritative" / "authoritative-summary.json"
+    )
+
+
+def test_authoritative_log_path_sits_at_authoritative_tier_root(
+    tmp_path: Path,
+) -> None:
+    assert paths.authoritative_log_path(tmp_path) == (
+        tmp_path / "authoritative" / "authoritative-log.json"
     )
 
 

@@ -164,38 +164,33 @@ def test_promote_auto_promotes_qualifying_group_and_reports_unqualified(
     result = promote_auto(tmp_path, metadata)
 
     assert len(result.promoted) == 1
-    dest_dir = result.promoted[0]
-    assert dest_dir == paths.authoritative_group_dir(tmp_path, KEY, "group1")
-
-    assert (dest_dir / "template.textfsm").read_text(encoding="utf-8") == _TEMPLATE
+    template_path = result.promoted[0]
+    dest_dir = paths.authoritative_dir(tmp_path, KEY)
+    # group1 is the primary/unsuffixed variant -- no group directory, no
+    # suffix, sitting directly in the flat cli-name directory.
+    assert template_path == dest_dir / "template.textfsm"
+    assert template_path.read_text(encoding="utf-8") == _TEMPLATE
     assert (dest_dir / "recognizers.txt").read_text(encoding="utf-8") == "r1\nr2"
 
-    data_dir = paths.promoted_data_dir(tmp_path, KEY, "group1")
+    data_dir = paths.promoted_data_dir(tmp_path, KEY)
     assert (data_dir / "sample.txt").exists()
     records = json.loads((data_dir / "records.json").read_text(encoding="utf-8"))
     assert records
 
-    golden_hash = paths.golden_hash_path(tmp_path, KEY, "group1").read_text(
-        encoding="utf-8"
-    )
-    expected_hash = hashlib.sha256(
-        (dest_dir / "template.textfsm").read_bytes()
-    ).hexdigest()
+    golden_hash = (dest_dir / "golden.hash").read_text(encoding="utf-8")
+    expected_hash = hashlib.sha256(template_path.read_bytes()).hexdigest()
     assert golden_hash == expected_hash
 
-    artifact = json.loads(
-        paths.artifact_path(tmp_path, KEY, "group1").read_text(encoding="utf-8")
-    )
+    artifact = json.loads((dest_dir / "artifact.json").read_text(encoding="utf-8"))
     assert artifact["created_by"] == "tuyen"
     assert artifact["email"] == "tuyen@example.com"
     assert artifact["mode"] == "auto_promoted"
     assert artifact["suffix"] is None
     assert artifact["case"] == "cisco/catalyst9200/ios-xe/show-clock"
 
-    log = json.loads(
-        paths.promotion_log_path(tmp_path, KEY).read_text(encoding="utf-8")
-    )
+    log = json.loads(paths.authoritative_log_path(tmp_path).read_text(encoding="utf-8"))
     assert len(log) == 1
+    assert log[0]["case"] == "cisco/catalyst9200/ios-xe/show-clock"
     assert log[0]["group_id"] == "group1"
     assert log[0]["mode"] == "auto_promoted"
 
@@ -227,12 +222,15 @@ def test_promote_auto_promotes_multiple_qualifying_groups_independently(
     gate = PromotionGate(match_rate_threshold=0.4, min_sample_count=1)
     result = promote_auto(tmp_path, PromotionMetadata(user="tuyen"), default_gate=gate)
 
+    dest_dir = paths.authoritative_dir(tmp_path, KEY)
     assert len(result.promoted) == 2
-    assert paths.authoritative_group_dir(tmp_path, KEY, "group1") in result.promoted
-    assert paths.authoritative_group_dir(tmp_path, KEY, "group2") in result.promoted
+    # group1 is unsuffixed (the primary); group2 gets its own stable,
+    # permanent v2 tag -- both sit side by side in the same flat directory.
+    assert dest_dir / "template.textfsm" in result.promoted
+    assert dest_dir / "template-v2.textfsm" in result.promoted
 
 
-def test_promote_auto_appends_promotion_log_across_repeated_runs(
+def test_promote_auto_appends_authoritative_log_across_repeated_runs(
     tmp_path: Path,
 ) -> None:
     _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
@@ -241,9 +239,7 @@ def test_promote_auto_appends_promotion_log_across_repeated_runs(
     promote_auto(tmp_path, metadata)
     promote_auto(tmp_path, metadata)
 
-    log = json.loads(
-        paths.promotion_log_path(tmp_path, KEY).read_text(encoding="utf-8")
-    )
+    log = json.loads(paths.authoritative_log_path(tmp_path).read_text(encoding="utf-8"))
     assert len(log) == 2
 
 
@@ -256,29 +252,31 @@ def test_promote_user_reviewed_writes_suffixed_files_and_reports_unmatched(
     metadata = PromotionMetadata(user="tuyen", note="reviewed in standup")
     requests = [
         UserReviewedRequest(
-            case_key="cisco/catalyst9200/ios-xe/show-clock", suffix="v2"
+            case_key="cisco/catalyst9200/ios-xe/show-clock", suffix="2"
         ),
         UserReviewedRequest(
-            case_key="cisco/catalyst9200/ios-xe/does-not-exist", suffix="v1"
+            case_key="cisco/catalyst9200/ios-xe/does-not-exist", suffix="1"
         ),
     ]
 
     result = promote_user_reviewed(tmp_path, metadata, requests)
 
     assert len(result.promoted) == 1
-    dest_dir = result.promoted[0]
-    assert (dest_dir / "template-v2.textfsm").exists()
-    assert (dest_dir / "recognizers-v2.txt").exists()
+    template_path = result.promoted[0]
+    dest_dir = paths.authoritative_dir(tmp_path, KEY)
+    # group1's major tag is "v1"; combined with the request's own minor
+    # marker "2" -> "v1-2" -- distinct from group1's unsuffixed auto-
+    # promoted files, which this leaves untouched.
+    assert template_path == dest_dir / "template-v1-2.textfsm"
+    assert (dest_dir / "recognizers-v1-2.txt").exists()
 
-    data_dir = paths.promoted_data_dir(tmp_path, KEY, "group1")
-    assert (data_dir / "sample-v2.txt").exists()
-    assert (data_dir / "records-v2.json").exists()
+    data_dir = paths.promoted_data_dir(tmp_path, KEY)
+    assert (data_dir / "sample-v1-2.txt").exists()
+    assert (data_dir / "records-v1-2.json").exists()
 
-    artifact = json.loads(
-        paths.artifact_path(tmp_path, KEY, "group1").read_text(encoding="utf-8")
-    )
+    artifact = json.loads((dest_dir / "artifact-v1-2.json").read_text(encoding="utf-8"))
     assert artifact["mode"] == "user_reviewed"
-    assert artifact["suffix"] == "v2"
+    assert artifact["suffix"] == "v1-2"
     assert artifact["note"] == "reviewed in standup"
 
     assert result.unmatched_cases == ["cisco/catalyst9200/ios-xe/does-not-exist"]
@@ -298,17 +296,17 @@ def test_promote_user_reviewed_only_considers_requested_cases(
     )
 
     requests = [
-        UserReviewedRequest(case_key=OTHER_KEY.relative_path().as_posix(), suffix="v1")
+        UserReviewedRequest(case_key=OTHER_KEY.relative_path().as_posix(), suffix="1")
     ]
     result = promote_user_reviewed(tmp_path, PromotionMetadata(user="tuyen"), requests)
 
     assert len(result.promoted) == 1
-    assert result.promoted[0] == paths.authoritative_group_dir(
-        tmp_path, OTHER_KEY, "group1"
+    assert result.promoted[0] == (
+        paths.authoritative_dir(tmp_path, OTHER_KEY) / "template-v1-1.textfsm"
     )
     # KEY's case would have cleared the default gate too, but was never
     # requested, so it must stay untouched.
-    assert not paths.authoritative_group_dir(tmp_path, KEY, "group1").exists()
+    assert not paths.authoritative_dir(tmp_path, KEY).exists()
 
 
 def test_promote_user_reviewed_uses_per_request_gate_override(tmp_path: Path) -> None:
@@ -321,7 +319,7 @@ def test_promote_user_reviewed_uses_per_request_gate_override(tmp_path: Path) ->
     requests = [
         UserReviewedRequest(
             case_key="cisco/catalyst9200/ios-xe/show-clock",
-            suffix="v1",
+            suffix="1",
             gate=loose_gate,
         )
     ]
@@ -329,5 +327,9 @@ def test_promote_user_reviewed_uses_per_request_gate_override(tmp_path: Path) ->
     result = promote_user_reviewed(tmp_path, PromotionMetadata(user="tuyen"), requests)
 
     # Both group1 and group2 have ratio_of_passed 0.5 -- fails the default
-    # 1.0 gate but clears the request's own 0.4 override.
+    # 1.0 gate but clears the request's own 0.4 override. Each gets its own
+    # major tag combined with the same minor marker: v1-1 and v2-1.
+    dest_dir = paths.authoritative_dir(tmp_path, KEY)
     assert len(result.promoted) == 2
+    assert dest_dir / "template-v1-1.textfsm" in result.promoted
+    assert dest_dir / "template-v2-1.textfsm" in result.promoted
