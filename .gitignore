@@ -35,12 +35,3 @@ venv/
 
 # Claude Code local session state
 .claude/
-
-# Runtime template store — trials/integration/authoritative are generated
-# data, not source; keep the directory scaffold via .gitkeep only.
-/store/trials/*
-!/store/trials/.gitkeep
-/store/integration/*
-!/store/integration/.gitkeep
-/store/authoritative/*
-!/store/authoritative/.gitkeep
