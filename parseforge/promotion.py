@@ -49,6 +49,16 @@ every promotion event ever (each entry records its own case/group/suffix),
 and ``authoritative-summary.json`` is a project-wide snapshot of the most
 recent run — overwritten every call, not accumulated.
 
+When a promotion is about to overwrite a slot (``template.textfsm``,
+``template-v2.textfsm``, ...) whose existing content differs from what's
+about to be written — e.g. re-running :func:`promote_auto` after new
+trials change which variant is representative — the *old* content is
+archived to that cli-name's ``history/`` first (§3.3), never silently
+discarded. A no-op re-promotion of byte-identical content archives
+nothing. ``authoritative-log.json`` already records *that* every
+promotion happened; ``history/`` is what lets you recover the actual
+prior template text, not just its metadata.
+
 A USER_REVIEWED request with no usable suffix (missing or blank) is never
 written — that would collide with (or silently pass as) an auto-promoted
 "current version" file. Such requests are reported in
@@ -211,6 +221,22 @@ def _version_tag(group_id: str) -> str:
     return f"v{_group_ordinal(group_id)}"
 
 
+def _archive_if_changed(dest_path: Path, new_content: str, history_dir: Path) -> None:
+    """If ``dest_path`` already holds *different* content than
+    ``new_content``, copy its current (about-to-be-replaced) content into
+    history/ before the caller overwrites it (§3.3). A no-op when
+    ``dest_path`` doesn't exist yet or already matches ``new_content`` —
+    re-promoting byte-identical content shouldn't spam history."""
+    if not dest_path.exists():
+        return
+    old_content = dest_path.read_text(encoding="utf-8")
+    if old_content == new_content:
+        return
+    history_dir.mkdir(parents=True, exist_ok=True)
+    archived_name = f"{dest_path.stem}-{paths.new_run_id()}{dest_path.suffix}"
+    (history_dir / archived_name).write_text(old_content, encoding="utf-8")
+
+
 def _write_promoted_version(
     store_root: Path,
     key: paths.DeviceKey,
@@ -228,8 +254,10 @@ def _write_promoted_version(
     unsuffixed — always the most recent promotion for this cli-name), and
     append to authoritative-log.json. ``suffix=None`` writes the unsuffixed
     "current version" filenames for template/recognizers/data; a suffix
-    writes those alongside them without replacing them. Returns the
-    template file path written."""
+    writes those alongside them without replacing them. Whichever
+    template.textfsm/recognizers.txt slot is being written is archived to
+    history/ first if it already holds different content (see
+    _archive_if_changed). Returns the template file path written."""
     variant_id = _representative_variant_id(reference_group.variants)
     variant = reference_group.variants[variant_id]
 
@@ -245,14 +273,17 @@ def _write_promoted_version(
     dest_dir.mkdir(parents=True, exist_ok=True)
     data_dir = paths.promoted_data_dir(store_root, key)
     data_dir.mkdir(parents=True, exist_ok=True)
+    history_dir = paths.authoritative_history_dir(store_root, key)
 
     template_dest = dest_dir / f"template{suffix_part}.textfsm"
+    _archive_if_changed(template_dest, template_text, history_dir)
     template_dest.write_text(template_text, encoding="utf-8")
 
     if source_recognizers.exists():
-        (dest_dir / f"recognizers{suffix_part}.txt").write_text(
-            source_recognizers.read_text(encoding="utf-8"), encoding="utf-8"
-        )
+        recognizers_text = source_recognizers.read_text(encoding="utf-8")
+        recognizers_dest = dest_dir / f"recognizers{suffix_part}.txt"
+        _archive_if_changed(recognizers_dest, recognizers_text, history_dir)
+        recognizers_dest.write_text(recognizers_text, encoding="utf-8")
 
     (data_dir / f"sample{suffix_part}.txt").write_text(sample_text, encoding="utf-8")
     parsed = validation.parse(template_text, sample_text)

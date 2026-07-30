@@ -33,6 +33,7 @@ OTHER_KEY = paths.DeviceKey(
 )
 
 _TEMPLATE = "Value LINE (.+)\n\nStart\n  ^${LINE} -> Record\n"
+_TEMPLATE_LINE_VARIANT = "Value LINE (\\S.*)\n\nStart\n  ^${LINE} -> Record\n"
 _TEMPLATE_B = (
     "Value DATE (\\S+)\nValue TIME (\\S+)\n\nStart\n  ^${DATE}\\s+${TIME} -> Record\n"
 )
@@ -45,12 +46,13 @@ def _write_trial(
     sample: str,
     key: paths.DeviceKey = KEY,
     passed: bool = True,
+    recognizers: str = "r1\nr2",
 ) -> Path:
     run_dir = paths.trial_run_dir(store_root, key, run_id=run_id)
     (run_dir / "derive").mkdir(parents=True, exist_ok=True)
     (run_dir / "samples").mkdir(parents=True, exist_ok=True)
     (run_dir / "derive" / "template.textfsm").write_text(template, encoding="utf-8")
-    (run_dir / "derive" / "recognizers.txt").write_text("r1\nr2", encoding="utf-8")
+    (run_dir / "derive" / "recognizers.txt").write_text(recognizers, encoding="utf-8")
     (run_dir / "samples" / "sample.txt").write_text(sample, encoding="utf-8")
     (run_dir / "summary.json").write_text(
         json.dumps({"passed": passed}), encoding="utf-8"
@@ -251,6 +253,69 @@ def test_promote_auto_appends_authoritative_log_across_repeated_runs(
 
     log = json.loads(paths.authoritative_log_path(tmp_path).read_text(encoding="utf-8"))
     assert len(log) == 2
+
+
+def test_promote_auto_archives_previous_content_when_representative_changes(
+    tmp_path: Path,
+) -> None:
+    """Re-running promote_auto after new trials shift which variant is
+    representative must archive the old template/recognizers content to
+    history/ before overwriting it -- never silently discard it (§3.3)."""
+    _write_trial(
+        tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n", recognizers="r1"
+    )
+
+    first = promote_auto(tmp_path, PromotionMetadata(user="tuyen"))
+    dest_dir = paths.authoritative_dir(tmp_path, KEY)
+    assert first.promoted == [dest_dir / "template.textfsm"]
+    original_template = (dest_dir / "template.textfsm").read_text(encoding="utf-8")
+    assert original_template == _TEMPLATE
+
+    history_dir = paths.authoritative_history_dir(tmp_path, KEY)
+    assert not history_dir.exists()
+
+    # Two more trials with a different (but same-schema) template make the
+    # new variant more prevalent -- it becomes the representative.
+    _write_trial(
+        tmp_path,
+        "20260101-000002-aaa002",
+        _TEMPLATE_LINE_VARIANT,
+        "goodbye world\n",
+        recognizers="r2",
+    )
+    _write_trial(
+        tmp_path,
+        "20260101-000003-aaa003",
+        _TEMPLATE_LINE_VARIANT,
+        "third line\n",
+        recognizers="r2",
+    )
+
+    second = promote_auto(tmp_path, PromotionMetadata(user="tuyen"))
+    assert second.promoted == [dest_dir / "template.textfsm"]
+    assert (dest_dir / "template.textfsm").read_text(
+        encoding="utf-8"
+    ) == _TEMPLATE_LINE_VARIANT
+    assert (dest_dir / "recognizers.txt").read_text(encoding="utf-8") == "r2"
+
+    archived_templates = list(history_dir.glob("template-*.textfsm"))
+    assert len(archived_templates) == 1
+    assert archived_templates[0].read_text(encoding="utf-8") == original_template
+
+    archived_recognizers = list(history_dir.glob("recognizers-*.txt"))
+    assert len(archived_recognizers) == 1
+    assert archived_recognizers[0].read_text(encoding="utf-8") == "r1"
+
+
+def test_promote_auto_does_not_archive_identical_content(tmp_path: Path) -> None:
+    _write_trial(tmp_path, "20260101-000001-aaa001", _TEMPLATE, "hello world\n")
+    metadata = PromotionMetadata(user="tuyen")
+
+    promote_auto(tmp_path, metadata)
+    promote_auto(tmp_path, metadata)
+
+    history_dir = paths.authoritative_history_dir(tmp_path, KEY)
+    assert not history_dir.exists()
 
 
 def test_promote_user_reviewed_writes_suffixed_files_and_reports_unmatched(
