@@ -137,11 +137,25 @@ def artifact_path(store_root: Path, key: DeviceKey) -> Path:
     return authoritative_dir(store_root, key) / "artifact.json"
 
 
+def authoritative_history_dir(store_root: Path, key: DeviceKey) -> Path:
+    """Where a promoted file's prior content is archived just before it
+    gets overwritten by a *different* promotion into the same slot (§3.3)
+    — e.g. re-running promote_auto() after new trials change which variant
+    is representative. Archived filenames are ``<stem>-<run-id>.<ext>``
+    (e.g. ``template-20260721-083901-ab12cd.textfsm``,
+    ``template-v2-20260721-090512-ef34gh.textfsm``), so the slot a given
+    history entry used to belong to stays identifiable even with multiple
+    simultaneously-valid variants. Nothing is archived when a promotion
+    writes byte-identical content — see :mod:`parseforge.promotion`."""
+    return authoritative_dir(store_root, key) / "history"
+
+
 def authoritative_summary_path(store_root: Path) -> Path:
     """Project-wide snapshot of the most recent promotion run — what got
     promoted, what didn't clear its gate, and (for USER_REVIEWED) any
-    requested case that doesn't exist. Overwritten every run; history lives
-    in authoritative-log.json instead."""
+    requested case that doesn't exist. Overwritten every run — metadata
+    history across every promotion event lives in authoritative-log.json,
+    and prior file *content* lives in each cli-name's own history/."""
     return tier_root(store_root, AUTHORITATIVE) / "authoritative-summary.json"
 
 
