@@ -252,6 +252,7 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
             username="tuyen",
             email="tuyen@example.com",
             description="desc",
+            note="fyi",
         ),
     )
 
@@ -265,6 +266,7 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         "username": "tuyen",
         "email": "tuyen@example.com",
         "description": "desc",
+        "note": "fyi",
     }
     assert summary["command_info"] == {
         "vendor": "cisco",

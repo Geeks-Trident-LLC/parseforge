@@ -69,6 +69,7 @@ class TrialMetadata:
     username: str | None = None
     email: str | None = None
     description: str | None = None
+    note: str | None = None
 
 
 @dataclass(frozen=True)
