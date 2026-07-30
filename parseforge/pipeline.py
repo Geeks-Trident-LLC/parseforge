@@ -11,18 +11,23 @@ Steps 1-7 of SPEC.md §5, wired to what each already does:
 2. Name resolution — :func:`parseforge.naming.resolve_cli_name`
    (LLM-backed, cached; only costs tokens on a cache miss).
 3. Path resolution — :mod:`parseforge.paths` (trials/<vendor>/<family>/
-   <os>/<version>/<cli-name>/<run-id>/).
-4. Sampling — :mod:`parseforge.sampling`, written to samples/sample.txt
-   and samples/sample-for-prompt.txt (the latter with a
-   "SAMPLE REFERENCE SOURCE" annotation — see _build_sample_for_prompt).
+   <os>/<cli-name>/<run-id>/). The OS version isn't part of the path (see
+   paths.py) — it's recorded per trial in summary.json's ``command_info``.
+4. Sampling — :mod:`parseforge.sampling`, written to samples/sample.txt.
+   The annotated version sent to generation (see _build_sample_for_prompt)
+   is built in memory only — not written to disk, since nothing reads it
+   back.
 5-6. Generation — :mod:`parseforge.generation`, written to derive/.
-7. Self-validation — the generated template is loaded via the real
-   textfsm library and run against the *raw* sample (not the annotated
-   prompt version) to confirm it actually parses.
+7. Self-validation — :func:`parseforge.validation.parse` runs the
+   generated template against the *raw* sample (not the annotated
+   prompt version) to confirm it actually parses, independent of
+   whatever textfsm-ai's own pipeline already reported as ``.ready``.
 
 Everything is written to summary.json alongside a created/ended
-timestamp, duration, naming + generation token usage, and provider
-info for both LLM calls.
+timestamp, duration, an ``error`` message when ``passed`` is false,
+naming + generation token usage, and the generation provider/model
+(the one that actually produced the template — naming's own provider
+only matters on a cache miss and isn't tracked here).
 
 Steps 8-11 (integration selection, authoritative promotion, drift
 monitoring, repeat/loop) run out-of-band across all trials for a
@@ -32,7 +37,6 @@ cli-name, not per single pipeline invocation — see
 
 from __future__ import annotations
 
-import io
 import json
 import time
 from dataclasses import asdict, dataclass
@@ -41,9 +45,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-import textfsm
-
-from parseforge import generation, naming, paths, sampling
+from parseforge import generation, naming, paths, sampling, validation
 
 
 class Mode(str, Enum):
@@ -65,7 +67,7 @@ class TrialMetadata:
 
     project: str | None = None
     username: str | None = None
-    user_reference: str | None = None
+    email: str | None = None
     description: str | None = None
 
 
@@ -74,7 +76,7 @@ class TrialResult:
     run_dir: Path
     cli_name: str
     passed: bool
-    duration_ms: float
+    duration_ms: int
 
 
 def _build_sample_for_prompt(
@@ -85,7 +87,7 @@ def _build_sample_for_prompt(
     the unannotated ``sample`` text.
 
     Caveat carried over from where this format was worked out (see
-    tests/integration/generation/): textfsm-ai's own prompt has no
+    tests/real/generation/): textfsm-ai's own prompt has no
     closing delimiter on its Sample section, so this annotation isn't
     guaranteed to be excluded from what the LLM treats as data.
     """
@@ -96,18 +98,6 @@ def _build_sample_for_prompt(
         f'a real "{command}" output from a '
         f"{context.vendor} {context.family} {context.os} device"
     )
-
-
-def _self_validate(template: str, sample: str) -> bool:
-    """Run the generated template against its own raw sample via the
-    real textfsm library (SPEC.md §5 step 7) — independent of whatever
-    textfsm-ai's own pipeline already reported as .ready."""
-    try:
-        fsm = textfsm.TextFSM(io.StringIO(template))
-        records = fsm.ParseText(sample)
-    except Exception:
-        return False
-    return len(records) >= 1
 
 
 def _usage_dict(usage: Any | None) -> dict[str, Any] | None:
@@ -142,7 +132,6 @@ def run_command_pipeline(
         vendor=context.vendor,
         family=context.family,
         os=context.os,
-        version=context.version,
         cli_name=naming_resolution.name,
     )
     run_dir = paths.trial_run_dir(store_root, key)
@@ -156,9 +145,6 @@ def run_command_pipeline(
     (samples_dir / "sample.txt").write_text(sample_text, encoding="utf-8")
 
     sample_for_prompt = _build_sample_for_prompt(sample_text, command, context)
-    (samples_dir / "sample-for-prompt.txt").write_text(
-        sample_for_prompt, encoding="utf-8"
-    )
 
     # 5-6. Generation
     gen_result = generation.generate(
@@ -179,33 +165,47 @@ def run_command_pipeline(
     )
 
     # 7. Self-validation — against the raw sample, not the annotated one.
-    passed = gen_result.ready and _self_validate(gen_result.template, sample_text)
+    parsed = validation.parse(gen_result.template, sample_text)
+    self_validated = parsed.passed and bool(parsed.records)
+    passed = gen_result.ready and self_validated
+
+    error: str | None = None
+    if not gen_result.ready:
+        error = gen_result.reason or "generation not ready"
+    elif not self_validated:
+        error = (
+            "; ".join(parsed.errors)
+            if parsed.errors
+            else "template produced no records against its own sample"
+        )
 
     ended_at = datetime.now(timezone.utc)
-    duration_ms = (time.monotonic() - start) * 1000
+    duration_ms = round((time.monotonic() - start) * 1000)
 
     summary = {
         "created_at": started_at.isoformat(),
         "ended_at": ended_at.isoformat(),
         "duration_ms": duration_ms,
         "passed": passed,
-        "mode": mode.value,
+        "error": error,
         "metadata": asdict(metadata),
+        "command_info": {
+            "vendor": context.vendor,
+            "family": context.family,
+            "os": context.os,
+            "version": context.version,
+            "device_type": connection.device_type,
+            "command": command,
+        },
         "usage": {
-            "naming_usage": _usage_dict(
+            "naming": _usage_dict(
                 naming_resolution.response.usage if naming_resolution.response else None
             ),
-            "generation_usage": _usage_dict(gen_result.usage),
+            "generation": _usage_dict(gen_result.usage),
         },
         "provider_info": {
-            "naming": {
-                "backend": type(naming_builder).__name__,
-                "model": getattr(naming_builder, "model", None),
-            },
-            "generation": {
-                "provider": generation_config.provider,
-                "model": generation_config.model,
-            },
+            "provider": generation_config.provider,
+            "model": generation_config.model,
         },
     }
     (run_dir / "summary.json").write_text(

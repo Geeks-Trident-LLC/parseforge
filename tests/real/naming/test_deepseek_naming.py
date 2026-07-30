@@ -16,7 +16,7 @@ from parseforge.naming import CliContext, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
 from parseforge.naming.providers.deepseek import DeepSeekRegexBuilder
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.real
 
 CONTEXT = CliContext(
     vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"

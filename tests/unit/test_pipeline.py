@@ -40,7 +40,9 @@ class FakeRegexBuilder:
         return LLMCLIResponse(
             content=self.pattern,
             raw=None,
-            usage=NamingTokenUsage(input_tokens=10, output_tokens=5, total_tokens=15),
+            usage=NamingTokenUsage(
+                input_tokens=10, output_tokens=5, total_tokens=15, estimated_cost=0.002
+            ),
             duration_ms=1.0,
             reason="stop",
             ready=True,
@@ -99,15 +101,10 @@ def test_run_command_pipeline_writes_expected_files(
     assert result.cli_name == "show-clock"
     assert result.passed is True
     assert result.duration_ms > 0
+    assert isinstance(result.duration_ms, int)
 
     expected_run_dir = (
-        tmp_path
-        / "trials"
-        / "cisco"
-        / "catalyst9200"
-        / "ios-xe"
-        / "17.9.1"
-        / "show-clock"
+        tmp_path / "trials" / "cisco" / "catalyst9200" / "ios-xe" / "show-clock"
     )
     assert result.run_dir.parent == expected_run_dir
 
@@ -131,9 +128,16 @@ def test_run_command_pipeline_writes_expected_files(
 def test_sample_for_prompt_includes_reference_annotation(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setattr(
-        "parseforge.generation.generate", lambda *a, **k: _fake_generation_result()
-    )
+    """sample-for-prompt.txt isn't written to disk (nothing reads it back) —
+    the annotated text only ever exists in memory, passed straight to
+    generation.generate(). Verify its content via that call instead."""
+    captured = {}
+
+    def _fake_generate(sample, *a, **k):
+        captured["sample"] = sample
+        return _fake_generation_result()
+
+    monkeypatch.setattr("parseforge.generation.generate", _fake_generate)
     naming_builder = FakeRegexBuilder(r"show\s+clock")
     sampler = FakeSampler("hello world")
 
@@ -148,14 +152,13 @@ def test_sample_for_prompt_includes_reference_annotation(
         naming_index_path=tmp_path / ".cli-name.json",
     )
 
-    sample_for_prompt = (
-        result.run_dir / "samples" / "sample-for-prompt.txt"
-    ).read_text(encoding="utf-8")
+    sample_for_prompt = captured["sample"]
     assert sample_for_prompt.startswith("hello world")
     assert "SAMPLE REFERENCE SOURCE" in sample_for_prompt
     assert 'a real "show clock" output from a cisco catalyst9200 ios-xe device' in (
         sample_for_prompt
     )
+    assert not (result.run_dir / "samples" / "sample-for-prompt.txt").exists()
 
 
 def test_generation_receives_sample_for_prompt_not_raw_sample(
@@ -225,8 +228,8 @@ def test_naming_cache_hit_has_no_naming_usage_in_summary(
     assert naming_builder.calls == 1
 
     summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
-    assert summary["usage"]["naming_usage"] is None
-    assert summary["usage"]["generation_usage"]["total_tokens"] == 28
+    assert summary["usage"]["naming"] is None
+    assert summary["usage"]["generation"]["total_tokens"] == 28
 
 
 def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -245,39 +248,52 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         store_root=tmp_path,
         naming_index_path=tmp_path / ".cli-name.json",
         metadata=TrialMetadata(
-            project="acme", username="tuyen", user_reference="ref-1", description="desc"
+            project="acme",
+            username="tuyen",
+            email="tuyen@example.com",
+            description="desc",
         ),
     )
 
     summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
 
     assert summary["passed"] is True
-    assert summary["mode"] == "loop"
+    assert summary["error"] is None
+    assert "mode" not in summary
     assert summary["metadata"] == {
         "project": "acme",
         "username": "tuyen",
-        "user_reference": "ref-1",
+        "email": "tuyen@example.com",
         "description": "desc",
     }
-    assert summary["usage"]["naming_usage"] == {
+    assert summary["command_info"] == {
+        "vendor": "cisco",
+        "family": "catalyst9200",
+        "os": "ios-xe",
+        "version": "17.9.1",
+        "device_type": "cisco_ios",
+        "command": "show clock",
+    }
+    assert summary["usage"]["naming"] == {
         "input_tokens": 10,
         "output_tokens": 5,
         "total_tokens": 15,
+        "estimated_cost": 0.002,
     }
-    assert summary["usage"]["generation_usage"] == {
+    assert summary["usage"]["generation"] == {
         "input_tokens": 20,
         "output_tokens": 8,
         "total_tokens": 28,
         "estimated_cost": 0.001,
     }
-    assert summary["provider_info"]["naming"]["backend"] == "FakeRegexBuilder"
-    assert summary["provider_info"]["generation"] == {
+    assert summary["provider_info"] == {
         "provider": "anthropic",
         "model": "claude-haiku-4-5-20251001",
     }
     assert "created_at" in summary
     assert "ended_at" in summary
     assert summary["duration_ms"] > 0
+    assert isinstance(summary["duration_ms"], int)
 
 
 def test_passed_is_false_when_generation_not_ready(
@@ -300,6 +316,8 @@ def test_passed_is_false_when_generation_not_ready(
     )
 
     assert result.passed is False
+    summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
+    assert summary["error"] == "generation not ready"
 
 
 def test_passed_is_false_when_template_does_not_parse_sample(
@@ -322,3 +340,5 @@ def test_passed_is_false_when_template_does_not_parse_sample(
     )
 
     assert result.passed is False
+    summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
+    assert summary["error"]

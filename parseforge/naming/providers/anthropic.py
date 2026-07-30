@@ -8,6 +8,7 @@ from typing import Any
 from anthropic import Anthropic, AnthropicError
 
 from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
+from .cost import estimate_cost
 from .errors import format_llm_error_reason, is_retryable
 from .models import default_model
 from .text import extract_pattern
@@ -31,6 +32,8 @@ class AnthropicRegexBuilder:
     API key resolves from the ``api_key`` argument if given, otherwise the
     ``ANTHROPIC_API_KEY`` environment variable (the SDK's own default).
     """
+
+    provider = "anthropic"
 
     def __init__(self, model: str = DEFAULT_MODEL, api_key: str | None = None) -> None:
         self.model = model
@@ -66,7 +69,9 @@ class AnthropicRegexBuilder:
             return LLMCLIResponse(
                 content="",
                 raw=exc,
-                usage=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0),
+                usage=TokenUsage(
+                    input_tokens=0, output_tokens=0, total_tokens=0, estimated_cost=0.0
+                ),
                 duration_ms=(time.monotonic() - start) * 1000,
                 reason=format_llm_error_reason(exc),
                 ready=False,
@@ -74,17 +79,25 @@ class AnthropicRegexBuilder:
         duration_ms = (time.monotonic() - start) * 1000
 
         text = "".join(block.text for block in response.content if block.type == "text")
+        # Anthropic's API has no total field of its own — sum it, unlike
+        # DeepSeek/OpenAI-compatible responses, which supply total_tokens
+        # directly and may account for it differently (e.g. cached-token
+        # pricing) than a simple input+output sum.
+        total_tokens = response.usage.input_tokens + response.usage.output_tokens
         return LLMCLIResponse(
             content=extract_pattern(text),
             raw=response,
             usage=TokenUsage(
                 input_tokens=response.usage.input_tokens,
                 output_tokens=response.usage.output_tokens,
-                # Anthropic's API has no total field of its own — sum it,
-                # unlike DeepSeek/OpenAI-compatible responses, which supply
-                # total_tokens directly and may account for it differently
-                # (e.g. cached-token pricing) than a simple input+output sum.
-                total_tokens=response.usage.input_tokens + response.usage.output_tokens,
+                total_tokens=total_tokens,
+                estimated_cost=estimate_cost(
+                    input_tokens=response.usage.input_tokens,
+                    output_tokens=response.usage.output_tokens,
+                    total_tokens=total_tokens,
+                    provider=self.provider,
+                    model=self.model,
+                ),
             ),
             duration_ms=duration_ms,
             reason=response.stop_reason or "",
