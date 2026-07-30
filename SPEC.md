@@ -61,49 +61,44 @@ Deliberately no `<version>` segment in the path: a cli-name's output structure u
 ```
 trials/<vendor>/<family>/<os>/<cli-name>/
   <yyyymmdd-HHMMSS-shortid>/
-    input.txt
-    raw-llm-response.txt
-    usage.txt
-    raw-template
-    template.textfsm
-    readable-dsl.txt
-    recognizers.txt
-    llm-records.json
-    records.json
-    debug.txt
-    status.txt
+    samples/
+      sample.txt
+    derive/
+      llm-template.textfsm
+      template.textfsm
+      readable-dsl.txt
+      recognizers.txt
+    summary.json
 ```
 Keep the timestamp+shortid directories (not `result1..N`) — chronological ordering and collision-safety in batch mode come for free, and sequential numbers throw both away.
 
 | File | Purpose |
 |---|---|
-| `input.txt` | Raw CLI output sample fed to the LLM |
-| `raw-llm-response.txt` | Full, unprocessed LLM response |
-| `usage.txt` | Token counts / cost metadata for that call |
-| `raw-template` | Template as extracted from the LLM response, pre-cleanup |
-| `template.textfsm` | Cleaned TextFSM template candidate (`.textfsm` extension — recognized by TextFSM tooling/linters, unlike `textfsm.template`) |
-| `readable-dsl.txt` | Human-readable description of what the template captures |
-| `recognizers.txt` | Heuristics/signatures for detecting this output type at runtime |
-| `llm-records.json` | Structured record of the LLM interaction (prompt, model, params, timestamps) |
-| `records.json` | Result of running this trial's `template.textfsm` against its own `input.txt` |
-| `debug.txt` | Parse errors, warnings, retry attempts |
-| `status.txt` | `passed`/`failed`, `llm-duration-ms`, `pipeline-duration-ms`, error summary |
+| `samples/sample.txt` | Raw CLI output sample fed to the LLM |
+| `derive/llm-template.textfsm` | Template as extracted from the LLM response, pre-cleanup |
+| `derive/template.textfsm` | Cleaned, DSL-compiled TextFSM template candidate (`.textfsm` extension — recognized by TextFSM tooling/linters, unlike `textfsm.template`) |
+| `derive/readable-dsl.txt` | Human-readable description of what the template captures |
+| `derive/recognizers.txt` | Heuristics/signatures for detecting this output type at runtime |
+| `summary.json` | Everything else about the run: `created_at`/`ended_at`/`duration_ms`, `passed`, `error` (when `passed` is false), `metadata` (project/username/email/description), `command_info` (vendor/family/os/version/device_type/command), `usage` (naming + generation token counts/cost), and `provider_info` (the generation provider/model) |
 
 ### 3.2 `integration/` (no human review yet)
 
 ```
 integration/<vendor>/<family>/<os>/<cli-name>/
-  common-result/
-    template.textfsm       ← the winning candidate, copied from trials/
-    selection-report.json  ← which trials were considered, why this one won
-    artifact/               ← supporting evidence (see below)
+  reference.json              ← every group's clustering evidence for this cli-name
+  group1-template1.textfsm    ← a distinct template variant, copied from trials/
+  group1-template2.textfsm    ← another distinct template text within the same group, if any
+  group2-template1.textfsm    ← a different output-schema group entirely (§6 multi-variant)
+
+integration/
+  reference-summary.json      ← project-wide match-rate ratios aggregated across every cli-name
 ```
 
-**How "common" gets chosen — don't just self-validate:** test *every* candidate `template.textfsm` from `trials/<cli-name>/` against *every* `input.txt` collected for that `cli-name`, not only the sample it was generated from. Promote whichever template parses the largest share of all known samples correctly. A template that only works against its own source sample is exactly the overfit case integration should catch. If you generate multiple candidates from the same input (repeated LLM calls), a structure that recurs across generations is additional evidence of stability — worth folding into the score, not just accuracy alone.
+**How grouping actually works — don't assume one winner.** Every trial whose own `summary.json` says `passed` is clustered by the field-key signature of its parsed records — the columns `derive/template.textfsm` actually produces against `samples/sample.txt` — not by exact template text; two templates that produce the same fields land in the same group even if their regex differs. Within a group, byte-identical template texts are further merged into "variants," so `reference.json` can report `exact_template_count`/`exact_records_count` per variant. This replaces self-validation-only trust: a template that only works against its own source sample still gets clustered on its own field signature, but its group's `ratio_of_passed` (in `reference-summary.json`) reads low if no other trial agrees with it — the overfit signal a human or `promotion.py`'s gate needs, in place of a single hand-picked "winner."
 
-`selection-report.json` should record: which trial run IDs were candidates, the cross-validation match rate for each, which samples the winner failed on (if any), and the score that made it win. This is what a human reviewer actually reads — the raw template alone doesn't convey robustness.
+`reference.json` is `{total_case_count, total_passed_case_count, groups: {group_id: {keys, sample_path, group_case_count, variants: {variant_id: {template_path, exact_template_count, exact_records_count}}}}}` — a full rebuild every time integration runs, not an incremental diff, so it's always a fresh snapshot of every trial currently under `trials/.../<cli-name>/`.
 
-`artifact/` holds whatever a reviewer needs to judge the result without re-running the pipeline: the aggregated `records.json` outputs across all cross-validated samples, and a diff/summary of any samples where the winning template didn't fully match.
+`reference-summary.json` turns those counts into ratios for every cli-name in one report: `ratio_of_total` (a group/variant's share of *every* trial attempted, diluted by raw generation failures) and `ratio_of_passed` (its share of only the trials that actually passed). `promotion.py`'s gate evaluates on `ratio_of_passed`, since promotion should judge template consistency, not raw pipeline reliability.
 
 ### 3.3 `authoritative/` (approved via human review, or confidence-gated auto-promotion)
 
@@ -144,7 +139,7 @@ Promotion defaults to human review, but can be confidence-gated per variant: if 
 - Pro: Fails fast and isolates problems per-command; simpler to debug; easier to parallelize across commands.
 - Con: Each template is generated from a single sample unless you explicitly loop multiple times per command and merge.
 
-**Recommendation:** Build Mode 2 first as the MVP — it's the simpler pipeline and gives you per-command `status.txt` results immediately. Add Mode 1 as a config flag afterward that changes only the *sampling* stage (collect N samples per command before invoking the LLM) — the generation, storage, and validation stages stay identical between modes if you design sampling as a separable stage up front.
+**Recommendation:** Build Mode 2 first as the MVP — it's the simpler pipeline and gives you per-command `summary.json` results immediately. Add Mode 1 as a config flag afterward that changes only the *sampling* stage (collect N samples per command before invoking the LLM) — the generation, storage, and validation stages stay identical between modes if you design sampling as a separable stage up front.
 
 ---
 
@@ -153,11 +148,11 @@ Promotion defaults to human review, but can be confidence-gated per variant: if 
 1. **Input intake** — device OS/version/family, auth, command list, mode selection.
 2. **Name generation** — tokenize each command → canonical `cli-name` per §2.
 3. **Path resolution** — compute `<vendor>/<device-family>/<os>/<cli-name>/` per §3.
-4. **Sampling** — connect (Netmiko/similar), run command(s), capture raw output → `trials/.../<run-id>/input.txt`.
-5. **Generation** — send `input.txt` (+ prior context if Mode 1) to LLM → `raw-llm-response.txt`, `usage.txt`.
-6. **Extraction & cleanup** — pull template from response → `raw-template` → cleaned `template.textfsm`.
-7. **Self-validation** — run `template.textfsm` against its own `input.txt` → `records.json`; capture errors → `debug.txt`; write trial `status.txt`.
-8. **Integration selection** — cross-validate every candidate `template.textfsm` in `trials/.../<cli-name>/` against every known `input.txt` for that `cli-name`; promote the best-scoring one to `integration/.../common-result/`, writing `selection-report.json`.
+4. **Sampling** — connect (Netmiko/similar), run command(s), capture raw output → `trials/.../<run-id>/samples/sample.txt`.
+5. **Generation** — send `sample.txt` (+ prior context if Mode 1) to LLM → `derive/llm-template.textfsm`, token usage recorded in `summary.json`.
+6. **Extraction & cleanup** — pull template from response → cleaned `derive/template.textfsm`, plus `derive/readable-dsl.txt` and `derive/recognizers.txt`.
+7. **Self-validation** — run `derive/template.textfsm` against its own `samples/sample.txt`; record `passed`/`error` in `summary.json`.
+8. **Integration selection** — cluster every passed trial's `derive/template.textfsm` in `trials/.../<cli-name>/` by output-schema signature, cross-validated against every known `samples/sample.txt` for that `cli-name`; write `integration/.../reference.json` and one `group#-template#.textfsm` per distinct variant.
 9. **Authoritative promotion** — auto-promote if the winning candidate clears the confidence threshold across all known samples; otherwise queue for human review. On approval, copy to `authoritative/.../template.textfsm` (or `template-v2.textfsm`, ... for an additional variant), archive the prior content to `history/` if it differs, and write `golden.hash`, `artifact.json`, and `authoritative-log.json`.
 10. **Drift monitoring** — continuously run the authoritative template against new production samples, logging match rate to `drift-log.json`. On breach, feed the failing sample back into `trials/` (→ step 4) to generate a replacement candidate.
 11. **Repeat/loop or batch-complete** depending on mode.
@@ -183,4 +178,4 @@ Where a fourth tier is tempting but better handled as **metadata instead of a ne
 - Do you want a **registry/index file** (e.g. `catalog.json`) at the repo root listing every `<vendor>/<family>/<os>/<cli-name>` combination that exists, plus its authoritative status, for fast lookup without walking the filesystem?
 - What **confidence threshold** (match-rate %, sample count minimum) should gate auto-promotion vs. human review in step 9 — worth making this configurable per-project rather than hardcoded?
 - Should `recognizers.txt` support **one-of-many matching** from day one (per the multi-variant note in §6), or is that a v2 concern?
-- What's the **LLM provider/model** for generation — worth pinning per-project so `usage.txt` costs are comparable across runs?
+- What's the **LLM provider/model** for generation — worth pinning per-project so `summary.json`'s usage costs are comparable across runs?
