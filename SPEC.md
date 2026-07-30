@@ -109,17 +109,28 @@ integration/<vendor>/<family>/<os>/<cli-name>/
 
 ```
 authoritative/<vendor>/<family>/<os>/<cli-name>/
-  template.textfsm          ← current approved template
-  artifact/                  ← carried over from the winning integration candidate
+  template.textfsm             ← current approved template (the primary variant)
+  template-v2.textfsm          ← an additional simultaneously-valid variant (§6), if any
+  template-v2-<suffix>.textfsm ← a USER_REVIEWED snapshot of that variant, kept alongside its current version
+  recognizers.txt              ← recognizer signature, one per template, same suffix rule
+  data/
+    sample.txt, records.json   ← the sample + parsed output behind each template, same suffix rule
+  golden.hash                  ← sha256 of the most recently promoted template, regardless of variant
+  artifact.json                ← who/when/mode/match-rate/source of the most recent promotion
+  drift-log.json               ← rolling match rate over time per variant, against live production samples
   history/
-    <yyyymmdd-HHMMSS>-<shortid>.textfsm   ← every prior approved version, kept
-  promotion-log.json         ← who/what approved each version, when, why, and what it replaced
-  drift-log.json             ← match-rate over time against live production samples
+    template-<yyyymmdd-HHMMSS>-<shortid>.textfsm   ← prior content, archived whenever a promotion overwrites it with something different
+
+authoritative/
+  authoritative-log.json       ← project-wide, append-only: every promotion event ever, across every cli-name
+  authoritative-summary.json   ← project-wide snapshot of the most recent promotion run
 ```
 
-Promotion from `integration/common-result` to `authoritative/` should default to human review, but can be confidence-gated: if the cross-validation match rate is at or near 100% across all known samples with no ambiguous fields, auto-promote; otherwise queue for human review. This isn't a replacement for review — it's a filter that keeps the easy, unambiguous cases from waiting on a person while still requiring a human on anything uncertain. A custom drift/quality-scoring model can slot into this same gate later without changing the pipeline shape.
+No per-variant subdirectory — every simultaneously-valid template for a `cli-name` (§6, hardware/firmware variance) lives directly in this one flat directory, distinguished by filename. The first-discovered variant owns the unsuffixed "current version" names; each additional variant owns a stable, permanent `template-v2.textfsm`, `template-v3.textfsm`, ... derived from its own group id and never renumbered. `golden.hash` and `artifact.json` are the one exception to per-variant filenames: both are singular and unsuffixed, always reflecting whichever promotion happened most recently regardless of which variant triggered it.
 
-**Drift detection** runs the current `authoritative/.../template.textfsm` against new production samples on an ongoing basis, logging match rate to `drift-log.json`. When match rate drops below threshold, that failing sample is written into `trials/.../<cli-name>/` as a new run, which re-enters the pipeline at §5 step 4 and works its way back through `integration/` to a possible new `authoritative/` version — closing the loop rather than treating drift as a one-off alert.
+Promotion defaults to human review, but can be confidence-gated per variant: if a variant's match rate — against only the trials that actually passed, not diluted by raw generation failures — is at or near 100% with enough samples, auto-promote it; otherwise it's queued for review. Two modes cover this: **AUTO_PROMOTED** walks every case and promotes every qualifying variant unsuffixed; **USER_REVIEWED** is scoped to caller-reviewed `(case, suffix)` requests, writing a suffixed snapshot alongside whatever that variant's current auto-promoted files already are, never replacing them. This isn't a replacement for review — it's a filter that keeps the easy, unambiguous cases from waiting on a person while still requiring a human on anything uncertain.
+
+**Drift detection** runs an authoritative template against new production samples on an ongoing basis, tracking a rolling match rate per variant in that cli-name's `drift-log.json`. When the rate drops below threshold, that failing sample is written into `trials/.../<cli-name>/` as a new run, which re-enters the pipeline at §5 step 4 and works its way back through `integration/` to a possible new `authoritative/` version — closing the loop rather than treating drift as a one-off alert.
 
 ---
 
@@ -147,7 +158,7 @@ Promotion from `integration/common-result` to `authoritative/` should default to
 6. **Extraction & cleanup** — pull template from response → `raw-template` → cleaned `template.textfsm`.
 7. **Self-validation** — run `template.textfsm` against its own `input.txt` → `records.json`; capture errors → `debug.txt`; write trial `status.txt`.
 8. **Integration selection** — cross-validate every candidate `template.textfsm` in `trials/.../<cli-name>/` against every known `input.txt` for that `cli-name`; promote the best-scoring one to `integration/.../common-result/`, writing `selection-report.json`.
-9. **Authoritative promotion** — auto-promote if the winning candidate clears the confidence threshold across all known samples; otherwise queue for human review. On approval, copy to `authoritative/.../template.textfsm`, archive the prior version to `history/`, and write `promotion-log.json`.
+9. **Authoritative promotion** — auto-promote if the winning candidate clears the confidence threshold across all known samples; otherwise queue for human review. On approval, copy to `authoritative/.../template.textfsm` (or `template-v2.textfsm`, ... for an additional variant), archive the prior content to `history/` if it differs, and write `golden.hash`, `artifact.json`, and `authoritative-log.json`.
 10. **Drift monitoring** — continuously run the authoritative template against new production samples, logging match rate to `drift-log.json`. On breach, feed the failing sample back into `trials/` (→ step 4) to generate a replacement candidate.
 11. **Repeat/loop or batch-complete** depending on mode.
 
@@ -160,7 +171,7 @@ Promotion from `integration/common-result` to `authoritative/` should default to
 Where a fourth tier is tempting but better handled as **metadata instead of a new directory layer:**
 
 - **Quarantine / stale-but-still-serving:** when drift is detected, the authoritative template is still the one in production use — you don't want to yank it out mid-flight while a replacement works its way through the pipeline. Rather than a new top-level tier, this is a `status` field in `drift-log.json` (`ok` / `drifting` / `superseded`) on the existing authoritative entry. The template keeps serving; the status just flags that a replacement is in flight.
-- **Archived / deprecated (EOL device-OS combos):** for template families you no longer actively maintain (e.g. an OS version taken out of production fleet-wide), this is also a status flag rather than a directory move — `history/` already retains every prior version, so "archived" just means promotion-log stops getting new entries, not that files need to relocate.
+- **Archived / deprecated (EOL device-OS combos):** for template families you no longer actively maintain (e.g. an OS version taken out of production fleet-wide), this is also a status flag rather than a directory move — `history/` already retains every prior version, so "archived" just means `authoritative-log.json` stops getting new entries for that cli-name, not that files need to relocate.
 - **Multiple simultaneously-valid templates for one `cli-name`:** if a command's output legitimately varies by hardware config (e.g. a chassis with vs. without an optional module) rather than by drift, that's not a tier problem — it's a case for storing *multiple* authoritative templates under the same `cli-name` path with distinct `recognizers.txt` signatures, and letting runtime dispatch pick the right one. Worth flagging now so `recognizers.txt` is designed to support one-of-many matching from the start rather than assuming exactly one template per `cli-name`.
 
 **Bottom line:** keep the three directories; push the "in-between" states (drifting-but-live, archived, multi-variant) into metadata/status fields on the existing tiers. Adding more top-level directories per edge case leads to directory sprawl without adding real distinctions in *how* a template is used.
