@@ -1,3 +1,34 @@
+# v0.2.2 — The Pipeline Comes Alive
+
+## 🔄 End-to-End Trial Pipeline
+`pipeline.run_command_pipeline()` now runs the full SPEC.md §5 flow — sample a
+device, name the CLI command, generate a TextFSM template via LLM, validate it —
+and records everything in a per-run `summary.json`.
+
+## 🧬 Integration: Grouping Trials into Evidence
+`integration.py` clusters passed trial runs by output schema into groups, so
+templates covering the same command's different valid outputs (hardware/firmware
+variants, SPEC.md §6) accumulate as separate, trackable variants instead of
+overwriting one another. A new `reference-summary.json` reports match-rate ratios
+project-wide.
+
+## 🚦 Promotion: Gated, Mode-Aware, Auditable
+`promotion.py` is now a real workflow, not a stub:
+- **AUTO_PROMOTED** — every group that clears its gate (match-rate threshold +
+  minimum sample count) across every case gets promoted automatically
+- **USER_REVIEWED** — scoped, suffixed promotions for snapshots a human has
+  already reviewed
+- `golden.hash` + `artifact.json` per cli-name, an append-only
+  `authoritative-log.json`, and `history/` retention of superseded content
+
+## 🧹 Cleanup
+Dropped the unused `store/` scaffold directory, the `<version>` path segment
+(superseded by group-based clustering), and dead code from earlier stub-era
+scaffolding.
+
+## 📦 Version
+`0.2.1 → 0.2.2`
+
 # v0.2.1 — Initial Scaffold & Release Pipeline
 
 ## 🏗️ Project Scaffold
