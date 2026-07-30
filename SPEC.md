@@ -100,6 +100,8 @@ integration/
 
 `reference-summary.json` turns those counts into ratios for every cli-name in one report: `ratio_of_total` (a group/variant's share of *every* trial attempted, diluted by raw generation failures) and `ratio_of_passed` (its share of only the trials that actually passed). `promotion.py`'s gate evaluates on `ratio_of_passed`, since promotion should judge template consistency, not raw pipeline reliability.
 
+**Grouping and `recognizers.txt` are two different mechanisms, not one.** §6's note about `recognizers.txt` enabling *one-of-many matching* is about a runtime picking the right authoritative template for new input; it plays no part in how integration itself tells variants apart. Group clustering here never reads `recognizers.txt` — it re-parses `derive/template.textfsm` against `samples/sample.txt` and clusters by the resulting field-key signature, purely evidence-gathering, before any template is authoritative. `recognizers.txt` is still generated per trial and carried through to `authoritative/` per-variant (§3.3), but what consumes it to actually dispatch between promoted variants at runtime is out of parseforge's own scope — still an open question (§7).
+
 ### 3.3 `authoritative/` (approved via human review, or confidence-gated auto-promotion)
 
 ```
