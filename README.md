@@ -17,10 +17,11 @@ parseforge/
   promotion.py    authoritative promotion gate + drift status (SPEC §3.3, §5 steps 9-10)
   pipeline.py     orchestrates the above; Mode LOOP (MVP) vs Mode BATCH (SPEC §4)
   cli/            `parseforge` command-line entry point
-
-store/            runtime template tree: trials/ -> integration/ -> authoritative/
-                  (generated at runtime, not checked in — see .gitignore)
 ```
+
+The runtime template tree (trials/ -> integration/ -> authoritative/) is generated at
+`~/.parseforge/tests` by default (see `paths.DEFAULT_STORE_ROOT`), not checked into
+this repo.
 
 `naming.py` and `paths.py` are implemented and tested. `sampling.py`, `generation.py`,
 `validation.py`, `promotion.py`, and `pipeline.py` are stub interfaces — the SPEC.md
