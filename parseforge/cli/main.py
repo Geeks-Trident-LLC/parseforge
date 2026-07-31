@@ -263,21 +263,14 @@ def name_cmd(
     help="Defaults to the naming provider's own default model.",
 )
 @click.option(
-    "--generation-provider",
+    "--provider",
     required=True,
     help="LLM provider for template generation (textfsm-ai's own registry, "
-    'e.g. "anthropic", "deepseek").',
+    'e.g. "anthropic", "deepseek"). Naming uses its own separate '
+    "--naming-provider, not this one.",
 )
-@click.option(
-    "--generation-api-key",
-    required=True,
-    help="API key for the template-generation LLM call.",
-)
-@click.option(
-    "--generation-model",
-    required=True,
-    help="Model for the template-generation LLM call.",
-)
+@click.option("--api-key", required=True, help="API key for the generation LLM call.")
+@click.option("--model", required=True, help="Model for the generation LLM call.")
 @click.option(
     "--store-root",
     default=None,
@@ -299,9 +292,9 @@ def run_cmd(
     naming_provider: str,
     naming_api_key: str | None,
     naming_model: str | None,
-    generation_provider: str,
-    generation_api_key: str,
-    generation_model: str,
+    provider: str,
+    api_key: str,
+    model: str,
     store_root: str | None,
     project: str | None,
     email: str | None,
@@ -328,7 +321,7 @@ def run_cmd(
     )
     naming_builder = _build_regex_builder(naming_provider, naming_api_key, naming_model)
     generation_config = LLMProviderConfig(
-        provider=generation_provider, api_key=generation_api_key, model=generation_model
+        provider=provider, api_key=api_key, model=model
     )
     metadata = TrialMetadata(
         project=project,
