@@ -1,3 +1,40 @@
+## v0.2.3 — 2026-07-31
+
+### Added
+- `drift.py` (SPEC.md §5 step 10): `check_drift()` runs an authoritative template
+  against a new production sample, tracks a rolling match rate per variant in that
+  cli-name's `drift-log.json`, and requeues failing samples into `trials/` as a new
+  run so drift closes the loop back through generation/integration instead of being
+  a one-off alert
+- CLI: `check` (validate a connector/provider, or report what it needs before
+  spending tokens), `generate-template`/`canonical`/`readable`/`recognizers`
+  (one-shot generation and template inspection, no trial persistence), and
+  `trial`/`integration`/`promotion` (config-file-driven workflow commands wrapping
+  `pipeline.py`/`integration.py`/`promotion.py` end to end — `promotion` covers
+  `AUTO_PROMOTED` mode only)
+- CLI: `init-trial-config`/`init-generate-template-config` — write placeholder YAML
+  configs for `trial --config`/`generate-template --config`, ready to fill in
+- `parseforge/cli/config.py` — YAML config loading for the new config-driven commands
+- `pipeline.TrialMetadata` gains a `note` field, for parity with
+  `promotion.PromotionMetadata.note`
+
+### Changed
+- SPEC.md's `trials/`/`integration/`/`authoritative/` layout sections (§3.1–§3.3)
+  rewritten to match the actual implementation — they'd described the
+  pre-implementation single-template/single-winner design since before this
+  session's integration/promotion work landed
+- `trial.yaml`'s `naming_provider`/`generation_provider`/`generation_api_key`/
+  `generation_model` fields collapsed into one shared `provider`/`api_key`/`model`,
+  used for both naming and generation
+- `run`'s `--generation-provider`/`--generation-api-key`/`--generation-model`
+  renamed to `--provider`/`--api-key`/`--model`
+- `promotion`'s `--match-rate-threshold`/`--min-sample-count` renamed to
+  `--threshold`/`--min-samples`
+- README.md and docs/index.md rewritten to describe the now-complete pipeline
+  instead of the earlier "early-stage scaffold" status; README's `## Layout`
+  section removed (duplicated each module's own docstring) in favor of a
+  `## Reference` section linking the docs site and SPEC.md
+
 ## v0.2.2 — 2026-07-30
 
 ### Added
