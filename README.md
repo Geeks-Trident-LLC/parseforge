@@ -24,26 +24,6 @@ wired into the CLI below. A few things are intentionally not there yet:
 - **One sampling connector** (Netmiko/SSH). The CLI's `--connector` registry
   is built to hold more without a redesign, but nothing else is wired in yet.
 
-## Layout
-
-```
-parseforge/
-  naming/         CLI command -> canonical cli-name (SPEC §2)
-  paths.py        trials/integration/authoritative path resolution (SPEC §3)
-  sampling/       device connection + command capture (SPEC §5 step 4)
-  generation.py   LLM call + template extraction (SPEC §5 steps 5-6)
-  validation.py   self-validation (SPEC §5 step 7)
-  integration.py  cross-validation clustering into groups/variants (SPEC §3.2, §5 step 8)
-  promotion.py    authoritative promotion gate (SPEC §3.3, §5 step 9)
-  drift.py        drift monitoring against production samples (SPEC §5 step 10)
-  pipeline.py     orchestrates naming/sampling/generation/validation (SPEC §4, §5 steps 1-7)
-  cli/            `parseforge` command-line entry point
-```
-
-The runtime template tree (trials/ -> integration/ -> authoritative/) is generated at
-`~/.parseforge/tests` by default (see `paths.DEFAULT_STORE_ROOT`), not checked into
-this repo.
-
 ## Development
 
 ```
@@ -64,6 +44,10 @@ first call, per SPEC §2):
 parseforge name --vendor cisco --family catalyst9200 --os ios-xe --version 17.9.1 \
   show interface GE1.1 status
 ```
+Still needs an LLM provider on a cache miss — `--provider` defaults to `anthropic`,
+and `--api-key` falls back to that provider's own env var (`ANTHROPIC_API_KEY`/
+`DEEPSEEK_API_KEY`). A cache hit (a command already seen before) never touches the
+LLM, so no key is needed at all in that case.
 
 **`check`** — validate a connector or provider before spending time/tokens on a real
 run. With neither `--env` nor explicit connection flags, prints what a connector needs
@@ -164,3 +148,8 @@ currently on disk, and `promotion` always refreshes integration itself before
 evaluating any gate — so running `promotion` alone after a `trial` run is enough to
 pick up new evidence; a separate `integration` run is only useful if you want to
 inspect `reference-summary.json` without also promoting.
+
+## Reference
+
+- [Documentation site](https://geeks-trident-llc.github.io/parseforge/) ([source](./docs/index.md))
+- [SPEC.md](SPEC.md) — full design plan and open questions
