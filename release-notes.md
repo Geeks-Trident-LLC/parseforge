@@ -1,3 +1,29 @@
+# v0.2.3 — Drift Monitoring and a Real CLI
+
+## 🌊 Drift Monitoring
+`drift.py` closes SPEC.md's last unimplemented pipeline stage: checking an
+authoritative template against new production samples, tracking a rolling match
+rate per variant, and requeuing failing samples back into `trials/` so drift
+feeds back into the pipeline instead of just being an alert.
+
+## 🖥️ A Real CLI
+Ten new commands, on top of `name`/`run`: `check` (validate a connector/provider
+before spending tokens), `generate-template`/`canonical`/`readable`/`recognizers`
+(one-shot generation and inspection, no persistence), `trial`/`integration`/
+`promotion` (config-driven, run the full pipeline end to end), and
+`init-trial-config`/`init-generate-template-config` to scaffold those config files
+instead of hand-writing them.
+
+## 🧹 Cleanup
+- SPEC.md's storage-tier sections now match the real implementation, not the
+  pre-implementation design they still described
+- `trial.yaml`, `run`, and `promotion`'s CLI flags simplified to shorter, more
+  consistent names
+- README.md and docs/index.md rewritten for the now-complete pipeline
+
+## 📦 Version
+`0.2.2 → 0.2.3`
+
 # v0.2.2 — The Pipeline Comes Alive
 
 ## 🔄 End-to-End Trial Pipeline
