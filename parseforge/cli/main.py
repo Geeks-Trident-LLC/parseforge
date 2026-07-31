@@ -28,6 +28,44 @@ _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
 
 _CONNECTORS = ("netmiko",)
 
+_TRIAL_CONFIG_PLACEHOLDER = """\
+# parseforge trial config -- see README.md's `trial` section for details.
+# Replace every <...> placeholder below, then run:
+#   parseforge trial --config trial.yaml
+
+# --- device / command context (required) ---
+vendor: <vendor>
+family: <family>
+os: <os>
+version: <os-version>
+
+# --- connector (required) ---
+connector: netmiko
+host: <device-host-or-ip>
+username: <device-username>
+password: <device-password>
+device_type: <netmiko-device-type>
+
+# --- LLM provider (required) -- shared for both naming and generation ---
+provider: anthropic
+api_key: <api-key>
+model: <model>
+
+# --- commands to run (required, at least one) ---
+commands:
+  - <show command>
+
+# --- who ran this (required) ---
+user: <your-name>
+
+# --- optional ---
+# email: you@example.com
+# description: short description of this trial batch
+# notes: any additional context
+# workers: 1
+# path: /path/to/store/root
+"""
+
 
 def _build_regex_builder(
     provider: str, api_key: str | None, model: str | None
@@ -528,6 +566,27 @@ def recognizers_cmd(template_file: str, sample_file: str) -> None:
         raise click.ClickException(result.reason)
     for pattern in result.recognizers:
         click.echo(pattern)
+
+
+@main.command("init-trial-config")
+@click.option(
+    "--out",
+    "out_path",
+    type=click.Path(dir_okay=False),
+    default="trial.yaml",
+    show_default=True,
+)
+@click.option(
+    "--force", is_flag=True, default=False, help="Overwrite --out if it already exists."
+)
+def init_trial_config_cmd(out_path: str, force: bool) -> None:
+    """Write a placeholder trial.yaml to --out, ready to fill in and pass to
+    `trial --config`."""
+    path = Path(out_path)
+    if path.exists() and not force:
+        raise click.ClickException(f"{path} already exists — pass --force to overwrite")
+    path.write_text(_TRIAL_CONFIG_PLACEHOLDER, encoding="utf-8")
+    click.echo(f"wrote {path}")
 
 
 @main.command("trial")

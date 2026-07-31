@@ -6,6 +6,7 @@ from typing import Any
 import yaml
 from click.testing import CliRunner
 
+from parseforge.cli import config as cli_config
 from parseforge.cli import main as cli_main
 from parseforge.generation import GenerationResult
 from parseforge.generation import TokenUsage as GenerationTokenUsage
@@ -402,6 +403,81 @@ def test_recognizers_prints_one_per_line(tmp_path: Path) -> None:
         ["recognizers", str(template_path), "--sample", str(sample_path)],
     )
     assert result.exit_code == 0
+
+
+# --------------------------------------------------------------------------
+# init-trial-config
+# --------------------------------------------------------------------------
+
+
+def test_init_trial_config_writes_placeholder(tmp_path: Path) -> None:
+    out_path = tmp_path / "trial.yaml"
+    result = CliRunner().invoke(
+        cli_main.main, ["init-trial-config", "--out", str(out_path)]
+    )
+    assert result.exit_code == 0
+    assert f"wrote {out_path}" in result.output
+
+    data = yaml.safe_load(out_path.read_text(encoding="utf-8"))
+    for key in (
+        "vendor",
+        "family",
+        "os",
+        "version",
+        "connector",
+        "host",
+        "username",
+        "password",
+        "device_type",
+        "provider",
+        "api_key",
+        "model",
+        "commands",
+        "user",
+    ):
+        assert key in data
+    assert data["commands"] == ["<show command>"]
+
+
+def test_init_trial_config_refuses_to_overwrite(tmp_path: Path) -> None:
+    out_path = tmp_path / "trial.yaml"
+    out_path.write_text("existing content\n", encoding="utf-8")
+
+    result = CliRunner().invoke(
+        cli_main.main, ["init-trial-config", "--out", str(out_path)]
+    )
+
+    assert result.exit_code != 0
+    assert "already exists" in result.output
+    assert out_path.read_text(encoding="utf-8") == "existing content\n"
+
+
+def test_init_trial_config_force_overwrites(tmp_path: Path) -> None:
+    out_path = tmp_path / "trial.yaml"
+    out_path.write_text("existing content\n", encoding="utf-8")
+
+    result = CliRunner().invoke(
+        cli_main.main, ["init-trial-config", "--out", str(out_path), "--force"]
+    )
+
+    assert result.exit_code == 0
+    assert "vendor:" in out_path.read_text(encoding="utf-8")
+
+
+def test_init_trial_config_placeholder_is_missing_required_values(
+    tmp_path: Path,
+) -> None:
+    """The generated placeholder is valid YAML but every value still needs
+    editing -- load_trial_config should accept it structurally (every
+    required key is present and non-empty) without pretending the
+    placeholder values are usable."""
+    out_path = tmp_path / "trial.yaml"
+    CliRunner().invoke(cli_main.main, ["init-trial-config", "--out", str(out_path)])
+
+    cfg = cli_config.load_trial_config(out_path)
+
+    assert cfg.host == "<device-host-or-ip>"
+    assert cfg.provider == "anthropic"
 
 
 # --------------------------------------------------------------------------
