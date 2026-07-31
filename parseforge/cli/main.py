@@ -66,6 +66,41 @@ user: <your-name>
 # path: /path/to/store/root
 """
 
+_GENERATE_TEMPLATE_CONFIG_PLACEHOLDER = """\
+# parseforge generate-template config -- see README.md's `generate-template`
+# section for details. Replace every <...> placeholder below, then run:
+#   parseforge generate-template --config generate-template.yaml
+
+# --- LLM provider (required) ---
+provider: anthropic
+api_key: <api-key>
+model: <model>
+
+# --- input: choose exactly one ---
+
+# Option A: a sample already captured to a file
+sample_file: <path/to/sample.txt>
+
+# Option B: sample live from a device -- comment out sample_file above, then
+# uncomment and fill in below (env can replace host/username/password/
+# device_type, same convention as `check --env`)
+# connector: netmiko
+# cmdline: <show command>
+# host: <device-host-or-ip>
+# username: <device-username>
+# password: <device-password>
+# device_type: <netmiko-device-type>
+# env: <sandbox-env-name>
+"""
+
+
+def _write_placeholder_config(out_path: str, force: bool, content: str) -> None:
+    path = Path(out_path)
+    if path.exists() and not force:
+        raise click.ClickException(f"{path} already exists — pass --force to overwrite")
+    path.write_text(content, encoding="utf-8")
+    click.echo(f"wrote {path}")
+
 
 def _build_regex_builder(
     provider: str, api_key: str | None, model: str | None
@@ -406,6 +441,23 @@ def check_cmd(
         _check_provider(provider, api_key, model)
 
 
+@main.command("init-generate-template-config")
+@click.option(
+    "--out",
+    "out_path",
+    type=click.Path(dir_okay=False),
+    default="generate-template.yaml",
+    show_default=True,
+)
+@click.option(
+    "--force", is_flag=True, default=False, help="Overwrite --out if it already exists."
+)
+def init_generate_template_config_cmd(out_path: str, force: bool) -> None:
+    """Write a placeholder generate-template.yaml to --out, ready to fill in
+    and pass to `generate-template --config`."""
+    _write_placeholder_config(out_path, force, _GENERATE_TEMPLATE_CONFIG_PLACEHOLDER)
+
+
 @main.command("generate-template")
 @click.option("--connector", type=click.Choice(_CONNECTORS), default=None)
 @click.option("--env", default=None)
@@ -582,11 +634,7 @@ def recognizers_cmd(template_file: str, sample_file: str) -> None:
 def init_trial_config_cmd(out_path: str, force: bool) -> None:
     """Write a placeholder trial.yaml to --out, ready to fill in and pass to
     `trial --config`."""
-    path = Path(out_path)
-    if path.exists() and not force:
-        raise click.ClickException(f"{path} already exists — pass --force to overwrite")
-    path.write_text(_TRIAL_CONFIG_PLACEHOLDER, encoding="utf-8")
-    click.echo(f"wrote {path}")
+    _write_placeholder_config(out_path, force, _TRIAL_CONFIG_PLACEHOLDER)
 
 
 @main.command("trial")

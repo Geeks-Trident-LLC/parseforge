@@ -357,6 +357,70 @@ def test_generate_template_from_config(monkeypatch: Any, tmp_path: Path) -> None
 
 
 # --------------------------------------------------------------------------
+# init-generate-template-config
+# --------------------------------------------------------------------------
+
+
+def test_init_generate_template_config_writes_placeholder(tmp_path: Path) -> None:
+    out_path = tmp_path / "generate-template.yaml"
+    result = CliRunner().invoke(
+        cli_main.main, ["init-generate-template-config", "--out", str(out_path)]
+    )
+    assert result.exit_code == 0
+    assert f"wrote {out_path}" in result.output
+
+    data = yaml.safe_load(out_path.read_text(encoding="utf-8"))
+    assert data["provider"] == "anthropic"
+    assert data["api_key"] == "<api-key>"
+    assert data["model"] == "<model>"
+    assert data["sample_file"] == "<path/to/sample.txt>"
+    assert "connector" not in data
+
+
+def test_init_generate_template_config_refuses_to_overwrite(tmp_path: Path) -> None:
+    out_path = tmp_path / "generate-template.yaml"
+    out_path.write_text("existing content\n", encoding="utf-8")
+
+    result = CliRunner().invoke(
+        cli_main.main, ["init-generate-template-config", "--out", str(out_path)]
+    )
+
+    assert result.exit_code != 0
+    assert "already exists" in result.output
+    assert out_path.read_text(encoding="utf-8") == "existing content\n"
+
+
+def test_init_generate_template_config_force_overwrites(tmp_path: Path) -> None:
+    out_path = tmp_path / "generate-template.yaml"
+    out_path.write_text("existing content\n", encoding="utf-8")
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        ["init-generate-template-config", "--out", str(out_path), "--force"],
+    )
+
+    assert result.exit_code == 0
+    assert "provider:" in out_path.read_text(encoding="utf-8")
+
+
+def test_init_generate_template_config_loads_via_config_loader(
+    tmp_path: Path,
+) -> None:
+    """The generated placeholder is valid YAML with every required key
+    present -- load_generation_config should accept it structurally."""
+    out_path = tmp_path / "generate-template.yaml"
+    CliRunner().invoke(
+        cli_main.main, ["init-generate-template-config", "--out", str(out_path)]
+    )
+
+    cfg = cli_config.load_generation_config(out_path)
+
+    assert cfg.provider == "anthropic"
+    assert cfg.sample_file == "<path/to/sample.txt>"
+    assert cfg.connector is None
+
+
+# --------------------------------------------------------------------------
 # canonical / readable / recognizers
 # --------------------------------------------------------------------------
 
