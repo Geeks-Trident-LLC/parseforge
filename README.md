@@ -67,7 +67,8 @@ parseforge generate-template --sample-file sample.txt \
 ```
 Also accepts `--connector`/`--cmdline` (live sample) or `--config <file>` in place of
 `--sample-file`; add `--out <dir>` to also write `template.textfsm`/`readable-dsl.txt`/
-`recognizers.txt` to disk.
+`recognizers.txt` to disk. `parseforge init-generate-template-config [--out <file>]`
+writes a placeholder for that `--config` file, ready to fill in.
 
 **`canonical` / `readable` / `recognizers`** — inspect an existing template file. No
 LLM call; `--sample` is required to build the example records `textfsm-ai`'s DSL
