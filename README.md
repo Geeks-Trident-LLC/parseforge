@@ -88,6 +88,12 @@ parseforge run --vendor cisco --family catalyst9200 --os ios-xe --version 17.9.1
   show clock
 ```
 
+**`init-trial-config`** — write a placeholder `trial.yaml` to fill in, instead of
+writing one by hand:
+```
+parseforge init-trial-config --out trial.yaml
+```
+
 **`trial`** — every command in a YAML config file, optionally in parallel:
 ```
 parseforge trial --config trial.yaml
