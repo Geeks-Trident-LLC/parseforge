@@ -1,4 +1,6 @@
-"""Authoritative promotion and drift monitoring (SPEC.md §3.3, §5 steps 9-10).
+"""Authoritative promotion (SPEC.md §3.3, §5 step 9).
+
+Drift monitoring (§5 step 10) is a separate concern — see :mod:`parseforge.drift`.
 
 Two entry points, mirroring integration.py's whole-project shape
 (build_integration() per case, build_reference_summary() across every
@@ -506,12 +508,3 @@ def promote_user_reviewed(
     )
     _write_authoritative_summary(store_root, PromotionMode.USER_REVIEWED, result)
     return result
-
-
-@dataclass(frozen=True)
-class DriftStatus:
-    match_rate: float
-    status: str  # "ok" | "drifting" | "superseded" — see SPEC.md §6
-
-    def breached(self, threshold: float) -> bool:
-        return self.match_rate < threshold

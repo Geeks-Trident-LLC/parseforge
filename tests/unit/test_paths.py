@@ -58,6 +58,12 @@ def test_authoritative_log_path_sits_at_authoritative_tier_root(
     )
 
 
+def test_drift_log_path_nests_under_authoritative_dir(tmp_path: Path) -> None:
+    assert paths.drift_log_path(tmp_path, KEY) == (
+        paths.authoritative_dir(tmp_path, KEY) / "drift-log.json"
+    )
+
+
 def test_authoritative_history_dir_nests_under_authoritative_dir(
     tmp_path: Path,
 ) -> None:

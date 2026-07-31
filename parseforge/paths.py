@@ -150,6 +150,15 @@ def authoritative_history_dir(store_root: Path, key: DeviceKey) -> Path:
     return authoritative_dir(store_root, key) / "history"
 
 
+def drift_log_path(store_root: Path, key: DeviceKey) -> Path:
+    """Per-cli-name, append-only log of production-sample checks against
+    every authoritative variant for that cli-name (§3.3, §5 step 10) — one
+    file per cli-name (not per variant, since each entry already records
+    which ``suffix`` it checked), mirroring how a cli-name can hold
+    multiple simultaneously-valid templates (§6)."""
+    return authoritative_dir(store_root, key) / "drift-log.json"
+
+
 def authoritative_summary_path(store_root: Path) -> Path:
     """Project-wide snapshot of the most recent promotion run — what got
     promoted, what didn't clear its gate, and (for USER_REVIEWED) any
