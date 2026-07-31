@@ -569,13 +569,9 @@ def trial_cmd(config_path: str, store_root_opt: str | None) -> None:
         password=cfg.password,
         device_type=cfg.device_type,
     )
-    naming_builder = _build_regex_builder(
-        cfg.naming_provider, cfg.naming_api_key, cfg.naming_model
-    )
+    naming_builder = _build_regex_builder(cfg.provider, cfg.api_key, cfg.model)
     generation_config = pipeline.LLMProviderConfig(
-        provider=cfg.generation_provider,
-        api_key=cfg.generation_api_key,
-        model=cfg.generation_model,
+        provider=cfg.provider, api_key=cfg.api_key, model=cfg.model
     )
     metadata = pipeline.TrialMetadata(
         username=cfg.user, email=cfg.email, description=cfg.description, note=cfg.note

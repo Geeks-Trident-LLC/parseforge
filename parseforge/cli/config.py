@@ -18,6 +18,11 @@ import yaml
 
 @dataclass(frozen=True)
 class TrialConfig:
+    """``provider``/``api_key``/``model`` are one shared LLM source for both
+    naming (cli-name resolution) and generation — the common case where a
+    trial doesn't need two different providers. Use the ``run`` command's
+    separate ``--naming-*``/``--generation-*`` flags if you actually do."""
+
     vendor: str
     family: str
     os: str
@@ -27,14 +32,11 @@ class TrialConfig:
     username: str
     password: str
     device_type: str
-    naming_provider: str
-    generation_provider: str
-    generation_api_key: str
-    generation_model: str
+    provider: str
+    api_key: str
+    model: str
     commands: list[str]
     user: str
-    naming_api_key: str | None = None
-    naming_model: str | None = None
     email: str | None = None
     description: str | None = None
     note: str | None = None
@@ -67,10 +69,9 @@ _TRIAL_REQUIRED = (
     "username",
     "password",
     "device_type",
-    "naming_provider",
-    "generation_provider",
-    "generation_api_key",
-    "generation_model",
+    "provider",
+    "api_key",
+    "model",
     "commands",
     "user",
 )
@@ -113,12 +114,9 @@ def load_trial_config(path: Path) -> TrialConfig:
         username=raw["username"],
         password=raw["password"],
         device_type=raw["device_type"],
-        naming_provider=raw["naming_provider"],
-        naming_api_key=raw.get("naming_api_key"),
-        naming_model=raw.get("naming_model"),
-        generation_provider=raw["generation_provider"],
-        generation_api_key=raw["generation_api_key"],
-        generation_model=raw["generation_model"],
+        provider=raw["provider"],
+        api_key=raw["api_key"],
+        model=raw["model"],
         commands=commands,
         user=raw["user"],
         email=raw.get("email"),
