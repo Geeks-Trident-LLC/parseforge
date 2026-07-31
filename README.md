@@ -118,16 +118,18 @@ host: 10.0.0.1
 username: admin
 password: secret
 device_type: cisco_ios
-naming_provider: anthropic
-generation_provider: anthropic
-generation_api_key: sk-...
-generation_model: claude-haiku-4-5-20251001
+provider: anthropic
+api_key: sk-...
+model: claude-haiku-4-5-20251001
 commands:
   - show clock
   - show version
 user: alice
 workers: 1
 ```
+`provider`/`api_key`/`model` are one shared LLM source used for both naming and
+generation. Use the `run` command's separate `--naming-*`/`--generation-*` flags
+instead if a trial actually needs two different providers.
 
 **`integration`** — rebuild `integration/` for every case under `trials/` (SPEC §5
 step 8):

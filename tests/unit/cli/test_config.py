@@ -18,10 +18,9 @@ _VALID_TRIAL: dict = {
     "username": "admin",
     "password": "secret",
     "device_type": "cisco_ios",
-    "naming_provider": "anthropic",
-    "generation_provider": "anthropic",
-    "generation_api_key": "sk-test",
-    "generation_model": "claude-haiku-4-5-20251001",
+    "provider": "anthropic",
+    "api_key": "sk-test",
+    "model": "claude-haiku-4-5-20251001",
     "commands": ["show clock"],
     "user": "alice",
 }
@@ -60,8 +59,6 @@ def test_load_trial_config_commands_must_be_list_of_strings(tmp_path: Path) -> N
 def test_load_trial_config_full(tmp_path: Path) -> None:
     data = dict(
         _VALID_TRIAL,
-        naming_api_key="nk",
-        naming_model="claude-haiku-4-5-20251001",
         email="alice@example.com",
         description="desc",
         notes="fyi",
@@ -73,6 +70,9 @@ def test_load_trial_config_full(tmp_path: Path) -> None:
     cfg = load_trial_config(path)
 
     assert cfg.vendor == "cisco"
+    assert cfg.provider == "anthropic"
+    assert cfg.api_key == "sk-test"
+    assert cfg.model == "claude-haiku-4-5-20251001"
     assert cfg.commands == ["show clock"]
     assert cfg.user == "alice"
     assert cfg.note == "fyi"
@@ -85,7 +85,6 @@ def test_load_trial_config_defaults(tmp_path: Path) -> None:
 
     cfg = load_trial_config(path)
 
-    assert cfg.naming_api_key is None
     assert cfg.email is None
     assert cfg.note is None
     assert cfg.workers == 1
