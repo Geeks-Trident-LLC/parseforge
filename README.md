@@ -84,10 +84,15 @@ parseforge recognizers template.textfsm --sample sample.txt
 ```
 parseforge run --vendor cisco --family catalyst9200 --os ios-xe --version 17.9.1 \
   --host 10.0.0.1 --username admin --device-type cisco_ios \
-  --generation-provider anthropic --generation-api-key $ANTHROPIC_API_KEY \
-  --generation-model claude-haiku-4-5-20251001 \
+  --provider anthropic --api-key $ANTHROPIC_API_KEY \
+  --model claude-haiku-4-5-20251001 \
   show clock
 ```
+`--provider`/`--api-key`/`--model` are for generation. Naming has its own separate
+`--naming-provider`/`--naming-api-key`/`--naming-model`, defaulting independently
+(`--naming-provider` defaults to `anthropic`; the other two fall back to that
+provider's own env var/default model) — set them explicitly if naming needs a
+different provider than generation.
 
 **`init-trial-config`** — write a placeholder `trial.yaml` to fill in, instead of
 writing one by hand:
