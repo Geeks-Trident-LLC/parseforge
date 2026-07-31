@@ -734,9 +734,9 @@ def test_promotion_reports_promoted_and_unqualified(
             "alice",
             "--path",
             str(tmp_path),
-            "--match-rate-threshold",
+            "--threshold",
             "0.9",
-            "--min-sample-count",
+            "--min-samples",
             "2",
         ],
     )

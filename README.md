@@ -136,7 +136,7 @@ parseforge integration
 **`promotion`** — auto-promote every group that clears its gate (SPEC §5 step 9;
 `AUTO_PROMOTED` mode only — `USER_REVIEWED` has no CLI surface yet):
 ```
-parseforge promotion --user alice --match-rate-threshold 1.0 --min-sample-count 1
+parseforge promotion --user alice --threshold 1.0 --min-samples 1
 ```
 
 `trial`, `integration`, and `promotion` all default to `paths.DEFAULT_STORE_ROOT`
