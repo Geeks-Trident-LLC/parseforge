@@ -733,16 +733,28 @@ def integration_cmd(store_root_opt: str | None) -> None:
 @click.option("--email", default=None)
 @click.option("--description", default=None)
 @click.option("--note", default=None)
-@click.option("--match-rate-threshold", type=float, default=1.0, show_default=True)
-@click.option("--min-sample-count", type=int, default=1, show_default=True)
+@click.option(
+    "--threshold",
+    type=float,
+    default=1.0,
+    show_default=True,
+    help="Minimum match rate (of passed trials) a group needs to auto-promote.",
+)
+@click.option(
+    "--min-samples",
+    type=int,
+    default=1,
+    show_default=True,
+    help="Minimum passed-trial count a group needs to auto-promote.",
+)
 def promotion_cmd(
     user: str,
     store_root_opt: str | None,
     email: str | None,
     description: str | None,
     note: str | None,
-    match_rate_threshold: float,
-    min_sample_count: int,
+    threshold: float,
+    min_samples: int,
 ) -> None:
     """Auto-promote every group that clears its gate (SPEC.md §5 step 9).
 
@@ -753,7 +765,7 @@ def promotion_cmd(
         user=user, email=email, description=description, note=note
     )
     gate = promotion.PromotionGate(
-        match_rate_threshold=match_rate_threshold, min_sample_count=min_sample_count
+        match_rate_threshold=threshold, min_sample_count=min_samples
     )
 
     result = promotion.promote_auto(store_root, metadata, gate)
