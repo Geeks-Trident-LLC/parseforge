@@ -5,6 +5,25 @@ templates from network device CLI output.
 
 Full design plan: [SPEC.md](SPEC.md).
 
+## Status
+
+Early beta. The full pipeline is implemented and tested end to end — naming,
+sampling, generation, self-validation, integration (output-schema group/variant
+clustering), promotion (auto and human-reviewed), and drift monitoring — and
+wired into the CLI below. A few things are intentionally not there yet:
+
+- **`USER_REVIEWED` promotion has a library entry point but no CLI command**
+  (`promotion.promote_user_reviewed()` works today; there's no
+  `parseforge promotion --mode user-reviewed` yet). Deferred until real
+  human-reviewed cases exist to show what a CLI/config shape for a list of
+  case/suffix/gate requests should actually look like, rather than guessing
+  ahead of need.
+- **Batch sampling mode** (collect several samples per command before
+  generating, SPEC.md §4) is designed but not built — the simpler
+  per-command loop mode is the only one implemented.
+- **One sampling connector** (Netmiko/SSH). The CLI's `--connector` registry
+  is built to hold more without a redesign, but nothing else is wired in yet.
+
 ## Layout
 
 ```
@@ -33,6 +52,11 @@ pytest
 ```
 
 ## CLI
+
+Three kinds of commands: single lookups (`name`, `check`), one-shot inspection with
+no persistence (`generate-template`, `canonical`/`readable`/`recognizers`), and the
+config-driven `trial` → `integration` → `promotion` workflow that runs the full
+pipeline end to end (see [Quickstart: end to end](#quickstart-end-to-end) below).
 
 **Naming** — resolve a raw CLI command to its canonical cli-name (cached after the
 first call, per SPEC §2):
@@ -119,3 +143,22 @@ parseforge promotion --user alice --match-rate-threshold 1.0 --min-sample-count 
 
 `trial`, `integration`, and `promotion` all default to `paths.DEFAULT_STORE_ROOT`
 (`~/.parseforge/tests`); pass `--path <dir>` to point at a different store root.
+
+### Quickstart: end to end
+
+Run `trial` once per device/command batch (repeat as more devices or commands come
+in — each run only adds new evidence, it never discards prior trials), then
+`integration` and `promotion` any time you want the current evidence reflected in
+`authoritative/`:
+
+```bash
+parseforge trial --config trial.yaml
+parseforge integration
+parseforge promotion --user alice
+```
+
+`integration` rebuilds `integration/reference-summary.json` from every trial
+currently on disk, and `promotion` always refreshes integration itself before
+evaluating any gate — so running `promotion` alone after a `trial` run is enough to
+pick up new evidence; a separate `integration` run is only useful if you want to
+inspect `reference-summary.json` without also promoting.
