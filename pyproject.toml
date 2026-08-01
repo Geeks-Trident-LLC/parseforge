@@ -22,7 +22,6 @@ dependencies = [
     "click>=8.1",
     "PyYAML>=6.0",
     "textfsm>=1.1.0",
-    "openai>=1.0.0",
     "textfsm-ai>=0.6.1",
 ]
 
@@ -60,10 +59,11 @@ keywords = [
 [project.optional-dependencies]
 # textfsm-ai v0.6.0+ made every provider SDK an optional extra (lazy
 # import; a clear ImportError only when that provider is actually used).
-# parseforge mirrors that per-provider, starting with anthropic --
-# openai/deepseek stays a hard base dependency until it gets the same
-# treatment in a follow-up.
+# parseforge mirrors that per-provider: `pip install parseforge` alone
+# now installs no AI-provider SDK at all -- add the extra(s) for the
+# provider(s) you actually use.
 anthropic = ["anthropic>=0.40.0", "textfsm-ai[anthropic]>=0.6.1"]
+deepseek = ["openai>=1.0.0", "textfsm-ai[deepseek]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
@@ -71,10 +71,11 @@ dev = [
     "ruff>=0.4.0",
     "black>=24.0.0",
     "mypy>=1.10.0",
-    # anthropic is optional at runtime (see the `anthropic` extra above),
-    # but it's the CLI's default --provider and tests should exercise it,
-    # not silently skip -- so dev always pulls it in.
+    # anthropic/openai are optional at runtime (see the extras above), but
+    # both providers are exercised by the CLI/tests, which should never
+    # silently skip -- so dev always pulls both in.
     "anthropic>=0.40.0",
+    "openai>=1.0.0",
 ]
 
 [project.scripts]
