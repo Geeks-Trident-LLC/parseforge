@@ -78,7 +78,7 @@ jobs:
           cache: "pip"
 
       - name: Install docs tools
-        run: python -m pip install -r requirements-dev.txt
+        run: python -m pip install mkdocs==1.* mkdocs-material==9.* mike
 
       - name: Configure git identity for mike
         run: |
