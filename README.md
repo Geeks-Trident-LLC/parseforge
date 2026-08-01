@@ -24,12 +24,26 @@ wired into the CLI below. A few things are intentionally not there yet:
 - **One sampling connector** (Netmiko/SSH). The CLI's `--connector` registry
   is built to hold more without a redesign, but nothing else is wired in yet.
 
+## Installation
+
+```
+pip install parseforge[anthropic]
+```
+The `anthropic` provider (the CLI's default everywhere `--provider` isn't required)
+is an optional extra — `pip install parseforge` alone gets you the CLI and
+`deepseek` (bundled via the still-mandatory `openai` dependency, since deepseek
+speaks OpenAI's chat-completions API) but not `anthropic`, until it's actually
+needed. `pip install parseforge[sampling]` adds Netmiko for live device sampling;
+combine extras as needed, e.g. `pip install parseforge[anthropic,sampling]`.
+
 ## Development
 
 ```
 pip install -e ".[dev,sampling]"
 pytest
 ```
+`dev` already includes `anthropic` (tests exercise it, not skip it) — add
+`,anthropic` explicitly only if installing outside of `dev`.
 
 ## CLI
 
