@@ -157,6 +157,28 @@ def test_generate_failure_path(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result.reason == "LLM call failed: rate limited"
 
 
+def test_generate_raises_for_missing_provider_sdk(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A missing provider SDK is an environment problem, not a generation
+    outcome -- textfsm-ai's own lazy provider registry raises ImportError
+    for it (pointing at the right `pip install textfsm-ai[<provider>]`),
+    and generate() must let that propagate rather than folding it into a
+    not-ready GenerationResult, same as naming.providers.anthropic/deepseek
+    treat a missing SDK as a hard error, not a soft failure."""
+
+    def _raise_missing_sdk(sample, provider, api_key, model, **kwargs):
+        raise ImportError(
+            f"Provider {provider!r} requires additional dependencies that are "
+            f"not installed. Install with: pip install textfsm-ai[{provider}]"
+        )
+
+    monkeypatch.setattr("parseforge.generation.run_pipeline", _raise_missing_sdk)
+
+    with pytest.raises(ImportError, match="textfsm-ai\\[anthropic\\]"):
+        generate("sample text", "anthropic", "sk-real-secret-123", "m")
+
+
 def test_generate_forwards_extra_kwargs(monkeypatch: pytest.MonkeyPatch) -> None:
     calls = []
 
