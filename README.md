@@ -29,12 +29,15 @@ wired into the CLI below. A few things are intentionally not there yet:
 ```
 pip install parseforge[anthropic]
 ```
-The `anthropic` provider (the CLI's default everywhere `--provider` isn't required)
-is an optional extra — `pip install parseforge` alone gets you the CLI and
-`deepseek` (bundled via the still-mandatory `openai` dependency, since deepseek
-speaks OpenAI's chat-completions API) but not `anthropic`, until it's actually
-needed. `pip install parseforge[sampling]` adds Netmiko for live device sampling;
-combine extras as needed, e.g. `pip install parseforge[anthropic,sampling]`.
+`pip install parseforge` alone installs no AI-provider SDK at all — every
+command that's pure local processing (`canonical`/`readable`/`recognizers`,
+`integration`, `promotion`) works with nothing further. Anything that calls an
+LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
+extra for whichever provider it uses: `anthropic` or `deepseek`. `--provider`
+defaults to `anthropic` wherever it isn't required, so that's the one most
+setups need. `pip install parseforge[sampling]` adds Netmiko for live device
+sampling; combine extras as needed, e.g.
+`pip install parseforge[anthropic,deepseek,sampling]`.
 
 ## Development
 
@@ -42,8 +45,9 @@ combine extras as needed, e.g. `pip install parseforge[anthropic,sampling]`.
 pip install -e ".[dev,sampling]"
 pytest
 ```
-`dev` already includes `anthropic` (tests exercise it, not skip it) — add
-`,anthropic` explicitly only if installing outside of `dev`.
+`dev` already includes both `anthropic` and `openai` (tests exercise both
+providers, never silently skip) — add `,anthropic`/`,deepseek` explicitly only
+if installing outside of `dev`.
 
 ## CLI
 
