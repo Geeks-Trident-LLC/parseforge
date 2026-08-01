@@ -49,6 +49,11 @@ pytest
 providers, never silently skip) — add `,anthropic`/`,deepseek` explicitly only
 if installing outside of `dev`.
 
+Linting/formatting/type-checking/docs run through tox instead of extras — see
+`tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own
+tools in an isolated env. Cutting a release needs `pip install -e ".[release]"`
+(`bump2version`, `build`) — see `scripts/release.ps1`.
+
 ## CLI
 
 Three kinds of commands: single lookups (`name`, `check`), one-shot inspection with
