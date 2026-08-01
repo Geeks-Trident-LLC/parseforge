@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any
-
-from anthropic import Anthropic, AnthropicError
+from typing import TYPE_CHECKING, Any
 
 from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
 from .cost import estimate_cost
@@ -13,12 +11,30 @@ from .errors import format_llm_error_reason, is_retryable
 from .models import default_model
 from .text import extract_pattern
 
+if TYPE_CHECKING:
+    import anthropic as anthropic_sdk
+
 DEFAULT_MODEL = default_model("anthropic")
 
 # Headroom in case a future/opt-in extended-thinking model burns part of
 # the budget on reasoning before the actual answer — see the
 # deepseek-v4-flash truncation this guards against in providers/deepseek.py.
 _DEFAULT_MAX_TOKENS = 1024
+
+
+def _import_anthropic() -> Any:
+    """Deferred import — anthropic is an optional extra (parseforge[anthropic]);
+    nothing else in this module (or a cache-hit lookup, which never reaches
+    build_pattern at all — see resolver.cli_name) should require it to be
+    installed."""
+    try:
+        import anthropic
+    except ImportError as exc:
+        raise ImportError(
+            "the anthropic package is required to use AnthropicRegexBuilder — "
+            "install it via `pip install parseforge[anthropic]`"
+        ) from exc
+    return anthropic
 
 
 class AnthropicRegexBuilder:
@@ -38,18 +54,22 @@ class AnthropicRegexBuilder:
     def __init__(self, model: str = DEFAULT_MODEL, api_key: str | None = None) -> None:
         self.model = model
         self._api_key = api_key
-        self._client: Anthropic | None = None
+        self._client: anthropic_sdk.Anthropic | None = None
 
-    def _get_client(self) -> Anthropic:
+    def _get_client(self) -> anthropic_sdk.Anthropic:
         if self._client is None:
+            anthropic = _import_anthropic()
             self._client = (
-                Anthropic(api_key=self._api_key) if self._api_key else Anthropic()
+                anthropic.Anthropic(api_key=self._api_key)
+                if self._api_key
+                else anthropic.Anthropic()
             )
         return self._client
 
     def build_pattern(
         self, command: str, context: CliContext, **kwargs: Any
     ) -> LLMCLIResponse:
+        anthropic = _import_anthropic()
         prompt = build_prompt(command, context)
         max_tokens = kwargs.pop("max_tokens", None) or _DEFAULT_MAX_TOKENS
 
@@ -61,7 +81,7 @@ class AnthropicRegexBuilder:
                 messages=[{"role": "user", "content": prompt}],
                 **kwargs,
             )
-        except AnthropicError as exc:
+        except anthropic.AnthropicError as exc:
             if not is_retryable(exc):
                 # Same request would fail the same way again — stop rather
                 # than let a caller burn another attempt on it.

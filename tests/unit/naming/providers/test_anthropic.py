@@ -1,10 +1,16 @@
 from dataclasses import dataclass
 
-import anthropic
 import pytest
 
-from parseforge.naming.llm import CliContext
-from parseforge.naming.providers.anthropic import DEFAULT_MODEL, AnthropicRegexBuilder
+anthropic = pytest.importorskip(
+    "anthropic", reason="anthropic is an optional extra (parseforge[anthropic])"
+)
+
+from parseforge.naming.llm import CliContext  # noqa: E402
+from parseforge.naming.providers.anthropic import (  # noqa: E402
+    DEFAULT_MODEL,
+    AnthropicRegexBuilder,
+)
 
 
 def _make_error(name: str, message: str = "boom") -> anthropic.AnthropicError:
@@ -66,9 +72,7 @@ def test_build_pattern_calls_client_and_extracts_text(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fake = _FakeAnthropic()
-    monkeypatch.setattr(
-        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
-    )
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: fake)
 
     builder = AnthropicRegexBuilder()
     response = builder.build_pattern("show version", CONTEXT)
@@ -85,9 +89,7 @@ def test_response_carries_usage_reason_and_ready(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fake = _FakeAnthropic()
-    monkeypatch.setattr(
-        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
-    )
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: fake)
 
     response = AnthropicRegexBuilder().build_pattern("show version", CONTEXT)
 
@@ -103,9 +105,7 @@ def test_response_carries_usage_reason_and_ready(
 
 def test_truncated_response_is_not_ready(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = _FakeAnthropic(stop_reason="max_tokens")
-    monkeypatch.setattr(
-        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
-    )
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: fake)
 
     response = AnthropicRegexBuilder().build_pattern("show version", CONTEXT)
 
@@ -121,9 +121,7 @@ def test_retryable_error_returns_not_ready_response(
 
     fake = _FakeAnthropic()
     fake.messages.create = _raise
-    monkeypatch.setattr(
-        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
-    )
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: fake)
 
     response = AnthropicRegexBuilder().build_pattern("show version", CONTEXT)
 
@@ -139,9 +137,7 @@ def test_non_retryable_error_raises(monkeypatch: pytest.MonkeyPatch) -> None:
 
     fake = _FakeAnthropic()
     fake.messages.create = _raise
-    monkeypatch.setattr(
-        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
-    )
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: fake)
 
     with pytest.raises(anthropic.AnthropicError, match="malformed"):
         AnthropicRegexBuilder().build_pattern("show version", CONTEXT)
@@ -154,7 +150,7 @@ def test_client_is_constructed_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
     def _boom(**kwargs):
         raise AssertionError("Anthropic() should not be constructed eagerly")
 
-    monkeypatch.setattr("parseforge.naming.providers.anthropic.Anthropic", _boom)
+    monkeypatch.setattr(anthropic, "Anthropic", _boom)
 
     AnthropicRegexBuilder()  # must not raise
 
@@ -166,7 +162,7 @@ def test_api_key_argument_is_passed_through(monkeypatch: pytest.MonkeyPatch) -> 
         captured.update(kwargs)
         return _FakeAnthropic(**kwargs)
 
-    monkeypatch.setattr("parseforge.naming.providers.anthropic.Anthropic", _fake_ctor)
+    monkeypatch.setattr(anthropic, "Anthropic", _fake_ctor)
 
     builder = AnthropicRegexBuilder(api_key="sk-test-123")
     builder.build_pattern("show version", CONTEXT)
@@ -178,9 +174,7 @@ def test_kwargs_override_max_tokens_and_pass_through_extras(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     fake = _FakeAnthropic()
-    monkeypatch.setattr(
-        "parseforge.naming.providers.anthropic.Anthropic", lambda **kw: fake
-    )
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kw: fake)
 
     builder = AnthropicRegexBuilder()
     builder.build_pattern("show version", CONTEXT, max_tokens=2048, temperature=0.1)
