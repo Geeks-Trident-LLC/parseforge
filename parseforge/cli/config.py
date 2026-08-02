@@ -15,6 +15,16 @@ from typing import Any
 import click
 import yaml
 
+# Providers that don't take an API key at all — Vertex AI relies on GCP's
+# Application Default Credentials, Bedrock on AWS's own credential chain,
+# and OCI on locally-configured request-signing credentials (see
+# naming/providers/vertexai.py, naming/providers/bedrock.py, and
+# naming/providers/oci.py). api_key is required for every other
+# provider, but never for these; kept as a small named set (rather than
+# scattered `provider not in (...)` checks) so a future provider with
+# the same trait is a one-line addition.
+NO_API_KEY_PROVIDERS = frozenset({"vertexai", "bedrock", "oci"})
+
 
 @dataclass(frozen=True)
 class TrialConfig:
@@ -33,10 +43,13 @@ class TrialConfig:
     password: str
     device_type: str
     provider: str
-    api_key: str
     model: str
     commands: list[str]
     user: str
+    # Required unless provider is in NO_API_KEY_PROVIDERS — see
+    # load_trial_config()'s explicit check; not in the dataclass's
+    # required-field position since it's conditionally optional.
+    api_key: str | None = None
     email: str | None = None
     description: str | None = None
     note: str | None = None
@@ -50,6 +63,21 @@ class TrialConfig:
     endpoint: str | None = None
     api_version: str | None = None
     deployment: str | None = None
+    # Only meaningful for provider: vertexai — see
+    # naming/providers/vertexai.py. Falls back to VERTEXAI_PROJECT/
+    # VERTEXAI_REGION if omitted, same as api_key falls back to a
+    # provider's own env var.
+    project: str | None = None
+    location: str | None = None
+    # Only meaningful for provider: bedrock — see
+    # naming/providers/bedrock.py. Falls back to BEDROCK_REGION, then
+    # BEDROCK_DEFAULT_REGION, if omitted.
+    region: str | None = None
+    # Only meaningful for provider: oci — see naming/providers/oci.py.
+    # compartment_id falls back to OCI_COMPARTMENT_ID if omitted; region
+    # (shared with the bedrock field above) falls back to OCI_REGION,
+    # then whatever region is already set in ~/.oci/config.
+    compartment_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -69,6 +97,13 @@ class GenerationRequestConfig:
     endpoint: str | None = None
     api_version: str | None = None
     deployment: str | None = None
+    # Only meaningful for provider: vertexai — see TrialConfig above.
+    project: str | None = None
+    location: str | None = None
+    # Only meaningful for provider: bedrock — see TrialConfig above.
+    region: str | None = None
+    # Only meaningful for provider: oci — see TrialConfig above.
+    compartment_id: str | None = None
 
 
 _TRIAL_REQUIRED = (
@@ -82,7 +117,6 @@ _TRIAL_REQUIRED = (
     "password",
     "device_type",
     "provider",
-    "api_key",
     "model",
     "commands",
     "user",
@@ -112,6 +146,10 @@ def load_trial_config(path: Path) -> TrialConfig:
     raw = _load_yaml_mapping(path)
     _require_keys(raw, _TRIAL_REQUIRED, path)
 
+    provider = raw["provider"]
+    if provider not in NO_API_KEY_PROVIDERS and not raw.get("api_key"):
+        raise click.ClickException(f"{path}: missing required config key(s): api_key")
+
     commands = raw["commands"]
     if not isinstance(commands, list) or not all(isinstance(c, str) for c in commands):
         raise click.ClickException(f"{path}: 'commands' must be a list of strings")
@@ -126,8 +164,8 @@ def load_trial_config(path: Path) -> TrialConfig:
         username=raw["username"],
         password=raw["password"],
         device_type=raw["device_type"],
-        provider=raw["provider"],
-        api_key=raw["api_key"],
+        provider=provider,
+        api_key=raw.get("api_key"),
         model=raw["model"],
         commands=commands,
         user=raw["user"],
@@ -139,6 +177,10 @@ def load_trial_config(path: Path) -> TrialConfig:
         endpoint=raw.get("endpoint"),
         api_version=raw.get("api_version"),
         deployment=raw.get("deployment"),
+        project=raw.get("project"),
+        location=raw.get("location"),
+        region=raw.get("region"),
+        compartment_id=raw.get("compartment_id"),
     )
 
 
@@ -161,4 +203,8 @@ def load_generation_config(path: Path) -> GenerationRequestConfig:
         endpoint=raw.get("endpoint"),
         api_version=raw.get("api_version"),
         deployment=raw.get("deployment"),
+        project=raw.get("project"),
+        location=raw.get("location"),
+        region=raw.get("region"),
+        compartment_id=raw.get("compartment_id"),
     )

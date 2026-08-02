@@ -124,6 +124,31 @@ def gemini_key(require_real_tests: None) -> str:
 
 
 @pytest.fixture(scope="session")
+def vertexai_project(require_real_tests: None) -> str:
+    return _require_env("VERTEXAI_PROJECT")
+
+
+@pytest.fixture(scope="session")
+def vertexai_location(require_real_tests: None) -> str:
+    return _require_env("VERTEXAI_REGION")
+
+
+@pytest.fixture(scope="session")
+def bedrock_region(require_real_tests: None) -> str:
+    return _require_env("BEDROCK_REGION")
+
+
+@pytest.fixture(scope="session")
+def oci_compartment_id(require_real_tests: None) -> str:
+    return _require_env("OCI_COMPARTMENT_ID")
+
+
+@pytest.fixture(scope="session")
+def oci_region(require_real_tests: None) -> str:
+    return _require_env("OCI_REGION")
+
+
+@pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
     """Generic sandbox connection — any vendor.
 

@@ -25,6 +25,7 @@ from parseforge.naming.providers.azure import DEFAULT_API_VERSION
 _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
     "anthropic": naming.AnthropicRegexBuilder,
     "azure": naming.AzureRegexBuilder,
+    "bedrock": naming.BedrockRegexBuilder,
     "cerebras": naming.CerebrasRegexBuilder,
     "cohere": naming.CohereRegexBuilder,
     "deepseek": naming.DeepSeekRegexBuilder,
@@ -33,10 +34,12 @@ _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
     "groq": naming.GroqRegexBuilder,
     "mistral": naming.MistralRegexBuilder,
     "moonshot": naming.MoonshotRegexBuilder,
+    "oci": naming.OCIRegexBuilder,
     "openai": naming.OpenAIRegexBuilder,
     "openrouter": naming.OpenRouterRegexBuilder,
     "perplexity": naming.PerplexityRegexBuilder,
     "together": naming.TogetherRegexBuilder,
+    "vertexai": naming.VertexAIRegexBuilder,
     "xai": naming.XAIRegexBuilder,
 }
 
@@ -71,6 +74,24 @@ model: <model>
 # endpoint: <azure-resource-endpoint>
 # api_version: <azure-api-version>
 # deployment: <azure-deployment-name>
+# For provider: vertexai only -- no API key at all (authenticates via
+# GCP's own Application Default Credentials instead, so api_key above
+# can be omitted entirely). project/location default to VERTEXAI_PROJECT/
+# VERTEXAI_REGION if omitted.
+# project: <gcp-project-id>
+# location: <gcp-region, e.g. us-central1>
+# For provider: bedrock only -- no API key at all (authenticates via
+# AWS's own credential chain instead, so api_key above can be omitted
+# entirely). region defaults to BEDROCK_REGION/BEDROCK_DEFAULT_REGION
+# if omitted.
+# region: <aws-region, e.g. us-east-1>
+# For provider: oci only -- no API key at all (authenticates via local
+# request-signing credentials in ~/.oci/config instead, so api_key
+# above can be omitted entirely). compartment_id defaults to
+# OCI_COMPARTMENT_ID if omitted; region defaults to OCI_REGION, then
+# whatever region is already set in ~/.oci/config.
+# compartment_id: <ocid1.compartment...>
+# region: <oci-region, e.g. us-ashburn-1>
 
 # --- commands to run (required, at least one) ---
 commands:
@@ -96,10 +117,15 @@ _GENERATE_TEMPLATE_CONFIG_PLACEHOLDER = """\
 provider: anthropic
 api_key: <api-key>
 model: <model>
-# For provider: azure only -- see trial.yaml's placeholder for details.
+# For provider: azure/vertexai/bedrock/oci only -- see trial.yaml's
+# placeholder for details.
 # endpoint: <azure-resource-endpoint>
 # api_version: <azure-api-version>
 # deployment: <azure-deployment-name>
+# project: <gcp-project-id>
+# location: <gcp-region, e.g. us-central1>
+# region: <aws-region, e.g. us-east-1 -- or oci-region, e.g. us-ashburn-1>
+# compartment_id: <ocid1.compartment...>
 
 # --- input: choose exactly one ---
 
@@ -134,17 +160,30 @@ def _build_regex_builder(
     endpoint: str | None = None,
     api_version: str | None = None,
     deployment: str | None = None,
+    project: str | None = None,
+    location: str | None = None,
+    region: str | None = None,
+    compartment_id: str | None = None,
 ) -> naming.RegexBuilder:
     """endpoint/api_version/deployment are only meaningful for
     provider="azure" (no fixed base_url or model catalog there — see
-    naming/providers/azure.py) — forwarded only when given, so every
-    other provider's constructor never sees an unexpected kwarg.
+    naming/providers/azure.py); project/location only for
+    provider="vertexai" (no API key at all there — see
+    naming/providers/vertexai.py); region only for provider="bedrock"
+    (also no API key at all there — see naming/providers/bedrock.py);
+    region and compartment_id together for provider="oci" (also no API
+    key at all there — see naming/providers/oci.py). Each is forwarded
+    only when given, so every other provider's constructor never sees an
+    unexpected kwarg.
 
     When deployment is given, model is *not* forwarded — AzureRegexBuilder
     has no model parameter at all (deployment replaces it), so passing
     both would raise a plain TypeError. This matters in practice: every
     TrialConfig always has a (placeholder) model value, since it's a
-    required config key shared by every provider."""
+    required config key shared by every provider. (VertexAIRegexBuilder/
+    BedrockRegexBuilder/OCIRegexBuilder *do* accept model normally, so no
+    equivalent exclusion is needed for project/location/region/
+    compartment_id.)"""
     kwargs: dict[str, str] = {}
     if api_key is not None:
         kwargs["api_key"] = api_key
@@ -156,6 +195,14 @@ def _build_regex_builder(
         kwargs["endpoint"] = endpoint
     if api_version is not None:
         kwargs["api_version"] = api_version
+    if project is not None:
+        kwargs["project"] = project
+    if location is not None:
+        kwargs["location"] = location
+    if region is not None:
+        kwargs["region"] = region
+    if compartment_id is not None:
+        kwargs["compartment_id"] = compartment_id
     return _BUILDERS[provider](**kwargs)
 
 
@@ -248,7 +295,11 @@ def main() -> None:
     "XAI_API_KEY, TOGETHER_API_KEY, FIREWORKS_API_KEY, PERPLEXITY_API_KEY, "
     "OPENROUTER_API_KEY, MOONSHOT_API_KEY, CEREBRAS_API_KEY, MISTRAL_API_KEY, "
     "COHERE_API_KEY, AZURE_API_KEY, GEMINI_API_KEY); only needed on a cache "
-    "miss.",
+    "miss. Not used at all by --provider vertexai (GCP's own Application "
+    "Default Credentials instead — see --gcp-project/--gcp-location), "
+    "--provider bedrock (AWS's own credential chain instead — see "
+    "--region), or --provider oci (local request-signing credentials in "
+    "~/.oci/config instead — see --region/--compartment-id).",
 )
 @click.option(
     "--model",
@@ -274,6 +325,36 @@ def main() -> None:
     help="Azure deployment name — replaces --model for --provider azure; "
     "defaults to AZURE_DEPLOYMENT.",
 )
+@click.option(
+    "--gcp-project",
+    default=None,
+    help="GCP project. Only used by --provider vertexai (which needs no "
+    "--api-key at all — see the vertexai row above); defaults to "
+    "VERTEXAI_PROJECT.",
+)
+@click.option(
+    "--gcp-location",
+    default=None,
+    help="GCP location/region. Only used by --provider vertexai; defaults to "
+    "VERTEXAI_REGION.",
+)
+@click.option(
+    "--region",
+    default=None,
+    envvar=["BEDROCK_REGION", "BEDROCK_DEFAULT_REGION", "OCI_REGION"],
+    help="AWS region for --provider bedrock (which needs no --api-key at "
+    "all — see the bedrock row above; defaults to BEDROCK_REGION, then "
+    "BEDROCK_DEFAULT_REGION), or OCI region for --provider oci (also no "
+    "--api-key — see the oci row above; defaults to OCI_REGION, then "
+    "whatever region is already set in ~/.oci/config).",
+)
+@click.option(
+    "--compartment-id",
+    default=None,
+    envvar="OCI_COMPARTMENT_ID",
+    help="OCI compartment OCID. Only used by --provider oci; defaults to "
+    "OCI_COMPARTMENT_ID.",
+)
 @click.argument("command", nargs=-1, required=True)
 def name_cmd(
     vendor: str,
@@ -286,6 +367,10 @@ def name_cmd(
     endpoint: str | None,
     api_version: str | None,
     deployment: str | None,
+    gcp_project: str | None,
+    gcp_location: str | None,
+    region: str | None,
+    compartment_id: str | None,
     command: tuple[str, ...],
 ) -> None:
     """Print the canonical cli-name for a raw CLI COMMAND.
@@ -295,7 +380,16 @@ def name_cmd(
     """
     context = naming.CliContext(vendor=vendor, family=family, os=os_, version=version)
     builder = _build_regex_builder(
-        provider, api_key, model, endpoint, api_version, deployment
+        provider,
+        api_key,
+        model,
+        endpoint,
+        api_version,
+        deployment,
+        gcp_project,
+        gcp_location,
+        region,
+        compartment_id,
     )
     click.echo(naming.cli_name(" ".join(command), context, builder=builder))
 
@@ -356,15 +450,48 @@ def name_cmd(
     "--naming-provider azure; defaults to AZURE_DEPLOYMENT.",
 )
 @click.option(
+    "--naming-gcp-project",
+    default=None,
+    help="GCP project for naming. Only used by --naming-provider vertexai; "
+    "defaults to VERTEXAI_PROJECT.",
+)
+@click.option(
+    "--naming-gcp-location",
+    default=None,
+    help="GCP location/region for naming. Only used by --naming-provider "
+    "vertexai; defaults to VERTEXAI_REGION.",
+)
+@click.option(
+    "--naming-region",
+    default=None,
+    help="AWS region for naming (--naming-provider bedrock; defaults to "
+    "BEDROCK_REGION, then BEDROCK_DEFAULT_REGION), or OCI region for "
+    "naming (--naming-provider oci; defaults to OCI_REGION, then "
+    "whatever region is already set in ~/.oci/config).",
+)
+@click.option(
+    "--naming-compartment-id",
+    default=None,
+    help="OCI compartment OCID for naming. Only used by --naming-provider "
+    "oci; defaults to OCI_COMPARTMENT_ID.",
+)
+@click.option(
     "--provider",
     required=True,
     help="LLM provider for template generation (textfsm-ai's own registry, "
     'e.g. "anthropic", "openai", "deepseek", "groq", "xai", "together", '
     '"fireworks", "perplexity", "openrouter", "moonshot", "cerebras", '
-    '"mistral", "cohere", "azure", "gemini"). Naming uses its own separate '
-    "--naming-provider, not this one.",
+    '"mistral", "cohere", "azure", "gemini", "vertexai", "bedrock", '
+    '"oci"). Naming uses its own separate --naming-provider, not this one.',
 )
-@click.option("--api-key", required=True, help="API key for the generation LLM call.")
+@click.option(
+    "--api-key",
+    default=None,
+    help="API key for the generation LLM call. Required for every provider "
+    "except vertexai (GCP's own Application Default Credentials instead), "
+    "bedrock (AWS's own credential chain instead), and oci (local "
+    "request-signing credentials in ~/.oci/config instead).",
+)
 @click.option(
     "--model",
     required=True,
@@ -395,6 +522,36 @@ def name_cmd(
     "variable.",
 )
 @click.option(
+    "--gcp-project",
+    default=None,
+    envvar="VERTEXAI_PROJECT",
+    help="GCP project for generation. Only used by --provider vertexai; "
+    "defaults to the VERTEXAI_PROJECT environment variable.",
+)
+@click.option(
+    "--gcp-location",
+    default=None,
+    envvar="VERTEXAI_REGION",
+    help="GCP location/region for generation. Only used by --provider "
+    "vertexai; defaults to the VERTEXAI_REGION environment variable.",
+)
+@click.option(
+    "--region",
+    default=None,
+    envvar=["BEDROCK_REGION", "BEDROCK_DEFAULT_REGION", "OCI_REGION"],
+    help="AWS region for generation (--provider bedrock; defaults to "
+    "BEDROCK_REGION, then BEDROCK_DEFAULT_REGION), or OCI region "
+    "(--provider oci; defaults to OCI_REGION, then whatever region is "
+    "already set in ~/.oci/config).",
+)
+@click.option(
+    "--compartment-id",
+    default=None,
+    envvar="OCI_COMPARTMENT_ID",
+    help="OCI compartment OCID for generation. Only used by --provider "
+    "oci; defaults to the OCI_COMPARTMENT_ID environment variable.",
+)
+@click.option(
     "--store-root",
     default=None,
     help="Root directory for trial output. Defaults to ~/.parseforge/tests.",
@@ -418,12 +575,20 @@ def run_cmd(
     naming_endpoint: str | None,
     naming_api_version: str | None,
     naming_deployment: str | None,
+    naming_gcp_project: str | None,
+    naming_gcp_location: str | None,
+    naming_region: str | None,
+    naming_compartment_id: str | None,
     provider: str,
-    api_key: str,
+    api_key: str | None,
     model: str,
     endpoint: str | None,
     api_version: str | None,
     deployment: str | None,
+    gcp_project: str | None,
+    gcp_location: str | None,
+    region: str | None,
+    compartment_id: str | None,
     store_root: str | None,
     project: str | None,
     email: str | None,
@@ -444,6 +609,9 @@ def run_cmd(
     from parseforge.sampling import DeviceConnection
     from parseforge.sampling.backends import NetmikoSampler
 
+    if provider not in cli_config.NO_API_KEY_PROVIDERS and not api_key:
+        raise click.UsageError(f"--api-key is required for --provider {provider}")
+
     context = naming.CliContext(vendor=vendor, family=family, os=os_, version=version)
     connection = DeviceConnection(
         host=host, username=username, password=password, device_type=device_type
@@ -455,13 +623,21 @@ def run_cmd(
         naming_endpoint,
         naming_api_version,
         naming_deployment,
+        naming_gcp_project,
+        naming_gcp_location,
+        naming_region,
+        naming_compartment_id,
     )
     generation_config = LLMProviderConfig(
         provider=provider,
-        api_key=api_key,
+        api_key=api_key or "",
         model=deployment or model,
         endpoint=endpoint,
         api_version=api_version,
+        project=gcp_project,
+        location=gcp_location,
+        region=region,
+        compartment_id=compartment_id,
     )
     metadata = TrialMetadata(
         project=project,
@@ -522,9 +698,22 @@ def _check_provider(
     endpoint: str | None = None,
     api_version: str | None = None,
     deployment: str | None = None,
+    project: str | None = None,
+    location: str | None = None,
+    region: str | None = None,
+    compartment_id: str | None = None,
 ) -> None:
     builder = _build_regex_builder(
-        provider, api_key, model, endpoint, api_version, deployment
+        provider,
+        api_key,
+        model,
+        endpoint,
+        api_version,
+        deployment,
+        project,
+        location,
+        region,
+        compartment_id,
     )
     context = naming.CliContext(vendor="check", family="check", os="check", version="0")
     try:
@@ -573,6 +762,30 @@ def _check_provider(
     default=None,
     help="Used for a --provider azure check; defaults to AZURE_DEPLOYMENT.",
 )
+@click.option(
+    "--gcp-project",
+    default=None,
+    help="Used for a --provider vertexai check; defaults to VERTEXAI_PROJECT.",
+)
+@click.option(
+    "--gcp-location",
+    default=None,
+    help="Used for a --provider vertexai check; defaults to VERTEXAI_REGION.",
+)
+@click.option(
+    "--region",
+    default=None,
+    envvar=["BEDROCK_REGION", "BEDROCK_DEFAULT_REGION", "OCI_REGION"],
+    help="Used for a --provider bedrock check (defaults to BEDROCK_REGION, "
+    "then BEDROCK_DEFAULT_REGION) or a --provider oci check (defaults to "
+    "OCI_REGION, then whatever region is already set in ~/.oci/config).",
+)
+@click.option(
+    "--compartment-id",
+    default=None,
+    envvar="OCI_COMPARTMENT_ID",
+    help="Used for a --provider oci check; defaults to OCI_COMPARTMENT_ID.",
+)
 def check_cmd(
     connector: str | None,
     provider: str | None,
@@ -587,6 +800,10 @@ def check_cmd(
     endpoint: str | None,
     api_version: str | None,
     deployment: str | None,
+    gcp_project: str | None,
+    gcp_location: str | None,
+    region: str | None,
+    compartment_id: str | None,
 ) -> None:
     """Validate a --connector or --provider is reachable, or report what it
     needs. Exactly one of --connector/--provider is required."""
@@ -598,7 +815,18 @@ def check_cmd(
         )
     else:
         assert provider is not None
-        _check_provider(provider, api_key, model, endpoint, api_version, deployment)
+        _check_provider(
+            provider,
+            api_key,
+            model,
+            endpoint,
+            api_version,
+            deployment,
+            gcp_project,
+            gcp_location,
+            region,
+            compartment_id,
+        )
 
 
 @main.command("init-generate-template-config")
@@ -672,6 +900,37 @@ def init_generate_template_config_cmd(out_path: str, force: bool) -> None:
     "defaults to the AZURE_DEPLOYMENT environment variable.",
 )
 @click.option(
+    "--gcp-project",
+    default=None,
+    envvar="VERTEXAI_PROJECT",
+    help="GCP project. Only used by --provider vertexai (which needs no "
+    "--api-key at all); defaults to the VERTEXAI_PROJECT environment "
+    "variable.",
+)
+@click.option(
+    "--gcp-location",
+    default=None,
+    envvar="VERTEXAI_REGION",
+    help="GCP location/region. Only used by --provider vertexai; defaults to "
+    "the VERTEXAI_REGION environment variable.",
+)
+@click.option(
+    "--region",
+    default=None,
+    envvar=["BEDROCK_REGION", "BEDROCK_DEFAULT_REGION", "OCI_REGION"],
+    help="AWS region for --provider bedrock (defaults to the BEDROCK_REGION, "
+    "then BEDROCK_DEFAULT_REGION, environment variable), or OCI region for "
+    "--provider oci (defaults to the OCI_REGION environment variable, then "
+    "whatever region is already set in ~/.oci/config).",
+)
+@click.option(
+    "--compartment-id",
+    default=None,
+    envvar="OCI_COMPARTMENT_ID",
+    help="OCI compartment OCID. Only used by --provider oci; defaults to "
+    "the OCI_COMPARTMENT_ID environment variable.",
+)
+@click.option(
     "--out",
     "out_dir",
     type=click.Path(file_okay=False),
@@ -694,6 +953,10 @@ def generate_template_cmd(
     endpoint: str | None,
     api_version: str | None,
     deployment: str | None,
+    gcp_project: str | None,
+    gcp_location: str | None,
+    region: str | None,
+    compartment_id: str | None,
     out_dir: str | None,
 ) -> None:
     """One-shot template generation — no trial persisted under trials/.
@@ -717,11 +980,19 @@ def generate_template_cmd(
         endpoint = endpoint or cfg.endpoint
         api_version = api_version or cfg.api_version
         deployment = deployment or cfg.deployment
+        gcp_project = gcp_project or cfg.project
+        gcp_location = gcp_location or cfg.location
+        region = region or cfg.region
+        compartment_id = compartment_id or cfg.compartment_id
 
-    if not provider or not model or not api_key:
+    if not provider or not model:
         raise click.UsageError(
-            "--provider, --api-key, and --model (or a --config supplying all "
-            "three) are required"
+            "--provider and --model (or a --config supplying both) are required"
+        )
+    if provider not in cli_config.NO_API_KEY_PROVIDERS and not api_key:
+        raise click.UsageError(
+            f"--api-key is required for --provider {provider} (or a --config "
+            "supplying it)"
         )
 
     if sample_file:
@@ -739,10 +1010,13 @@ def generate_template_cmd(
     result = generation.generate(
         sample_text,
         provider,
-        api_key,
+        api_key or "",
         deployment or model,
         endpoint=endpoint or "",
         api_version=api_version or DEFAULT_API_VERSION,
+        project=gcp_project or "",
+        region=region or gcp_location or "",
+        compartment_id=compartment_id or "",
     )
     if not result.ready:
         raise click.ClickException(f"generation not ready: {result.reason}")
@@ -883,13 +1157,21 @@ def trial_cmd(config_path: str, store_root_opt: str | None) -> None:
         cfg.endpoint,
         cfg.api_version,
         cfg.deployment,
+        cfg.project,
+        cfg.location,
+        cfg.region,
+        cfg.compartment_id,
     )
     generation_config = pipeline.LLMProviderConfig(
         provider=cfg.provider,
-        api_key=cfg.api_key,
+        api_key=cfg.api_key or "",
         model=cfg.deployment or cfg.model,
         endpoint=cfg.endpoint,
         api_version=cfg.api_version,
+        project=cfg.project,
+        location=cfg.location,
+        region=cfg.region,
+        compartment_id=cfg.compartment_id,
     )
     metadata = pipeline.TrialMetadata(
         username=cfg.user, email=cfg.email, description=cfg.description, note=cfg.note

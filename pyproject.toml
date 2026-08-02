@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parseforge"
-version = "0.2.10"
+version = "0.2.12"
 description = "LLM-driven pipeline that forges, validates, and promotes TextFSM templates from network CLI output"
 readme = "README.md"
 license = { text = "MIT" }
@@ -83,6 +83,22 @@ mistral = ["mistralai==1.10.0", "textfsm-ai[mistral]>=0.6.1"]
 cohere = ["cohere==5.21.1", "textfsm-ai[cohere]>=0.6.1"]
 azure = ["azure-ai-inference>=1.0.0b9", "textfsm-ai[azure]>=0.6.1"]
 gemini = ["google-genai>=0.2.0", "textfsm-ai[gemini]>=0.6.1"]
+# Same underlying google-genai package as gemini (Client(vertexai=True,
+# project=, location=) vs. Client(api_key=)) -- kept as its own extra
+# anyway, matching textfsm-ai's own separate gemini/vertexai extras and
+# the CLI's own --provider vertexai vs. gemini distinction.
+vertexai = ["google-genai>=0.2.0", "textfsm-ai[vertexai]>=0.6.1"]
+# Pinned exactly: the newest boto3 release with a Python 3.9-compatible
+# botocore, matching textfsm-ai's own pin (boto3 bumps its Python floor
+# frequently).
+bedrock = ["boto3==1.42.97", "textfsm-ai[bedrock]>=0.6.1"]
+# Pinned exactly for reproducibility (matching textfsm-ai's own pin).
+# Much heavier than every other provider SDK here (~36MB) -- Oracle's
+# single all-services SDK (compute, storage, IAM, ...), not a
+# Generative-AI-only package (no such package exists on PyPI) -- plus
+# the crypto libs (cryptography, pyOpenSSL) its request-signing auth
+# model needs.
+oci = ["oci==2.182.0", "textfsm-ai[oci]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
@@ -90,16 +106,19 @@ dev = [
     "ruff>=0.4.0",
     "black>=24.0.0",
     "mypy>=1.10.0",
-    # anthropic/openai/mistralai/cohere/azure-ai-inference/google-genai
-    # are optional at runtime (see the extras above), but every provider
-    # is exercised by the CLI/tests, which should never silently skip --
-    # so dev always pulls all six in.
+    # anthropic/openai/mistralai/cohere/azure-ai-inference/google-genai/
+    # boto3/oci are optional at runtime (see the extras above), but every
+    # provider is exercised by the CLI/tests, which should never silently
+    # skip -- so dev always pulls all of them in. google-genai covers both
+    # gemini and vertexai.
     "anthropic>=0.40.0",
     "openai>=1.0.0",
     "mistralai==1.10.0",
     "cohere==5.21.1",
     "azure-ai-inference>=1.0.0b9",
     "google-genai>=0.2.0",
+    "boto3==1.42.97",
+    "oci==2.182.0",
 ]
 # Tooling for scripts/release.ps1 and CI's own package-build step.
 # bump2version isn't otherwise installed anywhere -- release.ps1 assumes

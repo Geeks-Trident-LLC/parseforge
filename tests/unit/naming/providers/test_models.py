@@ -21,6 +21,9 @@ PROVIDERS = [
     "mistral",
     "cohere",
     "gemini",
+    "vertexai",
+    "bedrock",
+    "oci",
 ]
 
 
