@@ -1,4 +1,5 @@
 from .anthropic import AnthropicRegexBuilder
+from .azure import AzureRegexBuilder
 from .cerebras import CerebrasRegexBuilder
 from .cohere import CohereRegexBuilder
 from .deepseek import DeepSeekRegexBuilder
@@ -14,6 +15,7 @@ from .xai import XAIRegexBuilder
 
 __all__ = [
     "AnthropicRegexBuilder",
+    "AzureRegexBuilder",
     "CerebrasRegexBuilder",
     "CohereRegexBuilder",
     "DeepSeekRegexBuilder",

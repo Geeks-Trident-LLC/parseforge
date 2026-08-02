@@ -20,9 +20,11 @@ from parseforge import (
     validation,
 )
 from parseforge.cli import config as cli_config
+from parseforge.naming.providers.azure import DEFAULT_API_VERSION
 
 _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
     "anthropic": naming.AnthropicRegexBuilder,
+    "azure": naming.AzureRegexBuilder,
     "cerebras": naming.CerebrasRegexBuilder,
     "cohere": naming.CohereRegexBuilder,
     "deepseek": naming.DeepSeekRegexBuilder,
@@ -61,6 +63,13 @@ device_type: <netmiko-device-type>
 provider: anthropic
 api_key: <api-key>
 model: <model>
+# For provider: azure only -- no fixed base_url or model catalog there.
+# deployment replaces model above (still keep a model: placeholder value,
+# it's simply ignored); endpoint/api_version default to AZURE_ENDPOINT/
+# AZURE_API_VERSION if omitted.
+# endpoint: <azure-resource-endpoint>
+# api_version: <azure-api-version>
+# deployment: <azure-deployment-name>
 
 # --- commands to run (required, at least one) ---
 commands:
@@ -86,6 +95,10 @@ _GENERATE_TEMPLATE_CONFIG_PLACEHOLDER = """\
 provider: anthropic
 api_key: <api-key>
 model: <model>
+# For provider: azure only -- see trial.yaml's placeholder for details.
+# endpoint: <azure-resource-endpoint>
+# api_version: <azure-api-version>
+# deployment: <azure-deployment-name>
 
 # --- input: choose exactly one ---
 
@@ -114,13 +127,34 @@ def _write_placeholder_config(out_path: str, force: bool, content: str) -> None:
 
 
 def _build_regex_builder(
-    provider: str, api_key: str | None, model: str | None
+    provider: str,
+    api_key: str | None,
+    model: str | None,
+    endpoint: str | None = None,
+    api_version: str | None = None,
+    deployment: str | None = None,
 ) -> naming.RegexBuilder:
+    """endpoint/api_version/deployment are only meaningful for
+    provider="azure" (no fixed base_url or model catalog there — see
+    naming/providers/azure.py) — forwarded only when given, so every
+    other provider's constructor never sees an unexpected kwarg.
+
+    When deployment is given, model is *not* forwarded — AzureRegexBuilder
+    has no model parameter at all (deployment replaces it), so passing
+    both would raise a plain TypeError. This matters in practice: every
+    TrialConfig always has a (placeholder) model value, since it's a
+    required config key shared by every provider."""
     kwargs: dict[str, str] = {}
     if api_key is not None:
         kwargs["api_key"] = api_key
-    if model is not None:
+    if deployment is not None:
+        kwargs["deployment"] = deployment
+    elif model is not None:
         kwargs["model"] = model
+    if endpoint is not None:
+        kwargs["endpoint"] = endpoint
+    if api_version is not None:
+        kwargs["api_version"] = api_version
     return _BUILDERS[provider](**kwargs)
 
 
@@ -212,12 +246,31 @@ def main() -> None:
     "variable (ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, GROQ_API_KEY, "
     "XAI_API_KEY, TOGETHER_API_KEY, FIREWORKS_API_KEY, PERPLEXITY_API_KEY, "
     "OPENROUTER_API_KEY, MOONSHOT_API_KEY, CEREBRAS_API_KEY, MISTRAL_API_KEY, "
-    "COHERE_API_KEY); only needed on a cache miss.",
+    "COHERE_API_KEY, AZURE_API_KEY); only needed on a cache miss.",
 )
 @click.option(
     "--model",
     default=None,
-    help="Defaults to the selected provider's own default model.",
+    help="Defaults to the selected provider's own default model. Ignored for "
+    "--provider azure — use --deployment instead.",
+)
+@click.option(
+    "--endpoint",
+    default=None,
+    help="Azure resource endpoint. Only used by --provider azure; defaults to "
+    "AZURE_ENDPOINT.",
+)
+@click.option(
+    "--api-version",
+    default=None,
+    help="Azure API version. Only used by --provider azure; defaults to "
+    "AZURE_API_VERSION, then a built-in default.",
+)
+@click.option(
+    "--deployment",
+    default=None,
+    help="Azure deployment name — replaces --model for --provider azure; "
+    "defaults to AZURE_DEPLOYMENT.",
 )
 @click.argument("command", nargs=-1, required=True)
 def name_cmd(
@@ -228,6 +281,9 @@ def name_cmd(
     provider: str,
     api_key: str | None,
     model: str | None,
+    endpoint: str | None,
+    api_version: str | None,
+    deployment: str | None,
     command: tuple[str, ...],
 ) -> None:
     """Print the canonical cli-name for a raw CLI COMMAND.
@@ -236,7 +292,9 @@ def name_cmd(
     on a cache miss.
     """
     context = naming.CliContext(vendor=vendor, family=family, os=os_, version=version)
-    builder = _build_regex_builder(provider, api_key, model)
+    builder = _build_regex_builder(
+        provider, api_key, model, endpoint, api_version, deployment
+    )
     click.echo(naming.cli_name(" ".join(command), context, builder=builder))
 
 
@@ -274,7 +332,26 @@ def name_cmd(
 @click.option(
     "--naming-model",
     default=None,
-    help="Defaults to the naming provider's own default model.",
+    help="Defaults to the naming provider's own default model. Ignored for "
+    "--naming-provider azure — use --naming-deployment instead.",
+)
+@click.option(
+    "--naming-endpoint",
+    default=None,
+    help="Azure resource endpoint for naming. Only used by --naming-provider "
+    "azure; defaults to AZURE_ENDPOINT.",
+)
+@click.option(
+    "--naming-api-version",
+    default=None,
+    help="Azure API version for naming. Only used by --naming-provider azure; "
+    "defaults to AZURE_API_VERSION, then a built-in default.",
+)
+@click.option(
+    "--naming-deployment",
+    default=None,
+    help="Azure deployment name for naming — replaces --naming-model for "
+    "--naming-provider azure; defaults to AZURE_DEPLOYMENT.",
 )
 @click.option(
     "--provider",
@@ -282,11 +359,39 @@ def name_cmd(
     help="LLM provider for template generation (textfsm-ai's own registry, "
     'e.g. "anthropic", "openai", "deepseek", "groq", "xai", "together", '
     '"fireworks", "perplexity", "openrouter", "moonshot", "cerebras", '
-    '"mistral", "cohere"). Naming uses its own separate --naming-provider, '
-    "not this one.",
+    '"mistral", "cohere", "azure"). Naming uses its own separate '
+    "--naming-provider, not this one.",
 )
 @click.option("--api-key", required=True, help="API key for the generation LLM call.")
-@click.option("--model", required=True, help="Model for the generation LLM call.")
+@click.option(
+    "--model",
+    required=True,
+    help="Model for the generation LLM call. For --provider azure, pass the "
+    "deployment name here via --deployment instead — this becomes the "
+    "deployment name that's actually sent.",
+)
+@click.option(
+    "--endpoint",
+    default=None,
+    envvar="AZURE_ENDPOINT",
+    help="Azure resource endpoint for generation. Only used by --provider "
+    "azure; defaults to the AZURE_ENDPOINT environment variable.",
+)
+@click.option(
+    "--api-version",
+    default=None,
+    envvar="AZURE_API_VERSION",
+    help="Azure API version for generation. Only used by --provider azure; "
+    "defaults to the AZURE_API_VERSION environment variable.",
+)
+@click.option(
+    "--deployment",
+    default=None,
+    envvar="AZURE_DEPLOYMENT",
+    help="Azure deployment name for generation — overrides --model for "
+    "--provider azure; defaults to the AZURE_DEPLOYMENT environment "
+    "variable.",
+)
 @click.option(
     "--store-root",
     default=None,
@@ -308,9 +413,15 @@ def run_cmd(
     naming_provider: str,
     naming_api_key: str | None,
     naming_model: str | None,
+    naming_endpoint: str | None,
+    naming_api_version: str | None,
+    naming_deployment: str | None,
     provider: str,
     api_key: str,
     model: str,
+    endpoint: str | None,
+    api_version: str | None,
+    deployment: str | None,
     store_root: str | None,
     project: str | None,
     email: str | None,
@@ -335,9 +446,20 @@ def run_cmd(
     connection = DeviceConnection(
         host=host, username=username, password=password, device_type=device_type
     )
-    naming_builder = _build_regex_builder(naming_provider, naming_api_key, naming_model)
+    naming_builder = _build_regex_builder(
+        naming_provider,
+        naming_api_key,
+        naming_model,
+        naming_endpoint,
+        naming_api_version,
+        naming_deployment,
+    )
     generation_config = LLMProviderConfig(
-        provider=provider, api_key=api_key, model=model
+        provider=provider,
+        api_key=api_key,
+        model=deployment or model,
+        endpoint=endpoint,
+        api_version=api_version,
     )
     metadata = TrialMetadata(
         project=project,
@@ -391,8 +513,17 @@ def _check_connector(
     click.echo("OK")
 
 
-def _check_provider(provider: str, api_key: str | None, model: str | None) -> None:
-    builder = _build_regex_builder(provider, api_key, model)
+def _check_provider(
+    provider: str,
+    api_key: str | None,
+    model: str | None,
+    endpoint: str | None = None,
+    api_version: str | None = None,
+    deployment: str | None = None,
+) -> None:
+    builder = _build_regex_builder(
+        provider, api_key, model, endpoint, api_version, deployment
+    )
     context = naming.CliContext(vendor="check", family="check", os="check", version="0")
     try:
         response = builder.build_pattern("show clock", context)
@@ -425,6 +556,21 @@ def _check_provider(provider: str, api_key: str | None, model: str | None) -> No
 )
 @click.option("--api-key", default=None, help="Used for a --provider check.")
 @click.option("--model", default=None, help="Used for a --provider check.")
+@click.option(
+    "--endpoint",
+    default=None,
+    help="Used for a --provider azure check; defaults to AZURE_ENDPOINT.",
+)
+@click.option(
+    "--api-version",
+    default=None,
+    help="Used for a --provider azure check; defaults to AZURE_API_VERSION.",
+)
+@click.option(
+    "--deployment",
+    default=None,
+    help="Used for a --provider azure check; defaults to AZURE_DEPLOYMENT.",
+)
 def check_cmd(
     connector: str | None,
     provider: str | None,
@@ -436,6 +582,9 @@ def check_cmd(
     probe_command: str,
     api_key: str | None,
     model: str | None,
+    endpoint: str | None,
+    api_version: str | None,
+    deployment: str | None,
 ) -> None:
     """Validate a --connector or --provider is reachable, or report what it
     needs. Exactly one of --connector/--provider is required."""
@@ -447,7 +596,7 @@ def check_cmd(
         )
     else:
         assert provider is not None
-        _check_provider(provider, api_key, model)
+        _check_provider(provider, api_key, model, endpoint, api_version, deployment)
 
 
 @main.command("init-generate-template-config")
@@ -492,7 +641,34 @@ def init_generate_template_config_cmd(out_path: str, force: bool) -> None:
     help='Generation LLM provider (textfsm-ai\'s own registry), e.g. "anthropic".',
 )
 @click.option("--api-key", default=None)
-@click.option("--model", default=None)
+@click.option(
+    "--model",
+    default=None,
+    help="Model for the generation LLM call. For --provider azure, pass the "
+    "deployment name via --deployment instead — this becomes the "
+    "deployment name that's actually sent.",
+)
+@click.option(
+    "--endpoint",
+    default=None,
+    envvar="AZURE_ENDPOINT",
+    help="Azure resource endpoint. Only used by --provider azure; defaults to "
+    "the AZURE_ENDPOINT environment variable.",
+)
+@click.option(
+    "--api-version",
+    default=None,
+    envvar="AZURE_API_VERSION",
+    help="Azure API version. Only used by --provider azure; defaults to the "
+    "AZURE_API_VERSION environment variable.",
+)
+@click.option(
+    "--deployment",
+    default=None,
+    envvar="AZURE_DEPLOYMENT",
+    help="Azure deployment name — overrides --model for --provider azure; "
+    "defaults to the AZURE_DEPLOYMENT environment variable.",
+)
 @click.option(
     "--out",
     "out_dir",
@@ -513,6 +689,9 @@ def generate_template_cmd(
     provider: str | None,
     api_key: str | None,
     model: str | None,
+    endpoint: str | None,
+    api_version: str | None,
+    deployment: str | None,
     out_dir: str | None,
 ) -> None:
     """One-shot template generation — no trial persisted under trials/.
@@ -533,6 +712,9 @@ def generate_template_cmd(
         provider = provider or cfg.provider
         api_key = api_key or cfg.api_key
         model = model or cfg.model
+        endpoint = endpoint or cfg.endpoint
+        api_version = api_version or cfg.api_version
+        deployment = deployment or cfg.deployment
 
     if not provider or not model or not api_key:
         raise click.UsageError(
@@ -552,7 +734,14 @@ def generate_template_cmd(
             "or --host/--username/--password/--device-type), or --config"
         )
 
-    result = generation.generate(sample_text, provider, api_key, model)
+    result = generation.generate(
+        sample_text,
+        provider,
+        api_key,
+        deployment or model,
+        endpoint=endpoint or "",
+        api_version=api_version or DEFAULT_API_VERSION,
+    )
     if not result.ready:
         raise click.ClickException(f"generation not ready: {result.reason}")
 
@@ -685,9 +874,20 @@ def trial_cmd(config_path: str, store_root_opt: str | None) -> None:
         password=cfg.password,
         device_type=cfg.device_type,
     )
-    naming_builder = _build_regex_builder(cfg.provider, cfg.api_key, cfg.model)
+    naming_builder = _build_regex_builder(
+        cfg.provider,
+        cfg.api_key,
+        cfg.model,
+        cfg.endpoint,
+        cfg.api_version,
+        cfg.deployment,
+    )
     generation_config = pipeline.LLMProviderConfig(
-        provider=cfg.provider, api_key=cfg.api_key, model=cfg.model
+        provider=cfg.provider,
+        api_key=cfg.api_key,
+        model=cfg.deployment or cfg.model,
+        endpoint=cfg.endpoint,
+        api_version=cfg.api_version,
     )
     metadata = pipeline.TrialMetadata(
         username=cfg.user, email=cfg.email, description=cfg.description, note=cfg.note
