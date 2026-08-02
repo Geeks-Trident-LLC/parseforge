@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 from click.testing import CliRunner
 
@@ -31,9 +32,12 @@ KEY = DeviceKey(
 
 
 class FakeRegexBuilder:
-    def __init__(self, ready: bool = True, reason: str = "stop") -> None:
+    def __init__(
+        self, ready: bool = True, reason: str = "stop", content: str = "pattern"
+    ) -> None:
         self.ready = ready
         self.reason = reason
+        self.content = content
         self.calls: list[tuple[str, CliContext]] = []
 
     def build_pattern(
@@ -41,7 +45,7 @@ class FakeRegexBuilder:
     ) -> LLMCLIResponse:
         self.calls.append((command, context))
         return LLMCLIResponse(
-            content="pattern",
+            content=self.content,
             raw=None,
             usage=NamingTokenUsage(
                 input_tokens=1, output_tokens=1, total_tokens=2, estimated_cost=0.0
@@ -89,6 +93,149 @@ def _fake_generation_result(ready: bool = True, reason: str = "") -> GenerationR
         reason=reason,
         raw={},
     )
+
+
+# --------------------------------------------------------------------------
+# name
+# --------------------------------------------------------------------------
+
+
+def test_name_azure_forwards_endpoint_api_version_deployment(monkeypatch: Any) -> None:
+    captured: dict[str, Any] = {}
+
+    def _fake_builder(
+        provider: str,
+        api_key: str | None,
+        model: str | None,
+        endpoint: str | None = None,
+        api_version: str | None = None,
+        deployment: str | None = None,
+    ) -> FakeRegexBuilder:
+        captured.update(
+            provider=provider,
+            endpoint=endpoint,
+            api_version=api_version,
+            deployment=deployment,
+        )
+        # naming.cli_name() self-validates that the returned pattern
+        # matches its own source command — "show version" is a fixed
+        # string with no regex metacharacters, so it works as its own
+        # matching pattern here.
+        return FakeRegexBuilder(ready=True, content="show version")
+
+    monkeypatch.setattr(cli_main, "_build_regex_builder", _fake_builder)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "name",
+            "--vendor",
+            "cisco",
+            "--family",
+            "catalyst9200",
+            "--os",
+            "ios-xe",
+            "--version",
+            "17.9.1",
+            "--provider",
+            "azure",
+            "--api-key",
+            "sk-test",
+            "--endpoint",
+            "https://my-resource.openai.azure.com",
+            "--api-version",
+            "2024-06-01",
+            "--deployment",
+            "my-deployment",
+            "show",
+            "version",
+        ],
+    )
+    assert result.exit_code == 0
+    assert captured["provider"] == "azure"
+    assert captured["endpoint"] == "https://my-resource.openai.azure.com"
+    assert captured["api_version"] == "2024-06-01"
+    assert captured["deployment"] == "my-deployment"
+
+
+# --------------------------------------------------------------------------
+# run
+# --------------------------------------------------------------------------
+
+
+def test_run_azure_generation_config_uses_deployment_and_endpoint(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    # run_cmd constructs NetmikoSampler() directly (unlike check/trial/
+    # generate-template, which all go through the lazy _build_sampler()
+    # helper) -- netmiko must actually be importable to invoke it, even
+    # though this test never uses the sampler itself.
+    pytest.importorskip(
+        "netmiko", reason="netmiko is an optional extra (parseforge[sampling])"
+    )
+    monkeypatch.setattr(
+        cli_main, "_build_regex_builder", lambda *a, **k: FakeRegexBuilder()
+    )
+    captured: dict[str, Any] = {}
+
+    def _fake_pipeline(
+        command: str,
+        context: CliContext,
+        connection: DeviceConnection,
+        naming_builder: Any,
+        sampler: Any,
+        generation_config: Any,
+        **kwargs: Any,
+    ) -> TrialResult:
+        captured["generation_config"] = generation_config
+        return TrialResult(
+            run_dir=tmp_path, cli_name="show-clock", passed=True, duration_ms=1
+        )
+
+    monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "run",
+            "--vendor",
+            "cisco",
+            "--family",
+            "catalyst9200",
+            "--os",
+            "ios-xe",
+            "--version",
+            "17.9.1",
+            "--host",
+            "10.0.0.1",
+            "--username",
+            "admin",
+            "--password",
+            "secret",
+            "--device-type",
+            "cisco_ios",
+            "--provider",
+            "azure",
+            "--api-key",
+            "sk-test",
+            "--model",
+            "ignored-since-deployment-is-set",
+            "--endpoint",
+            "https://my-resource.openai.azure.com",
+            "--api-version",
+            "2024-06-01",
+            "--deployment",
+            "my-deployment",
+            "show",
+            "clock",
+        ],
+    )
+    assert result.exit_code == 0
+    gen_cfg = captured["generation_config"]
+    assert gen_cfg.provider == "azure"
+    assert gen_cfg.model == "my-deployment"
+    assert gen_cfg.endpoint == "https://my-resource.openai.azure.com"
+    assert gen_cfg.api_version == "2024-06-01"
 
 
 # --------------------------------------------------------------------------
@@ -186,7 +333,9 @@ def test_check_connector_env_resolves(monkeypatch: Any) -> None:
 
 def test_check_provider_ok(monkeypatch: Any) -> None:
     monkeypatch.setattr(
-        cli_main, "_build_regex_builder", lambda p, k, m: FakeRegexBuilder(ready=True)
+        cli_main,
+        "_build_regex_builder",
+        lambda p, k, m, *a: FakeRegexBuilder(ready=True),
     )
     result = CliRunner().invoke(cli_main.main, ["check", "--provider", "anthropic"])
     assert result.exit_code == 0
@@ -197,7 +346,7 @@ def test_check_provider_not_ready(monkeypatch: Any) -> None:
     monkeypatch.setattr(
         cli_main,
         "_build_regex_builder",
-        lambda p, k, m: FakeRegexBuilder(ready=False, reason="max_tokens"),
+        lambda p, k, m, *a: FakeRegexBuilder(ready=False, reason="max_tokens"),
     )
     result = CliRunner().invoke(cli_main.main, ["check", "--provider", "anthropic"])
     assert result.exit_code == 1
@@ -206,11 +355,52 @@ def test_check_provider_not_ready(monkeypatch: Any) -> None:
 
 def test_check_provider_raises(monkeypatch: Any) -> None:
     monkeypatch.setattr(
-        cli_main, "_build_regex_builder", lambda p, k, m: FailingRegexBuilder()
+        cli_main, "_build_regex_builder", lambda p, k, m, *a: FailingRegexBuilder()
     )
     result = CliRunner().invoke(cli_main.main, ["check", "--provider", "anthropic"])
     assert result.exit_code == 1
     assert "FAIL: boom" in result.output
+
+
+def test_check_provider_azure_forwards_endpoint_api_version_deployment(
+    monkeypatch: Any,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    def _fake_builder(
+        provider: str,
+        api_key: str | None,
+        model: str | None,
+        endpoint: str | None = None,
+        api_version: str | None = None,
+        deployment: str | None = None,
+    ) -> FakeRegexBuilder:
+        captured.update(
+            endpoint=endpoint, api_version=api_version, deployment=deployment
+        )
+        return FakeRegexBuilder(ready=True)
+
+    monkeypatch.setattr(cli_main, "_build_regex_builder", _fake_builder)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "check",
+            "--provider",
+            "azure",
+            "--endpoint",
+            "https://my-resource.openai.azure.com",
+            "--api-version",
+            "2024-06-01",
+            "--deployment",
+            "my-deployment",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "OK" in result.output
+    assert captured["endpoint"] == "https://my-resource.openai.azure.com"
+    assert captured["api_version"] == "2024-06-01"
+    assert captured["deployment"] == "my-deployment"
 
 
 # --------------------------------------------------------------------------
@@ -354,6 +544,124 @@ def test_generate_template_from_config(monkeypatch: Any, tmp_path: Path) -> None
     )
     assert result.exit_code == 0
     assert "readable description" in result.output
+
+
+def test_generate_template_azure_uses_deployment_and_endpoint(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    sample_path = tmp_path / "sample.txt"
+    sample_path.write_text("hello\n", encoding="utf-8")
+    captured: dict[str, Any] = {}
+
+    def _fake_generate(
+        sample: str, provider: str, api_key: str, model: str, **kwargs: Any
+    ) -> GenerationResult:
+        captured.update(provider=provider, model=model, **kwargs)
+        return _fake_generation_result()
+
+    monkeypatch.setattr(cli_main.generation, "generate", _fake_generate)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "generate-template",
+            "--sample-file",
+            str(sample_path),
+            "--provider",
+            "azure",
+            "--api-key",
+            "sk-test",
+            "--model",
+            "ignored-since-deployment-is-set",
+            "--endpoint",
+            "https://my-resource.openai.azure.com",
+            "--api-version",
+            "2024-06-01",
+            "--deployment",
+            "my-deployment",
+        ],
+    )
+    assert result.exit_code == 0
+    assert captured["model"] == "my-deployment"
+    assert captured["endpoint"] == "https://my-resource.openai.azure.com"
+    assert captured["api_version"] == "2024-06-01"
+
+
+def test_generate_template_azure_api_version_defaults_when_unset(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    monkeypatch.delenv("AZURE_API_VERSION", raising=False)
+    sample_path = tmp_path / "sample.txt"
+    sample_path.write_text("hello\n", encoding="utf-8")
+    captured: dict[str, Any] = {}
+
+    def _fake_generate(
+        sample: str, provider: str, api_key: str, model: str, **kwargs: Any
+    ) -> GenerationResult:
+        captured.update(**kwargs)
+        return _fake_generation_result()
+
+    monkeypatch.setattr(cli_main.generation, "generate", _fake_generate)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "generate-template",
+            "--sample-file",
+            str(sample_path),
+            "--provider",
+            "azure",
+            "--api-key",
+            "sk-test",
+            "--model",
+            "ignored",
+            "--endpoint",
+            "https://my-resource.openai.azure.com",
+            "--deployment",
+            "my-deployment",
+        ],
+    )
+    assert result.exit_code == 0
+    assert captured["api_version"] == cli_main.DEFAULT_API_VERSION
+
+
+def test_generate_template_from_config_azure_fields(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    sample_path = tmp_path / "sample.txt"
+    sample_path.write_text("hello\n", encoding="utf-8")
+    config_path = tmp_path / "gen.yaml"
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "provider": "azure",
+                "api_key": "sk-test",
+                "model": "ignored-since-deployment-is-set",
+                "sample_file": str(sample_path),
+                "endpoint": "https://my-resource.openai.azure.com",
+                "api_version": "2024-06-01",
+                "deployment": "my-deployment",
+            }
+        ),
+        encoding="utf-8",
+    )
+    captured: dict[str, Any] = {}
+
+    def _fake_generate(
+        sample: str, provider: str, api_key: str, model: str, **kwargs: Any
+    ) -> GenerationResult:
+        captured.update(model=model, **kwargs)
+        return _fake_generation_result()
+
+    monkeypatch.setattr(cli_main.generation, "generate", _fake_generate)
+
+    result = CliRunner().invoke(
+        cli_main.main, ["generate-template", "--config", str(config_path)]
+    )
+    assert result.exit_code == 0
+    assert captured["model"] == "my-deployment"
+    assert captured["endpoint"] == "https://my-resource.openai.azure.com"
+    assert captured["api_version"] == "2024-06-01"
 
 
 # --------------------------------------------------------------------------
@@ -646,6 +954,47 @@ def test_trial_workers_runs_concurrently(monkeypatch: Any, tmp_path: Path) -> No
     result = CliRunner().invoke(cli_main.main, ["trial", "--config", str(config_path)])
     assert result.exit_code == 0
     assert "3/3 passed" in result.output
+
+
+def test_trial_azure_generation_config_uses_deployment_and_endpoint(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    store_root = tmp_path / "store"
+    config_path = _write_trial_config(
+        tmp_path / "trial.yaml",
+        store_root,
+        provider="azure",
+        model="ignored-since-deployment-is-set",
+        endpoint="https://my-resource.openai.azure.com",
+        api_version="2024-06-01",
+        deployment="my-deployment",
+    )
+    monkeypatch.setattr(cli_main, "_build_sampler", lambda connector: FakeSampler("ok"))
+    captured: dict[str, Any] = {}
+
+    def _fake_pipeline(
+        command: str,
+        context: CliContext,
+        connection: DeviceConnection,
+        naming_builder: Any,
+        sampler: Any,
+        generation_config: Any,
+        **kwargs: Any,
+    ) -> TrialResult:
+        captured["generation_config"] = generation_config
+        return TrialResult(
+            run_dir=store_root, cli_name=command, passed=True, duration_ms=1
+        )
+
+    monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
+
+    result = CliRunner().invoke(cli_main.main, ["trial", "--config", str(config_path)])
+    assert result.exit_code == 0
+    gen_cfg = captured["generation_config"]
+    assert gen_cfg.provider == "azure"
+    assert gen_cfg.model == "my-deployment"
+    assert gen_cfg.endpoint == "https://my-resource.openai.azure.com"
+    assert gen_cfg.api_version == "2024-06-01"
 
 
 # --------------------------------------------------------------------------

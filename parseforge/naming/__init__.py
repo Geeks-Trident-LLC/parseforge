@@ -10,6 +10,7 @@ from .llm import (
 )
 from .providers import (
     AnthropicRegexBuilder,
+    AzureRegexBuilder,
     CerebrasRegexBuilder,
     CohereRegexBuilder,
     DeepSeekRegexBuilder,
@@ -33,6 +34,7 @@ __all__ = [
     "RegexBuilder",
     "UnimplementedRegexBuilder",
     "AnthropicRegexBuilder",
+    "AzureRegexBuilder",
     "CerebrasRegexBuilder",
     "CohereRegexBuilder",
     "DeepSeekRegexBuilder",

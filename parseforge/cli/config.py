@@ -42,6 +42,14 @@ class TrialConfig:
     note: str | None = None
     workers: int = 1
     path: str | None = None
+    # Only meaningful for provider: azure — no fixed base_url or model
+    # catalog there (see naming/providers/azure.py). endpoint/api_version
+    # are ignored by every other provider; deployment replaces the usual
+    # "model" concept and is what actually gets sent as the generation
+    # model argument (see cli/main.py's trial_cmd).
+    endpoint: str | None = None
+    api_version: str | None = None
+    deployment: str | None = None
 
 
 @dataclass(frozen=True)
@@ -57,6 +65,10 @@ class GenerationRequestConfig:
     env: str | None = None
     cmdline: str | None = None
     sample_file: str | None = None
+    # Only meaningful for provider: azure — see TrialConfig above.
+    endpoint: str | None = None
+    api_version: str | None = None
+    deployment: str | None = None
 
 
 _TRIAL_REQUIRED = (
@@ -124,6 +136,9 @@ def load_trial_config(path: Path) -> TrialConfig:
         note=raw.get("notes"),
         workers=int(raw.get("workers", 1)),
         path=raw.get("path"),
+        endpoint=raw.get("endpoint"),
+        api_version=raw.get("api_version"),
+        deployment=raw.get("deployment"),
     )
 
 
@@ -143,4 +158,7 @@ def load_generation_config(path: Path) -> GenerationRequestConfig:
         env=raw.get("env"),
         cmdline=raw.get("cmdline"),
         sample_file=raw.get("sample_file"),
+        endpoint=raw.get("endpoint"),
+        api_version=raw.get("api_version"),
+        deployment=raw.get("deployment"),
     )
