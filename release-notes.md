@@ -1,3 +1,58 @@
+# v0.2.12 — Bedrock and OCI Round Out the Cloud Trio
+
+## ☁️ AWS and Oracle Join Google in the No-API-Key Club
+Two more providers, two more ways to skip the API key entirely:
+
+```
+pip install parseforge[bedrock,oci]
+```
+```
+parseforge name --provider bedrock --region us-east-1 show version
+parseforge name --provider oci --region us-ashburn-1 \
+  --compartment-id ocid1.compartment.oc1..xxxx show version
+```
+
+**Bedrock** authenticates via AWS's own credential chain and only needs a
+region — the simplest of the three cloud providers so far. **OCI** is the
+most involved provider yet: it signs every request cryptographically
+against local `~/.oci/config` credentials, and needs a *compartment ID* on
+top of region (the OCID of the compartment/tenancy that bills and scopes
+each request) — a third parameter no other provider has required.
+
+Error handling split along familiar lines: Bedrock raises a family of
+named exception classes classified by name (like Anthropic and OpenAI),
+while OCI raises one exception class with a status code (like Mistral,
+Cohere, Azure, and Gemini).
+
+## 📦 Version
+`0.2.11 → 0.2.12`
+
+# v0.2.11 — Vertex AI: No API Key Required
+
+## 🔑 A Second Provider Without an API Key
+Sixteen providers in, and Vertex AI breaks the mold the same way Azure did
+— just differently. No `--api-key` at all: it authenticates through GCP's
+own Application Default Credentials, and needs a project and a region
+instead.
+
+```
+pip install parseforge[vertexai]
+```
+```
+parseforge name --provider vertexai --gcp-project my-project \
+  --gcp-location us-central1 show version
+```
+
+Under the hood it's the same `google-genai` SDK Gemini already uses — just
+pointed at GCP's enterprise billing instead of the public API — so Vertex
+AI serves the identical Gemini model catalog. The trickiest part wasn't
+the SDK, it was naming the new flags: `run` already had a `--project` flag
+(a free-text trial label), so Vertex AI's GCP project needed a
+`--gcp-project`/`--gcp-location` pair to avoid a collision.
+
+## 📦 Version
+`0.2.10 → 0.2.11`
+
 # v0.2.10 — Gemini Joins the Native-SDK Club
 
 ## ✨ Fifteen Providers Now
