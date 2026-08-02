@@ -1,3 +1,67 @@
+## v0.2.12 — 2026-08-02
+
+### Added
+- `BedrockRegexBuilder` (`parseforge[bedrock]`) — the seventeenth naming
+  provider. Like Vertex AI, Bedrock has no API key at all — it
+  authenticates via AWS's own credential chain — and needs only a
+  `region`. Talks to `boto3`'s bedrock-runtime Converse API directly;
+  unlike Mistral/Cohere/Azure/Gemini/Vertex AI's single status-coded
+  error class, Bedrock raises a family of named `ClientError`
+  subclasses, classified by class name — the same approach already used
+  for Anthropic/OpenAI's own named-exception families
+- `OCIRegexBuilder` (`parseforge[oci]`) — the eighteenth naming
+  provider, and the most complex auth shape yet: no API key at all
+  (Oracle Cloud signs each request cryptographically against local
+  `~/.oci/config` credentials), plus *two* app-specific parameters —
+  `region` and `compartment_id` (the OCID of the compartment/tenancy to
+  bill and scope requests to). Talks to the native `oci` SDK's
+  `GenerativeAiInferenceClient.chat()` Generic chat format directly
+  (OpenAI-shaped messages/choices, the format shared by Meta Llama and
+  xAI Grok models on OCI); errors are a single `ServiceError` class
+  classified by its HTTP-style `.status` code, same approach as
+  Mistral/Cohere/Azure/Gemini
+- `NO_API_KEY_PROVIDERS` gains `bedrock`/`oci`. New `--region`/
+  `--compartment-id` options (and `--naming-region`/
+  `--naming-compartment-id` on `run`) across `name`, `run`, `check
+  --provider`, `generate-template`, and `trial.yaml`/
+  `generate-template.yaml` config files
+- `pipeline.py`'s `LLMProviderConfig` gains `region`/`compartment_id`
+  fields. `region` is shared across vertexai/bedrock/oci (only one is
+  ever set for a given trial, since a trial has exactly one generation
+  provider); `compartment_id` is oci-only and has its own dedicated
+  kwarg on `run_pipeline()`, needing no such sharing
+
+### Fixed
+- A new `test_oci.py` unit test file was missing `from __future__
+  import annotations`, which broke collection on Python 3.9 (`str |
+  None` union syntax needs the future import before Python 3.10) —
+  caught by CI before merge, not shipped
+
+## v0.2.11 — 2026-08-02
+
+### Added
+- `VertexAIRegexBuilder` (`parseforge[vertexai]`) — the sixteenth
+  naming provider, and the first after Azure to break the usual
+  `api_key`+`model` shape. Vertex AI has no API key at all — it
+  authenticates via GCP's own Application Default Credentials — and
+  needs a `project`/`location` pair instead. Reuses the `google-genai`
+  SDK already installed for Gemini (`Client(vertexai=True, project=,
+  location=)` vs. Gemini's own `Client(api_key=)`), serving the
+  identical Gemini model catalog under GCP's separate enterprise
+  billing
+- New `NO_API_KEY_PROVIDERS` set (`cli/config.py`) — providers that
+  authenticate without any API key at all; `--api-key`/`api_key` is now
+  required conditionally on provider instead of unconditionally
+- New `--gcp-project`/`--gcp-location` CLI flags — prefixed `gcp-`
+  specifically to avoid colliding with `run`'s pre-existing free-text
+  `--project` trial-label flag — across `name`, `run` (both naming and
+  generation sides), `check --provider`, and `generate-template`;
+  `trial.yaml`/`generate-template.yaml` config files gain matching
+  `project`/`location` keys
+- `pipeline.py`'s `LLMProviderConfig` gains `project`/`location`
+  fields, mapped onto `generation.generate()`'s `region=` kwarg — the
+  name `run_pipeline()` itself expects, not `location`
+
 ## v0.2.10 — 2026-08-02
 
 ### Added
