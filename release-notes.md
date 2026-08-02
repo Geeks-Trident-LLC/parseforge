@@ -1,3 +1,35 @@
+# v0.2.8 — Native-SDK Providers: Mistral and Cohere
+
+## 🧬 Beyond OpenAI-Compatible
+Every provider so far — even DeepSeek, Groq, xAI, and the rest — spoke the
+same OpenAI-compatible `chat.completions` dialect under the hood. Mistral
+and Cohere don't: both ship their own native Python SDKs with their own
+client shapes, error types, and response formats. `parseforge` now speaks
+both:
+
+- **Mistral** (`pip install parseforge[mistral]`, `MISTRAL_API_KEY`,
+  default `mistral-small-latest`) — via the native `mistralai` SDK's
+  `client.chat.complete()`.
+- **Cohere** (`pip install parseforge[cohere]`, `COHERE_API_KEY`, default
+  `command-light`) — via the native `cohere` SDK's `ClientV2.chat()`.
+
+Both required their own error-classification logic (status-code-based
+instead of the shared exception-class-name approach every other provider
+uses) since neither SDK raises OpenAI/Anthropic-shaped exceptions. Both are
+pinned to exact versions (`mistralai==1.10.0`, `cohere==5.21.1`) — the last
+releases of each SDK supporting Python 3.9, matching the same floor
+`parseforge` itself supports.
+
+That brings the provider count to **thirteen**.
+
+## ✅ Live Test Coverage
+Same real-API test pair as every other provider (naming + generation),
+gated behind `pytest --real` and the provider's own API key.
+
+## 📦 Version
+`0.2.6 → 0.2.8` (0.2.7 — the Mistral provider alone — was bumped but never
+published to production; this release folds it in alongside Cohere)
+
 # v0.2.6 — Eight New Naming Providers
 
 ## 🚀 Bring Your Own Model
