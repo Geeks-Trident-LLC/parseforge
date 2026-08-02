@@ -42,3 +42,12 @@ groq:
     - mixtral-8x7b-32768
     - deepseek-r1-distill-llama-70b
   deprecated: []
+
+xai:
+  default: grok-3-mini
+  supported:
+    - grok-3-mini
+    - grok-3
+    - grok-4
+    - grok-2-vision-1212
+  deprecated: []

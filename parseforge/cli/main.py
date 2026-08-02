@@ -26,6 +26,7 @@ _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
     "deepseek": naming.DeepSeekRegexBuilder,
     "groq": naming.GroqRegexBuilder,
     "openai": naming.OpenAIRegexBuilder,
+    "xai": naming.XAIRegexBuilder,
 }
 
 _CONNECTORS = ("netmiko",)
@@ -200,8 +201,8 @@ def main() -> None:
     "--api-key",
     default=None,
     help="Provider API key. Defaults to that provider's own API key environment "
-    "variable (ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, GROQ_API_KEY); "
-    "only needed on a cache miss.",
+    "variable (ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, GROQ_API_KEY, "
+    "XAI_API_KEY); only needed on a cache miss.",
 )
 @click.option(
     "--model",
@@ -269,8 +270,8 @@ def name_cmd(
     "--provider",
     required=True,
     help="LLM provider for template generation (textfsm-ai's own registry, "
-    'e.g. "anthropic", "openai", "deepseek", "groq"). Naming uses its own separate '
-    "--naming-provider, not this one.",
+    'e.g. "anthropic", "openai", "deepseek", "groq", "xai"). Naming uses its '
+    "own separate --naming-provider, not this one.",
 )
 @click.option("--api-key", required=True, help="API key for the generation LLM call.")
 @click.option("--model", required=True, help="Model for the generation LLM call.")
