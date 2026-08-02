@@ -33,11 +33,11 @@ pip install parseforge[anthropic]
 command that's pure local processing (`canonical`/`readable`/`recognizers`,
 `integration`, `promotion`) works with nothing further. Anything that calls an
 LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
-extra for whichever provider it uses: `anthropic` or `deepseek`. `--provider`
-defaults to `anthropic` wherever it isn't required, so that's the one most
-setups need. `pip install parseforge[sampling]` adds Netmiko for live device
-sampling; combine extras as needed, e.g.
-`pip install parseforge[anthropic,deepseek,sampling]`.
+extra for whichever provider it uses: `anthropic`, `openai`, or `deepseek`.
+`--provider` defaults to `anthropic` wherever it isn't required, so that's the
+one most setups need. `pip install parseforge[sampling]` adds Netmiko for live
+device sampling; combine extras as needed, e.g.
+`pip install parseforge[anthropic,openai,deepseek,sampling]`.
 
 ## Development
 
@@ -45,9 +45,10 @@ sampling; combine extras as needed, e.g.
 pip install -e ".[dev,sampling]"
 pytest
 ```
-`dev` already includes both `anthropic` and `openai` (tests exercise both
-providers, never silently skip) — add `,anthropic`/`,deepseek` explicitly only
-if installing outside of `dev`.
+`dev` already includes both the `anthropic` and `openai` SDKs (tests exercise
+all three providers — `anthropic`, `openai`, `deepseek` share just those two
+packages — and never silently skip) — add `,anthropic`/`,openai`/`,deepseek`
+explicitly only if installing outside of `dev`.
 
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own
@@ -69,8 +70,8 @@ parseforge name --vendor cisco --family catalyst9200 --os ios-xe --version 17.9.
 ```
 Still needs an LLM provider on a cache miss — `--provider` defaults to `anthropic`,
 and `--api-key` falls back to that provider's own env var (`ANTHROPIC_API_KEY`/
-`DEEPSEEK_API_KEY`). A cache hit (a command already seen before) never touches the
-LLM, so no key is needed at all in that case.
+`OPENAI_API_KEY`/`DEEPSEEK_API_KEY`). A cache hit (a command already seen before)
+never touches the LLM, so no key is needed at all in that case.
 
 **`check`** — validate a connector or provider before spending time/tokens on a real
 run. With neither `--env` nor explicit connection flags, prints what a connector needs

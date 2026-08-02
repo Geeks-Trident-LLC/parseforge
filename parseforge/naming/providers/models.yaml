@@ -22,3 +22,12 @@ deepseek:
     - deepseek-v4-flash
     - deepseek-v4-pro
   deprecated: []
+
+openai:
+  default: gpt-5.4-mini
+  supported:
+    - gpt-5.4-mini
+    - gpt-5.4
+    - gpt-5.4-nano
+    - gpt-5.5
+  deprecated: []
