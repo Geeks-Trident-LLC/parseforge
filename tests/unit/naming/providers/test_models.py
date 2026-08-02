@@ -17,6 +17,7 @@ PROVIDERS = [
     "perplexity",
     "openrouter",
     "moonshot",
+    "cerebras",
 ]
 
 

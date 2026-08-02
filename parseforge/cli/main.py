@@ -23,6 +23,7 @@ from parseforge.cli import config as cli_config
 
 _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
     "anthropic": naming.AnthropicRegexBuilder,
+    "cerebras": naming.CerebrasRegexBuilder,
     "deepseek": naming.DeepSeekRegexBuilder,
     "fireworks": naming.FireworksRegexBuilder,
     "groq": naming.GroqRegexBuilder,
@@ -208,7 +209,8 @@ def main() -> None:
     help="Provider API key. Defaults to that provider's own API key environment "
     "variable (ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, GROQ_API_KEY, "
     "XAI_API_KEY, TOGETHER_API_KEY, FIREWORKS_API_KEY, PERPLEXITY_API_KEY, "
-    "OPENROUTER_API_KEY, MOONSHOT_API_KEY); only needed on a cache miss.",
+    "OPENROUTER_API_KEY, MOONSHOT_API_KEY, CEREBRAS_API_KEY); only needed on a "
+    "cache miss.",
 )
 @click.option(
     "--model",
@@ -277,8 +279,8 @@ def name_cmd(
     required=True,
     help="LLM provider for template generation (textfsm-ai's own registry, "
     'e.g. "anthropic", "openai", "deepseek", "groq", "xai", "together", '
-    '"fireworks", "perplexity", "openrouter", "moonshot"). Naming uses its own '
-    "separate --naming-provider, not this one.",
+    '"fireworks", "perplexity", "openrouter", "moonshot", "cerebras"). Naming '
+    "uses its own separate --naming-provider, not this one.",
 )
 @click.option("--api-key", required=True, help="API key for the generation LLM call.")
 @click.option("--model", required=True, help="Model for the generation LLM call.")
