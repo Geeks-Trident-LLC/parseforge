@@ -12,6 +12,7 @@ from .openai import OpenAIRegexBuilder
 from .openrouter import OpenRouterRegexBuilder
 from .perplexity import PerplexityRegexBuilder
 from .together import TogetherRegexBuilder
+from .vertexai import VertexAIRegexBuilder
 from .xai import XAIRegexBuilder
 
 __all__ = [
@@ -29,5 +30,6 @@ __all__ = [
     "OpenRouterRegexBuilder",
     "PerplexityRegexBuilder",
     "TogetherRegexBuilder",
+    "VertexAIRegexBuilder",
     "XAIRegexBuilder",
 ]

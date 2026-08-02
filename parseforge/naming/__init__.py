@@ -23,6 +23,7 @@ from .providers import (
     OpenRouterRegexBuilder,
     PerplexityRegexBuilder,
     TogetherRegexBuilder,
+    VertexAIRegexBuilder,
     XAIRegexBuilder,
 )
 from .resolver import NamingResolution, cli_name, resolve_cli_name
@@ -48,6 +49,7 @@ __all__ = [
     "OpenRouterRegexBuilder",
     "PerplexityRegexBuilder",
     "TogetherRegexBuilder",
+    "VertexAIRegexBuilder",
     "XAIRegexBuilder",
     "LLMCLIResponse",
     "TokenUsage",

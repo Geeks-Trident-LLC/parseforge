@@ -61,13 +61,20 @@ class LLMProviderConfig:
     resolves --deployment into this field so this dataclass and
     generation.generate()'s positional model arg stay untouched.
     ``endpoint``/``api_version`` are ignored by every provider except
-    azure (see textfsm-ai's generation_engine.run())."""
+    azure, and ``project``/``location`` by every provider except
+    vertexai (see textfsm-ai's generation_engine.run()). ``api_key`` has
+    no real value for provider="vertexai" (see
+    naming/providers/vertexai.py) — the CLI passes an empty string
+    there, which generation_engine.run() simply never reads for that
+    provider."""
 
     provider: str
     api_key: str
     model: str
     endpoint: str | None = None
     api_version: str | None = None
+    project: str | None = None
+    location: str | None = None
 
 
 @dataclass(frozen=True)
@@ -170,6 +177,13 @@ def run_command_pipeline(
         # naming/providers/azure.py's own AzureRegexBuilder — so the same
         # default is applied here explicitly.
         api_version=generation_config.api_version or DEFAULT_API_VERSION,
+        project=generation_config.project or "",
+        # run_pipeline()'s kwarg is named "region", not "location" (shared
+        # with bedrock/oci) — location is the user-facing name (matching
+        # VertexAIProvider's own constructor param and VERTEXAI_REGION's
+        # naming intent), mapped here the same way --deployment maps onto
+        # the positional model arg above.
+        region=generation_config.location or "",
     )
     (derive_dir / "llm-template.textfsm").write_text(
         gen_result.raw_template, encoding="utf-8"
