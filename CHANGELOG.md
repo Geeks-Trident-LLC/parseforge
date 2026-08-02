@@ -1,3 +1,36 @@
+## v0.2.4 — 2026-08-02
+
+### Changed
+- **Breaking:** `pip install parseforge` no longer installs any AI-provider SDK —
+  `anthropic` and `openai`/`deepseek` moved into optional extras
+  (`pip install parseforge[anthropic]`, `parseforge[deepseek]`), mirroring
+  `textfsm-ai` v0.6.0's own per-provider extras model. Both providers'
+  `naming/providers/*.py` builders now import their SDK lazily, only when a
+  client is actually constructed — a cache-hit naming lookup, or any purely
+  local command (`canonical`/`readable`/`recognizers`/`integration`/
+  `promotion`), never touches either package, and neither does importing the
+  CLI itself
+- `dev` extra keeps both `anthropic` and `openai` directly, so tests always
+  exercise both providers instead of silently skipping
+- Fixed `generation.generate()`'s docstring, which claimed to "never raise for
+  a failed generation" — a missing provider SDK actually raises `ImportError`
+  (uncaught, from `textfsm-ai`'s own lazy provider registry), which is correct
+  and intentional, matching how a missing SDK is treated as a hard
+  environment error everywhere else in this release, not a soft failure
+
+### Added
+- New `release` extra (`bump2version`, `build`) for `scripts/release.ps1` and
+  local package builds — the one piece of tooling `requirements-dev.txt`
+  covered that had no other home after being retired
+
+### Removed
+- `requirements.txt`/`requirements-dev.txt` — already stale (unconditional
+  `anthropic`/`openai`/`netmiko`, an old `textfsm-ai>=0.5.1` floor) and
+  duplicated what `pyproject.toml` now owns as the single source of truth.
+  `docs.yml`'s deploy job (the only real consumer) didn't need any of
+  parseforge's own runtime dependencies in the first place — it now installs
+  `mkdocs`/`mkdocs-material`/`mike` directly
+
 ## v0.2.3 — 2026-07-31
 
 ### Added
