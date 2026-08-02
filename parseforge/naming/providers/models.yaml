@@ -120,3 +120,12 @@ mistral:
     - magistral-medium-latest
     - codestral-latest
   deprecated: []
+
+cohere:
+  default: command-light
+  supported:
+    - command-light
+    - command-r
+    - command-r-plus
+    - command-a
+  deprecated: []

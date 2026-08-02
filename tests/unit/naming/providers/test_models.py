@@ -19,6 +19,7 @@ PROVIDERS = [
     "moonshot",
     "cerebras",
     "mistral",
+    "cohere",
 ]
 
 
