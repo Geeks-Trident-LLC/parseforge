@@ -71,3 +71,13 @@ fireworks:
     - accounts/fireworks/models/mixtral-8x22b-instruct
     - accounts/fireworks/models/deepseek-r1
   deprecated: []
+
+perplexity:
+  default: sonar
+  supported:
+    - sonar
+    - sonar-pro
+    - sonar-reasoning
+    - sonar-reasoning-pro
+    - sonar-deep-research
+  deprecated: []

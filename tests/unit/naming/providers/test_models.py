@@ -14,6 +14,7 @@ PROVIDERS = [
     "xai",
     "together",
     "fireworks",
+    "perplexity",
 ]
 
 

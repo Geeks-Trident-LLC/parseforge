@@ -14,6 +14,7 @@ from .providers import (
     FireworksRegexBuilder,
     GroqRegexBuilder,
     OpenAIRegexBuilder,
+    PerplexityRegexBuilder,
     TogetherRegexBuilder,
     XAIRegexBuilder,
 )
@@ -31,6 +32,7 @@ __all__ = [
     "FireworksRegexBuilder",
     "GroqRegexBuilder",
     "OpenAIRegexBuilder",
+    "PerplexityRegexBuilder",
     "TogetherRegexBuilder",
     "XAIRegexBuilder",
     "LLMCLIResponse",
