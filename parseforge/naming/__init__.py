@@ -11,6 +11,7 @@ from .llm import (
 from .providers import (
     AnthropicRegexBuilder,
     DeepSeekRegexBuilder,
+    FireworksRegexBuilder,
     GroqRegexBuilder,
     OpenAIRegexBuilder,
     TogetherRegexBuilder,
@@ -27,6 +28,7 @@ __all__ = [
     "UnimplementedRegexBuilder",
     "AnthropicRegexBuilder",
     "DeepSeekRegexBuilder",
+    "FireworksRegexBuilder",
     "GroqRegexBuilder",
     "OpenAIRegexBuilder",
     "TogetherRegexBuilder",
