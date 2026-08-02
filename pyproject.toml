@@ -92,6 +92,13 @@ vertexai = ["google-genai>=0.2.0", "textfsm-ai[vertexai]>=0.6.1"]
 # botocore, matching textfsm-ai's own pin (boto3 bumps its Python floor
 # frequently).
 bedrock = ["boto3==1.42.97", "textfsm-ai[bedrock]>=0.6.1"]
+# Pinned exactly for reproducibility (matching textfsm-ai's own pin).
+# Much heavier than every other provider SDK here (~36MB) -- Oracle's
+# single all-services SDK (compute, storage, IAM, ...), not a
+# Generative-AI-only package (no such package exists on PyPI) -- plus
+# the crypto libs (cryptography, pyOpenSSL) its request-signing auth
+# model needs.
+oci = ["oci==2.182.0", "textfsm-ai[oci]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
@@ -100,7 +107,7 @@ dev = [
     "black>=24.0.0",
     "mypy>=1.10.0",
     # anthropic/openai/mistralai/cohere/azure-ai-inference/google-genai/
-    # boto3 are optional at runtime (see the extras above), but every
+    # boto3/oci are optional at runtime (see the extras above), but every
     # provider is exercised by the CLI/tests, which should never silently
     # skip -- so dev always pulls all of them in. google-genai covers both
     # gemini and vertexai.
@@ -111,6 +118,7 @@ dev = [
     "azure-ai-inference>=1.0.0b9",
     "google-genai>=0.2.0",
     "boto3==1.42.97",
+    "oci==2.182.0",
 ]
 # Tooling for scripts/release.ps1 and CI's own package-build step.
 # bump2version isn't otherwise installed anywhere -- release.ps1 assumes

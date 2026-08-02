@@ -16,13 +16,14 @@ import click
 import yaml
 
 # Providers that don't take an API key at all — Vertex AI relies on GCP's
-# Application Default Credentials, Bedrock on AWS's own credential chain
-# (see naming/providers/vertexai.py and naming/providers/bedrock.py).
-# api_key is required for every other provider, but never for these;
-# kept as a small named set (rather than scattered
-# `provider not in (...)` checks) so a future provider with the same
-# trait is a one-line addition.
-NO_API_KEY_PROVIDERS = frozenset({"vertexai", "bedrock"})
+# Application Default Credentials, Bedrock on AWS's own credential chain,
+# and OCI on locally-configured request-signing credentials (see
+# naming/providers/vertexai.py, naming/providers/bedrock.py, and
+# naming/providers/oci.py). api_key is required for every other
+# provider, but never for these; kept as a small named set (rather than
+# scattered `provider not in (...)` checks) so a future provider with
+# the same trait is a one-line addition.
+NO_API_KEY_PROVIDERS = frozenset({"vertexai", "bedrock", "oci"})
 
 
 @dataclass(frozen=True)
@@ -72,6 +73,11 @@ class TrialConfig:
     # naming/providers/bedrock.py. Falls back to BEDROCK_REGION, then
     # BEDROCK_DEFAULT_REGION, if omitted.
     region: str | None = None
+    # Only meaningful for provider: oci — see naming/providers/oci.py.
+    # compartment_id falls back to OCI_COMPARTMENT_ID if omitted; region
+    # (shared with the bedrock field above) falls back to OCI_REGION,
+    # then whatever region is already set in ~/.oci/config.
+    compartment_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -96,6 +102,8 @@ class GenerationRequestConfig:
     location: str | None = None
     # Only meaningful for provider: bedrock — see TrialConfig above.
     region: str | None = None
+    # Only meaningful for provider: oci — see TrialConfig above.
+    compartment_id: str | None = None
 
 
 _TRIAL_REQUIRED = (
@@ -172,6 +180,7 @@ def load_trial_config(path: Path) -> TrialConfig:
         project=raw.get("project"),
         location=raw.get("location"),
         region=raw.get("region"),
+        compartment_id=raw.get("compartment_id"),
     )
 
 
@@ -197,4 +206,5 @@ def load_generation_config(path: Path) -> GenerationRequestConfig:
         project=raw.get("project"),
         location=raw.get("location"),
         region=raw.get("region"),
+        compartment_id=raw.get("compartment_id"),
     )

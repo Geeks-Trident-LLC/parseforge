@@ -113,6 +113,7 @@ def test_name_azure_forwards_endpoint_api_version_deployment(monkeypatch: Any) -
         project: str | None = None,
         location: str | None = None,
         region: str | None = None,
+        compartment_id: str | None = None,
     ) -> FakeRegexBuilder:
         captured.update(
             provider=provider,
@@ -177,6 +178,7 @@ def test_name_vertexai_forwards_gcp_project_and_location(monkeypatch: Any) -> No
         project: str | None = None,
         location: str | None = None,
         region: str | None = None,
+        compartment_id: str | None = None,
     ) -> FakeRegexBuilder:
         captured.update(provider=provider, project=project, location=location)
         return FakeRegexBuilder(ready=True, content="show version")
@@ -224,6 +226,7 @@ def test_name_bedrock_forwards_region(monkeypatch: Any) -> None:
         project: str | None = None,
         location: str | None = None,
         region: str | None = None,
+        compartment_id: str | None = None,
     ) -> FakeRegexBuilder:
         captured.update(provider=provider, region=region)
         return FakeRegexBuilder(ready=True, content="show version")
@@ -253,6 +256,54 @@ def test_name_bedrock_forwards_region(monkeypatch: Any) -> None:
     assert result.exit_code == 0
     assert captured["provider"] == "bedrock"
     assert captured["region"] == "us-east-1"
+
+
+def test_name_oci_forwards_region_and_compartment_id(monkeypatch: Any) -> None:
+    captured: dict[str, Any] = {}
+
+    def _fake_builder(
+        provider: str,
+        api_key: str | None,
+        model: str | None,
+        endpoint: str | None = None,
+        api_version: str | None = None,
+        deployment: str | None = None,
+        project: str | None = None,
+        location: str | None = None,
+        region: str | None = None,
+        compartment_id: str | None = None,
+    ) -> FakeRegexBuilder:
+        captured.update(provider=provider, region=region, compartment_id=compartment_id)
+        return FakeRegexBuilder(ready=True, content="show version")
+
+    monkeypatch.setattr(cli_main, "_build_regex_builder", _fake_builder)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "name",
+            "--vendor",
+            "cisco",
+            "--family",
+            "catalyst9200",
+            "--os",
+            "ios-xe",
+            "--version",
+            "17.9.1",
+            "--provider",
+            "oci",
+            "--region",
+            "us-ashburn-1",
+            "--compartment-id",
+            "ocid1.compartment.test",
+            "show",
+            "version",
+        ],
+    )
+    assert result.exit_code == 0
+    assert captured["provider"] == "oci"
+    assert captured["region"] == "us-ashburn-1"
+    assert captured["compartment_id"] == "ocid1.compartment.test"
 
 
 # --------------------------------------------------------------------------
@@ -462,6 +513,71 @@ def test_run_bedrock_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> None:
     assert gen_cfg.region == "us-east-1"
 
 
+def test_run_oci_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> None:
+    pytest.importorskip(
+        "netmiko", reason="netmiko is an optional extra (parseforge[sampling])"
+    )
+    monkeypatch.setattr(
+        cli_main, "_build_regex_builder", lambda *a, **k: FakeRegexBuilder()
+    )
+    captured: dict[str, Any] = {}
+
+    def _fake_pipeline(
+        command: str,
+        context: CliContext,
+        connection: DeviceConnection,
+        naming_builder: Any,
+        sampler: Any,
+        generation_config: Any,
+        **kwargs: Any,
+    ) -> TrialResult:
+        captured["generation_config"] = generation_config
+        return TrialResult(
+            run_dir=tmp_path, cli_name="show-clock", passed=True, duration_ms=1
+        )
+
+    monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "run",
+            "--vendor",
+            "cisco",
+            "--family",
+            "catalyst9200",
+            "--os",
+            "ios-xe",
+            "--version",
+            "17.9.1",
+            "--host",
+            "10.0.0.1",
+            "--username",
+            "admin",
+            "--password",
+            "secret",
+            "--device-type",
+            "cisco_ios",
+            "--provider",
+            "oci",
+            "--model",
+            "meta.llama-3.3-70b-instruct",
+            "--region",
+            "us-ashburn-1",
+            "--compartment-id",
+            "ocid1.compartment.test",
+            "show",
+            "clock",
+        ],
+    )
+    assert result.exit_code == 0
+    gen_cfg = captured["generation_config"]
+    assert gen_cfg.provider == "oci"
+    assert gen_cfg.api_key == ""
+    assert gen_cfg.region == "us-ashburn-1"
+    assert gen_cfg.compartment_id == "ocid1.compartment.test"
+
+
 def test_run_missing_api_key_for_normal_provider_raises(monkeypatch: Any) -> None:
     pytest.importorskip(
         "netmiko", reason="netmiko is an optional extra (parseforge[sampling])"
@@ -641,6 +757,7 @@ def test_check_provider_azure_forwards_endpoint_api_version_deployment(
         project: str | None = None,
         location: str | None = None,
         region: str | None = None,
+        compartment_id: str | None = None,
     ) -> FakeRegexBuilder:
         captured.update(
             endpoint=endpoint, api_version=api_version, deployment=deployment
@@ -685,6 +802,7 @@ def test_check_provider_vertexai_forwards_gcp_project_and_location(
         project: str | None = None,
         location: str | None = None,
         region: str | None = None,
+        compartment_id: str | None = None,
     ) -> FakeRegexBuilder:
         captured.update(project=project, location=location)
         return FakeRegexBuilder(ready=True)
@@ -724,6 +842,7 @@ def test_check_provider_bedrock_forwards_region(
         project: str | None = None,
         location: str | None = None,
         region: str | None = None,
+        compartment_id: str | None = None,
     ) -> FakeRegexBuilder:
         captured.update(region=region)
         return FakeRegexBuilder(ready=True)
@@ -743,6 +862,46 @@ def test_check_provider_bedrock_forwards_region(
     assert result.exit_code == 0
     assert "OK" in result.output
     assert captured["region"] == "us-east-1"
+
+
+def test_check_provider_oci_forwards_region_and_compartment_id(
+    monkeypatch: Any,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    def _fake_builder(
+        provider: str,
+        api_key: str | None,
+        model: str | None,
+        endpoint: str | None = None,
+        api_version: str | None = None,
+        deployment: str | None = None,
+        project: str | None = None,
+        location: str | None = None,
+        region: str | None = None,
+        compartment_id: str | None = None,
+    ) -> FakeRegexBuilder:
+        captured.update(region=region, compartment_id=compartment_id)
+        return FakeRegexBuilder(ready=True)
+
+    monkeypatch.setattr(cli_main, "_build_regex_builder", _fake_builder)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "check",
+            "--provider",
+            "oci",
+            "--region",
+            "us-ashburn-1",
+            "--compartment-id",
+            "ocid1.compartment.test",
+        ],
+    )
+    assert result.exit_code == 0
+    assert "OK" in result.output
+    assert captured["region"] == "us-ashburn-1"
+    assert captured["compartment_id"] == "ocid1.compartment.test"
 
 
 # --------------------------------------------------------------------------
@@ -1174,6 +1333,82 @@ def test_generate_template_from_config_bedrock_fields(
     assert captured["region"] == "us-east-1"
 
 
+def test_generate_template_oci_needs_no_api_key(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    sample_path = tmp_path / "sample.txt"
+    sample_path.write_text("hello\n", encoding="utf-8")
+    captured: dict[str, Any] = {}
+
+    def _fake_generate(
+        sample: str, provider: str, api_key: str, model: str, **kwargs: Any
+    ) -> GenerationResult:
+        captured.update(provider=provider, api_key=api_key, model=model, **kwargs)
+        return _fake_generation_result()
+
+    monkeypatch.setattr(cli_main.generation, "generate", _fake_generate)
+
+    result = CliRunner().invoke(
+        cli_main.main,
+        [
+            "generate-template",
+            "--sample-file",
+            str(sample_path),
+            "--provider",
+            "oci",
+            "--model",
+            "meta.llama-3.3-70b-instruct",
+            "--region",
+            "us-ashburn-1",
+            "--compartment-id",
+            "ocid1.compartment.test",
+        ],
+    )
+    assert result.exit_code == 0
+    assert captured["provider"] == "oci"
+    assert captured["api_key"] == ""
+    assert captured["model"] == "meta.llama-3.3-70b-instruct"
+    assert captured["region"] == "us-ashburn-1"
+    assert captured["compartment_id"] == "ocid1.compartment.test"
+
+
+def test_generate_template_from_config_oci_fields(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    sample_path = tmp_path / "sample.txt"
+    sample_path.write_text("hello\n", encoding="utf-8")
+    config_path = tmp_path / "gen.yaml"
+    config_path.write_text(
+        yaml.safe_dump(
+            {
+                "provider": "oci",
+                "model": "meta.llama-3.3-70b-instruct",
+                "sample_file": str(sample_path),
+                "region": "us-ashburn-1",
+                "compartment_id": "ocid1.compartment.test",
+            }
+        ),
+        encoding="utf-8",
+    )
+    captured: dict[str, Any] = {}
+
+    def _fake_generate(
+        sample: str, provider: str, api_key: str, model: str, **kwargs: Any
+    ) -> GenerationResult:
+        captured.update(api_key=api_key, **kwargs)
+        return _fake_generation_result()
+
+    monkeypatch.setattr(cli_main.generation, "generate", _fake_generate)
+
+    result = CliRunner().invoke(
+        cli_main.main, ["generate-template", "--config", str(config_path)]
+    )
+    assert result.exit_code == 0
+    assert captured["api_key"] == ""
+    assert captured["region"] == "us-ashburn-1"
+    assert captured["compartment_id"] == "ocid1.compartment.test"
+
+
 # --------------------------------------------------------------------------
 # init-generate-template-config
 # --------------------------------------------------------------------------
@@ -1603,6 +1838,56 @@ def test_trial_bedrock_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> Non
     assert gen_cfg.provider == "bedrock"
     assert gen_cfg.api_key == ""
     assert gen_cfg.region == "us-east-1"
+
+
+def test_trial_oci_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> None:
+    store_root = tmp_path / "store"
+    config: dict[str, Any] = {
+        "vendor": "cisco",
+        "family": "catalyst9200",
+        "os": "ios-xe",
+        "version": "17.9.1",
+        "connector": "netmiko",
+        "host": "10.0.0.1",
+        "username": "admin",
+        "password": "secret",
+        "device_type": "cisco_ios",
+        "provider": "oci",
+        "model": "meta.llama-3.3-70b-instruct",
+        "region": "us-ashburn-1",
+        "compartment_id": "ocid1.compartment.test",
+        "commands": ["show clock"],
+        "user": "alice",
+        "path": str(store_root),
+    }
+    config_path = tmp_path / "trial.yaml"
+    config_path.write_text(yaml.safe_dump(config), encoding="utf-8")
+    monkeypatch.setattr(cli_main, "_build_sampler", lambda connector: FakeSampler("ok"))
+    captured: dict[str, Any] = {}
+
+    def _fake_pipeline(
+        command: str,
+        context: CliContext,
+        connection: DeviceConnection,
+        naming_builder: Any,
+        sampler: Any,
+        generation_config: Any,
+        **kwargs: Any,
+    ) -> TrialResult:
+        captured["generation_config"] = generation_config
+        return TrialResult(
+            run_dir=store_root, cli_name=command, passed=True, duration_ms=1
+        )
+
+    monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
+
+    result = CliRunner().invoke(cli_main.main, ["trial", "--config", str(config_path)])
+    assert result.exit_code == 0
+    gen_cfg = captured["generation_config"]
+    assert gen_cfg.provider == "oci"
+    assert gen_cfg.api_key == ""
+    assert gen_cfg.region == "us-ashburn-1"
+    assert gen_cfg.compartment_id == "ocid1.compartment.test"
 
 
 # --------------------------------------------------------------------------
