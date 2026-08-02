@@ -6,7 +6,11 @@ import click
 import pytest
 import yaml
 
-from parseforge.cli.config import load_generation_config, load_trial_config
+from parseforge.cli.config import (
+    NO_API_KEY_PROVIDERS,
+    load_generation_config,
+    load_trial_config,
+)
 
 _VALID_TRIAL: dict = {
     "vendor": "cisco",
@@ -67,6 +71,8 @@ def test_load_trial_config_full(tmp_path: Path) -> None:
         endpoint="https://my-resource.openai.azure.com",
         api_version="2024-06-01",
         deployment="my-deployment",
+        project="my-gcp-project",
+        location="us-central1",
     )
     path = _write(tmp_path / "trial.yaml", data)
 
@@ -84,6 +90,8 @@ def test_load_trial_config_full(tmp_path: Path) -> None:
     assert cfg.endpoint == "https://my-resource.openai.azure.com"
     assert cfg.api_version == "2024-06-01"
     assert cfg.deployment == "my-deployment"
+    assert cfg.project == "my-gcp-project"
+    assert cfg.location == "us-central1"
 
 
 def test_load_trial_config_defaults(tmp_path: Path) -> None:
@@ -98,6 +106,33 @@ def test_load_trial_config_defaults(tmp_path: Path) -> None:
     assert cfg.endpoint is None
     assert cfg.api_version is None
     assert cfg.deployment is None
+    assert cfg.project is None
+    assert cfg.location is None
+
+
+def test_load_trial_config_missing_api_key_for_normal_provider_raises(
+    tmp_path: Path,
+) -> None:
+    data = {k: v for k, v in _VALID_TRIAL.items() if k != "api_key"}
+    path = _write(tmp_path / "trial.yaml", data)
+
+    with pytest.raises(click.ClickException, match="missing required config key"):
+        load_trial_config(path)
+
+
+def test_load_trial_config_vertexai_needs_no_api_key(tmp_path: Path) -> None:
+    assert "vertexai" in NO_API_KEY_PROVIDERS
+    data = dict(_VALID_TRIAL, provider="vertexai", project="my-gcp-project")
+    del data["api_key"]
+    data["location"] = "us-central1"
+    path = _write(tmp_path / "trial.yaml", data)
+
+    cfg = load_trial_config(path)
+
+    assert cfg.provider == "vertexai"
+    assert cfg.api_key is None
+    assert cfg.project == "my-gcp-project"
+    assert cfg.location == "us-central1"
 
 
 def test_load_generation_config_missing_required_keys(tmp_path: Path) -> None:
@@ -124,6 +159,8 @@ def test_load_generation_config_full(tmp_path: Path) -> None:
     assert cfg.endpoint is None
     assert cfg.api_version is None
     assert cfg.deployment is None
+    assert cfg.project is None
+    assert cfg.location is None
 
 
 def test_load_generation_config_azure_fields(tmp_path: Path) -> None:
@@ -143,3 +180,20 @@ def test_load_generation_config_azure_fields(tmp_path: Path) -> None:
     assert cfg.endpoint == "https://my-resource.openai.azure.com"
     assert cfg.api_version == "2024-06-01"
     assert cfg.deployment == "my-deployment"
+
+
+def test_load_generation_config_vertexai_fields(tmp_path: Path) -> None:
+    data = {
+        "provider": "vertexai",
+        "model": "gemini-2.5-flash",
+        "sample_file": "sample.txt",
+        "project": "my-gcp-project",
+        "location": "us-central1",
+    }
+    path = _write(tmp_path / "gen.yaml", data)
+
+    cfg = load_generation_config(path)
+
+    assert cfg.api_key is None
+    assert cfg.project == "my-gcp-project"
+    assert cfg.location == "us-central1"

@@ -83,6 +83,11 @@ mistral = ["mistralai==1.10.0", "textfsm-ai[mistral]>=0.6.1"]
 cohere = ["cohere==5.21.1", "textfsm-ai[cohere]>=0.6.1"]
 azure = ["azure-ai-inference>=1.0.0b9", "textfsm-ai[azure]>=0.6.1"]
 gemini = ["google-genai>=0.2.0", "textfsm-ai[gemini]>=0.6.1"]
+# Same underlying google-genai package as gemini (Client(vertexai=True,
+# project=, location=) vs. Client(api_key=)) -- kept as its own extra
+# anyway, matching textfsm-ai's own separate gemini/vertexai extras and
+# the CLI's own --provider vertexai vs. gemini distinction.
+vertexai = ["google-genai>=0.2.0", "textfsm-ai[vertexai]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
@@ -93,7 +98,8 @@ dev = [
     # anthropic/openai/mistralai/cohere/azure-ai-inference/google-genai
     # are optional at runtime (see the extras above), but every provider
     # is exercised by the CLI/tests, which should never silently skip --
-    # so dev always pulls all six in.
+    # so dev always pulls all of them in. google-genai covers both
+    # gemini and vertexai.
     "anthropic>=0.40.0",
     "openai>=1.0.0",
     "mistralai==1.10.0",
