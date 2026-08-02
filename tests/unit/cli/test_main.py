@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 from click.testing import CliRunner
 
@@ -165,6 +166,13 @@ def test_name_azure_forwards_endpoint_api_version_deployment(monkeypatch: Any) -
 def test_run_azure_generation_config_uses_deployment_and_endpoint(
     monkeypatch: Any, tmp_path: Path
 ) -> None:
+    # run_cmd constructs NetmikoSampler() directly (unlike check/trial/
+    # generate-template, which all go through the lazy _build_sampler()
+    # helper) -- netmiko must actually be importable to invoke it, even
+    # though this test never uses the sampler itself.
+    pytest.importorskip(
+        "netmiko", reason="netmiko is an optional extra (parseforge[sampling])"
+    )
     monkeypatch.setattr(
         cli_main, "_build_regex_builder", lambda *a, **k: FakeRegexBuilder()
     )
