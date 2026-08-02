@@ -9,6 +9,7 @@ from .gemini import GeminiRegexBuilder
 from .groq import GroqRegexBuilder
 from .mistral import MistralRegexBuilder
 from .moonshot import MoonshotRegexBuilder
+from .oci import OCIRegexBuilder
 from .openai import OpenAIRegexBuilder
 from .openrouter import OpenRouterRegexBuilder
 from .perplexity import PerplexityRegexBuilder
@@ -28,6 +29,7 @@ __all__ = [
     "GroqRegexBuilder",
     "MistralRegexBuilder",
     "MoonshotRegexBuilder",
+    "OCIRegexBuilder",
     "OpenAIRegexBuilder",
     "OpenRouterRegexBuilder",
     "PerplexityRegexBuilder",

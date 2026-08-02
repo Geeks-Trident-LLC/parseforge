@@ -74,6 +74,7 @@ def test_load_trial_config_full(tmp_path: Path) -> None:
         project="my-gcp-project",
         location="us-central1",
         region="us-east-1",
+        compartment_id="ocid1.compartment.test",
     )
     path = _write(tmp_path / "trial.yaml", data)
 
@@ -94,6 +95,7 @@ def test_load_trial_config_full(tmp_path: Path) -> None:
     assert cfg.project == "my-gcp-project"
     assert cfg.location == "us-central1"
     assert cfg.region == "us-east-1"
+    assert cfg.compartment_id == "ocid1.compartment.test"
 
 
 def test_load_trial_config_defaults(tmp_path: Path) -> None:
@@ -111,6 +113,7 @@ def test_load_trial_config_defaults(tmp_path: Path) -> None:
     assert cfg.project is None
     assert cfg.location is None
     assert cfg.region is None
+    assert cfg.compartment_id is None
 
 
 def test_load_trial_config_missing_api_key_for_normal_provider_raises(
@@ -151,6 +154,25 @@ def test_load_trial_config_bedrock_needs_no_api_key(tmp_path: Path) -> None:
     assert cfg.region == "us-east-1"
 
 
+def test_load_trial_config_oci_needs_no_api_key(tmp_path: Path) -> None:
+    assert "oci" in NO_API_KEY_PROVIDERS
+    data = dict(
+        _VALID_TRIAL,
+        provider="oci",
+        region="us-ashburn-1",
+        compartment_id="ocid1.compartment.test",
+    )
+    del data["api_key"]
+    path = _write(tmp_path / "trial.yaml", data)
+
+    cfg = load_trial_config(path)
+
+    assert cfg.provider == "oci"
+    assert cfg.api_key is None
+    assert cfg.region == "us-ashburn-1"
+    assert cfg.compartment_id == "ocid1.compartment.test"
+
+
 def test_load_generation_config_missing_required_keys(tmp_path: Path) -> None:
     path = _write(tmp_path / "gen.yaml", {"provider": "anthropic"})
     with pytest.raises(click.ClickException, match="missing required config key"):
@@ -178,6 +200,7 @@ def test_load_generation_config_full(tmp_path: Path) -> None:
     assert cfg.project is None
     assert cfg.location is None
     assert cfg.region is None
+    assert cfg.compartment_id is None
 
 
 def test_load_generation_config_azure_fields(tmp_path: Path) -> None:
@@ -229,3 +252,20 @@ def test_load_generation_config_bedrock_fields(tmp_path: Path) -> None:
 
     assert cfg.api_key is None
     assert cfg.region == "us-east-1"
+
+
+def test_load_generation_config_oci_fields(tmp_path: Path) -> None:
+    data = {
+        "provider": "oci",
+        "model": "meta.llama-3.3-70b-instruct",
+        "sample_file": "sample.txt",
+        "region": "us-ashburn-1",
+        "compartment_id": "ocid1.compartment.test",
+    }
+    path = _write(tmp_path / "gen.yaml", data)
+
+    cfg = load_generation_config(path)
+
+    assert cfg.api_key is None
+    assert cfg.region == "us-ashburn-1"
+    assert cfg.compartment_id == "ocid1.compartment.test"

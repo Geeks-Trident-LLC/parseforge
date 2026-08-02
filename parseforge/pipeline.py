@@ -63,16 +63,20 @@ class LLMProviderConfig:
     ``endpoint``/``api_version`` are ignored by every provider except
     azure, and ``project``/``location`` by every provider except
     vertexai (see textfsm-ai's generation_engine.run()). ``api_key`` has
-    no real value for provider="vertexai"/"bedrock" (see
-    naming/providers/vertexai.py, naming/providers/bedrock.py) — the CLI
-    passes an empty string there, which generation_engine.run() simply
-    never reads for those providers.
+    no real value for provider="vertexai"/"bedrock"/"oci" (see
+    naming/providers/vertexai.py, naming/providers/bedrock.py,
+    naming/providers/oci.py) — the CLI passes an empty string there,
+    which generation_engine.run() simply never reads for those
+    providers.
 
-    ``region`` is only meaningful for provider="bedrock" — it and
-    ``location`` (vertexai's own region-shaped field) both ultimately
+    ``region`` is meaningful for provider="bedrock" or "oci" — it and
+    ``location`` (vertexai's own region-shaped field) all ultimately
     populate run_pipeline()'s single ``region=`` kwarg (see
-    run_command_pipeline() below); only one of the two is ever set for a
-    given trial, since a trial has exactly one generation provider."""
+    run_command_pipeline() below); only one of the two fields is ever
+    set for a given trial, since a trial has exactly one generation
+    provider. ``compartment_id`` is only meaningful for provider="oci"
+    — run_pipeline() has its own dedicated ``compartment_id=`` kwarg,
+    unlike region, so it needs no such sharing/reconciliation."""
 
     provider: str
     api_key: str
@@ -82,6 +86,7 @@ class LLMProviderConfig:
     project: str | None = None
     location: str | None = None
     region: str | None = None
+    compartment_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -190,9 +195,15 @@ def run_command_pipeline(
         # VertexAIProvider's own constructor param and VERTEXAI_REGION's
         # naming intent), mapped here the same way --deployment maps onto
         # the positional model arg above. generation_config.region is
-        # bedrock's own already-correctly-named field, forwarded as-is;
-        # only one of region/location is ever set for a given provider.
+        # bedrock/oci's own already-correctly-named field, forwarded
+        # as-is; only one of region/location is ever set for a given
+        # provider.
         region=generation_config.region or generation_config.location or "",
+        # Only meaningful for provider="oci" (ignored by every other
+        # provider) — unlike region, run_pipeline() has a dedicated
+        # compartment_id= kwarg, so no reconciliation with another field
+        # is needed here.
+        compartment_id=generation_config.compartment_id or "",
     )
     (derive_dir / "llm-template.textfsm").write_text(
         gen_result.raw_template, encoding="utf-8"

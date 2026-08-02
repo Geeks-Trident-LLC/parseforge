@@ -168,3 +168,15 @@ bedrock:
     - amazon.titan-text-premier-v1:0
     - cohere.command-r-plus-v1:0
   deprecated: []
+
+# Deliberately minimal: unlike every other provider's catalog, OCI model
+# IDs aren't easily fabricated as plausible-future-names (they're closer
+# to identifiers than product names), so only the two model IDs directly
+# confirmed against Oracle's own docs are listed here, matching
+# textfsm-ai's own model_catalog/providers.yaml oci: block.
+oci:
+  default: meta.llama-3.3-70b-instruct
+  supported:
+    - meta.llama-3.3-70b-instruct
+    - xai.grok-4-fast-reasoning
+  deprecated: []
