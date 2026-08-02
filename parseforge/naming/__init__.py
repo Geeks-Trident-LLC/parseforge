@@ -10,6 +10,7 @@ from .llm import (
 )
 from .providers import (
     AnthropicRegexBuilder,
+    CerebrasRegexBuilder,
     DeepSeekRegexBuilder,
     FireworksRegexBuilder,
     GroqRegexBuilder,
@@ -30,6 +31,7 @@ __all__ = [
     "RegexBuilder",
     "UnimplementedRegexBuilder",
     "AnthropicRegexBuilder",
+    "CerebrasRegexBuilder",
     "DeepSeekRegexBuilder",
     "FireworksRegexBuilder",
     "GroqRegexBuilder",

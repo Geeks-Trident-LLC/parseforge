@@ -89,6 +89,11 @@ def moonshot_key(require_real_tests: None) -> str:
 
 
 @pytest.fixture(scope="session")
+def cerebras_key(require_real_tests: None) -> str:
+    return _require_env("CEREBRAS_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
     """Generic sandbox connection — any vendor.
 

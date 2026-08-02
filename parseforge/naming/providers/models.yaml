@@ -100,3 +100,13 @@ moonshot:
     - kimi-k2-0711-preview
     - kimi-k2-turbo-preview
   deprecated: []
+
+cerebras:
+  default: llama3.1-8b
+  supported:
+    - llama3.1-8b
+    - llama-4-maverick-17b-128e-instruct
+    - llama-4-scout-17b-16e-instruct
+    - qwen-3-32b
+    - gpt-oss-120b
+  deprecated: []

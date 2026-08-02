@@ -1,4 +1,5 @@
 from .anthropic import AnthropicRegexBuilder
+from .cerebras import CerebrasRegexBuilder
 from .deepseek import DeepSeekRegexBuilder
 from .fireworks import FireworksRegexBuilder
 from .groq import GroqRegexBuilder
@@ -11,6 +12,7 @@ from .xai import XAIRegexBuilder
 
 __all__ = [
     "AnthropicRegexBuilder",
+    "CerebrasRegexBuilder",
     "DeepSeekRegexBuilder",
     "FireworksRegexBuilder",
     "GroqRegexBuilder",
