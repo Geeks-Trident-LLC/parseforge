@@ -1,3 +1,37 @@
+# v0.2.6 — Eight New Naming Providers
+
+## 🚀 Bring Your Own Model
+`parseforge` now speaks to eleven LLM providers for cli-name resolution, up
+from three. Each new provider follows the same pattern already established
+for `anthropic`/`openai`/`deepseek`: an optional extra
+(`pip install parseforge[<provider>]`), a lazily-imported SDK (never touched
+unless you actually make a call), and its own environment variable for the
+API key:
+
+| Provider | Extra | Env var | Default model |
+|---|---|---|---|
+| Groq | `parseforge[groq]` | `GROQ_API_KEY` | `llama-3.1-8b-instant` |
+| xAI | `parseforge[xai]` | `XAI_API_KEY` | `grok-3-mini` |
+| Together AI | `parseforge[together]` | `TOGETHER_API_KEY` | `meta-llama/Llama-3.1-8B-Instruct-Turbo` |
+| Fireworks AI | `parseforge[fireworks]` | `FIREWORKS_API_KEY` | `accounts/fireworks/models/llama-v3p1-8b-instruct` |
+| Perplexity | `parseforge[perplexity]` | `PERPLEXITY_API_KEY` | `sonar` |
+| OpenRouter | `parseforge[openrouter]` | `OPENROUTER_API_KEY` | `google/gemini-2.5-flash-lite` |
+| Moonshot AI (Kimi) | `parseforge[moonshot]` | `MOONSHOT_API_KEY` | `moonshot-v1-8k` |
+| Cerebras | `parseforge[cerebras]` | `CEREBRAS_API_KEY` | `llama3.1-8b` |
+
+All eight are pure `openai`-SDK-compatible providers (same request/response
+shape, just a different `base_url`), so no new SDK dependency was needed —
+`--provider anthropic|deepseek|openai|groq|xai|together|fireworks|perplexity|openrouter|moonshot|cerebras`
+is now a single flag away.
+
+## ✅ Live Test Coverage
+Every new provider ships with the same real-API test pair as the existing
+ones (naming + generation), gated behind `pytest --real` and that provider's
+API key — nothing runs, or costs tokens, unless you opt in.
+
+## 📦 Version
+`0.2.5 → 0.2.6`
+
 # v0.2.5 — OpenAI Joins the Party
 
 ## 🤖 A Real OpenAI Naming Provider

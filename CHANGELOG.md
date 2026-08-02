@@ -1,3 +1,35 @@
+## v0.2.6 — 2026-08-02
+
+### Added
+- Eight new naming providers, each with a lazily-imported `openai`-SDK-backed
+  `RegexBuilder`, an optional `pyproject.toml` extra, a `models.yaml` entry,
+  live-API test coverage (`tests/real/naming/`, `tests/real/generation/`), and
+  unit tests (`tests/unit/naming/providers/`) — all wired automatically into
+  every `--provider`/`--naming-provider` CLI surface via the shared
+  `_BUILDERS` registry:
+  - `GroqRegexBuilder` (`parseforge[groq]`, `GROQ_API_KEY`,
+    default `llama-3.1-8b-instant`)
+  - `XAIRegexBuilder` (`parseforge[xai]`, `XAI_API_KEY`,
+    default `grok-3-mini`)
+  - `TogetherRegexBuilder` (`parseforge[together]`, `TOGETHER_API_KEY`,
+    default `meta-llama/Llama-3.1-8B-Instruct-Turbo`)
+  - `FireworksRegexBuilder` (`parseforge[fireworks]`, `FIREWORKS_API_KEY`,
+    default `accounts/fireworks/models/llama-v3p1-8b-instruct`)
+  - `PerplexityRegexBuilder` (`parseforge[perplexity]`, `PERPLEXITY_API_KEY`,
+    default `sonar`)
+  - `OpenRouterRegexBuilder` (`parseforge[openrouter]`, `OPENROUTER_API_KEY`,
+    default `google/gemini-2.5-flash-lite`) — a model aggregator/router that
+    re-exposes many upstream providers under a `vendor/model` namespace
+  - `MoonshotRegexBuilder` (`parseforge[moonshot]`, `MOONSHOT_API_KEY`,
+    default `moonshot-v1-8k`) — uses the global `api.moonshot.ai` endpoint
+  - `CerebrasRegexBuilder` (`parseforge[cerebras]`, `CEREBRAS_API_KEY`,
+    default `llama3.1-8b`)
+- `dev` extra unchanged (still just `anthropic`/`openai` directly) — the new
+  providers all reuse the `openai` SDK against a different `base_url`, so no
+  new SDK dependency was needed for tests to exercise them
+- `--api-key`/`--provider` help text (CLI) and the provider extras list
+  (README) now enumerate all eleven providers
+
 ## v0.2.5 — 2026-08-02
 
 ### Added
