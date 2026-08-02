@@ -61,3 +61,13 @@ together:
     - mistralai/Mixtral-8x7B-Instruct-v0.1
     - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
   deprecated: []
+
+fireworks:
+  default: accounts/fireworks/models/llama-v3p1-8b-instruct
+  supported:
+    - accounts/fireworks/models/llama-v3p1-8b-instruct
+    - accounts/fireworks/models/llama-v3p3-70b-instruct
+    - accounts/fireworks/models/qwen2p5-32b-instruct
+    - accounts/fireworks/models/mixtral-8x22b-instruct
+    - accounts/fireworks/models/deepseek-r1
+  deprecated: []
