@@ -31,3 +31,14 @@ openai:
     - gpt-5.4-nano
     - gpt-5.5
   deprecated: []
+
+groq:
+  default: llama-3.1-8b-instant
+  supported:
+    - llama-3.1-8b-instant
+    - llama-3.3-70b-versatile
+    - gemma2-9b-it
+    - qwen-2.5-32b
+    - mixtral-8x7b-32768
+    - deepseek-r1-distill-llama-70b
+  deprecated: []

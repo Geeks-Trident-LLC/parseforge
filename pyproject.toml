@@ -65,6 +65,7 @@ keywords = [
 anthropic = ["anthropic>=0.40.0", "textfsm-ai[anthropic]>=0.6.1"]
 deepseek = ["openai>=1.0.0", "textfsm-ai[deepseek]>=0.6.1"]
 openai = ["openai>=1.0.0", "textfsm-ai[openai]>=0.6.1"]
+groq = ["openai>=1.0.0", "textfsm-ai[groq]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
