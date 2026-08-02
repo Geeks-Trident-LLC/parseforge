@@ -8,7 +8,19 @@ from .llm import (
     UnimplementedRegexBuilder,
     build_prompt,
 )
-from .providers import AnthropicRegexBuilder, DeepSeekRegexBuilder, OpenAIRegexBuilder
+from .providers import (
+    AnthropicRegexBuilder,
+    CerebrasRegexBuilder,
+    DeepSeekRegexBuilder,
+    FireworksRegexBuilder,
+    GroqRegexBuilder,
+    MoonshotRegexBuilder,
+    OpenAIRegexBuilder,
+    OpenRouterRegexBuilder,
+    PerplexityRegexBuilder,
+    TogetherRegexBuilder,
+    XAIRegexBuilder,
+)
 from .resolver import NamingResolution, cli_name, resolve_cli_name
 
 __all__ = [
@@ -19,8 +31,16 @@ __all__ = [
     "RegexBuilder",
     "UnimplementedRegexBuilder",
     "AnthropicRegexBuilder",
+    "CerebrasRegexBuilder",
     "DeepSeekRegexBuilder",
+    "FireworksRegexBuilder",
+    "GroqRegexBuilder",
+    "MoonshotRegexBuilder",
     "OpenAIRegexBuilder",
+    "OpenRouterRegexBuilder",
+    "PerplexityRegexBuilder",
+    "TogetherRegexBuilder",
+    "XAIRegexBuilder",
     "LLMCLIResponse",
     "TokenUsage",
     "build_prompt",

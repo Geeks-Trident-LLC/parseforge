@@ -54,6 +54,46 @@ def openai_key(require_real_tests: None) -> str:
 
 
 @pytest.fixture(scope="session")
+def groq_key(require_real_tests: None) -> str:
+    return _require_env("GROQ_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def xai_key(require_real_tests: None) -> str:
+    return _require_env("XAI_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def together_key(require_real_tests: None) -> str:
+    return _require_env("TOGETHER_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def fireworks_key(require_real_tests: None) -> str:
+    return _require_env("FIREWORKS_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def perplexity_key(require_real_tests: None) -> str:
+    return _require_env("PERPLEXITY_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def openrouter_key(require_real_tests: None) -> str:
+    return _require_env("OPENROUTER_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def moonshot_key(require_real_tests: None) -> str:
+    return _require_env("MOONSHOT_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def cerebras_key(require_real_tests: None) -> str:
+    return _require_env("CEREBRAS_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
     """Generic sandbox connection — any vendor.
 

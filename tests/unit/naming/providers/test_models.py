@@ -6,7 +6,19 @@ from parseforge.naming.providers.models import (
     supported_models,
 )
 
-PROVIDERS = ["anthropic", "deepseek", "openai"]
+PROVIDERS = [
+    "anthropic",
+    "deepseek",
+    "openai",
+    "groq",
+    "xai",
+    "together",
+    "fireworks",
+    "perplexity",
+    "openrouter",
+    "moonshot",
+    "cerebras",
+]
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
