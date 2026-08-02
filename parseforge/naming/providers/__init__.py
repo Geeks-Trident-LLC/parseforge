@@ -4,6 +4,7 @@ from .cerebras import CerebrasRegexBuilder
 from .cohere import CohereRegexBuilder
 from .deepseek import DeepSeekRegexBuilder
 from .fireworks import FireworksRegexBuilder
+from .gemini import GeminiRegexBuilder
 from .groq import GroqRegexBuilder
 from .mistral import MistralRegexBuilder
 from .moonshot import MoonshotRegexBuilder
@@ -20,6 +21,7 @@ __all__ = [
     "CohereRegexBuilder",
     "DeepSeekRegexBuilder",
     "FireworksRegexBuilder",
+    "GeminiRegexBuilder",
     "GroqRegexBuilder",
     "MistralRegexBuilder",
     "MoonshotRegexBuilder",

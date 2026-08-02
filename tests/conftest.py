@@ -119,6 +119,11 @@ def azure_deployment(require_real_tests: None) -> str:
 
 
 @pytest.fixture(scope="session")
+def gemini_key(require_real_tests: None) -> str:
+    return _require_env("GEMINI_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
     """Generic sandbox connection — any vendor.
 

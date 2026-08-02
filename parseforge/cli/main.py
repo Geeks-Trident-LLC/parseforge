@@ -29,6 +29,7 @@ _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
     "cohere": naming.CohereRegexBuilder,
     "deepseek": naming.DeepSeekRegexBuilder,
     "fireworks": naming.FireworksRegexBuilder,
+    "gemini": naming.GeminiRegexBuilder,
     "groq": naming.GroqRegexBuilder,
     "mistral": naming.MistralRegexBuilder,
     "moonshot": naming.MoonshotRegexBuilder,
@@ -246,7 +247,8 @@ def main() -> None:
     "variable (ANTHROPIC_API_KEY, OPENAI_API_KEY, DEEPSEEK_API_KEY, GROQ_API_KEY, "
     "XAI_API_KEY, TOGETHER_API_KEY, FIREWORKS_API_KEY, PERPLEXITY_API_KEY, "
     "OPENROUTER_API_KEY, MOONSHOT_API_KEY, CEREBRAS_API_KEY, MISTRAL_API_KEY, "
-    "COHERE_API_KEY, AZURE_API_KEY); only needed on a cache miss.",
+    "COHERE_API_KEY, AZURE_API_KEY, GEMINI_API_KEY); only needed on a cache "
+    "miss.",
 )
 @click.option(
     "--model",
@@ -359,7 +361,7 @@ def name_cmd(
     help="LLM provider for template generation (textfsm-ai's own registry, "
     'e.g. "anthropic", "openai", "deepseek", "groq", "xai", "together", '
     '"fireworks", "perplexity", "openrouter", "moonshot", "cerebras", '
-    '"mistral", "cohere", "azure"). Naming uses its own separate '
+    '"mistral", "cohere", "azure", "gemini"). Naming uses its own separate '
     "--naming-provider, not this one.",
 )
 @click.option("--api-key", required=True, help="API key for the generation LLM call.")

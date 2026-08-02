@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parseforge"
-version = "0.2.9"
+version = "0.2.10"
 description = "LLM-driven pipeline that forges, validates, and promotes TextFSM templates from network CLI output"
 readme = "README.md"
 license = { text = "MIT" }
@@ -82,6 +82,7 @@ mistral = ["mistralai==1.10.0", "textfsm-ai[mistral]>=0.6.1"]
 # textfsm-ai's own pin.
 cohere = ["cohere==5.21.1", "textfsm-ai[cohere]>=0.6.1"]
 azure = ["azure-ai-inference>=1.0.0b9", "textfsm-ai[azure]>=0.6.1"]
+gemini = ["google-genai>=0.2.0", "textfsm-ai[gemini]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
@@ -89,15 +90,16 @@ dev = [
     "ruff>=0.4.0",
     "black>=24.0.0",
     "mypy>=1.10.0",
-    # anthropic/openai/mistralai/cohere/azure-ai-inference are optional at
-    # runtime (see the extras above), but every provider is exercised by
-    # the CLI/tests, which should never silently skip -- so dev always
-    # pulls all five in.
+    # anthropic/openai/mistralai/cohere/azure-ai-inference/google-genai
+    # are optional at runtime (see the extras above), but every provider
+    # is exercised by the CLI/tests, which should never silently skip --
+    # so dev always pulls all six in.
     "anthropic>=0.40.0",
     "openai>=1.0.0",
     "mistralai==1.10.0",
     "cohere==5.21.1",
     "azure-ai-inference>=1.0.0b9",
+    "google-genai>=0.2.0",
 ]
 # Tooling for scripts/release.ps1 and CI's own package-build step.
 # bump2version isn't otherwise installed anywhere -- release.ps1 assumes
