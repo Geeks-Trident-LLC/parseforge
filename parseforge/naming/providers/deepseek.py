@@ -9,15 +9,16 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Any
-
-from openai import OpenAI, OpenAIError
+from typing import TYPE_CHECKING, Any
 
 from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
 from .cost import estimate_cost
 from .errors import format_llm_error_reason, is_retryable
 from .models import default_model
 from .text import extract_pattern
+
+if TYPE_CHECKING:
+    import openai as openai_sdk
 
 DEFAULT_MODEL = default_model("deepseek")
 
@@ -32,6 +33,21 @@ _DEFAULT_MAX_TOKENS = 1024
 # all, so it's disabled explicitly by default. See:
 # https://api-docs.deepseek.com/guides/thinking_mode/
 _THINKING_DISABLED = {"thinking": {"type": "disabled"}}
+
+
+def _import_openai() -> Any:
+    """Deferred import — openai is an optional extra (parseforge[deepseek]);
+    nothing else in this module (or a cache-hit lookup, which never reaches
+    build_pattern at all — see resolver.cli_name) should require it to be
+    installed."""
+    try:
+        import openai
+    except ImportError as exc:
+        raise ImportError(
+            "the openai package is required to use DeepSeekRegexBuilder — "
+            "install it via `pip install parseforge[deepseek]`"
+        ) from exc
+    return openai
 
 
 class DeepSeekRegexBuilder:
@@ -53,21 +69,23 @@ class DeepSeekRegexBuilder:
     def __init__(self, model: str = DEFAULT_MODEL, api_key: str | None = None) -> None:
         self.model = model
         self._api_key = api_key
-        self._client: OpenAI | None = None
+        self._client: openai_sdk.OpenAI | None = None
 
-    def _get_client(self) -> OpenAI:
+    def _get_client(self) -> openai_sdk.OpenAI:
         if self._client is None:
+            openai = _import_openai()
             api_key = self._api_key or os.environ.get("DEEPSEEK_API_KEY")
             if not api_key:
                 raise RuntimeError(
                     "no DeepSeek API key — pass api_key or set DEEPSEEK_API_KEY"
                 )
-            self._client = OpenAI(api_key=api_key, base_url=_BASE_URL)
+            self._client = openai.OpenAI(api_key=api_key, base_url=_BASE_URL)
         return self._client
 
     def build_pattern(
         self, command: str, context: CliContext, **kwargs: Any
     ) -> LLMCLIResponse:
+        openai = _import_openai()
         prompt = build_prompt(command, context)
         # Callers can override either of these per-call (e.g. re-enable
         # thinking mode, raise max_tokens further); anything else in
@@ -84,7 +102,7 @@ class DeepSeekRegexBuilder:
                 extra_body=extra_body,
                 **kwargs,
             )
-        except OpenAIError as exc:
+        except openai.OpenAIError as exc:
             if not is_retryable(exc):
                 # Same request would fail the same way again — stop rather
                 # than let a caller burn another attempt on it.

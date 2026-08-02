@@ -1,10 +1,16 @@
 from dataclasses import dataclass
 
-import openai
 import pytest
 
-from parseforge.naming.llm import CliContext
-from parseforge.naming.providers.deepseek import DEFAULT_MODEL, DeepSeekRegexBuilder
+openai = pytest.importorskip(
+    "openai", reason="openai is an optional extra (parseforge[deepseek])"
+)
+
+from parseforge.naming.llm import CliContext  # noqa: E402
+from parseforge.naming.providers.deepseek import (  # noqa: E402
+    DEFAULT_MODEL,
+    DeepSeekRegexBuilder,
+)
 
 
 def _make_error(name: str, message: str = "boom") -> openai.OpenAIError:
@@ -82,9 +88,7 @@ def test_build_pattern_calls_client_and_extracts_text(
 ) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-key")
     fake = _FakeOpenAI()
-    monkeypatch.setattr(
-        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
-    )
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: fake)
 
     builder = DeepSeekRegexBuilder()
     response = builder.build_pattern("show version", CONTEXT)
@@ -106,9 +110,7 @@ def test_response_carries_usage_reason_and_ready(
 ) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-key")
     fake = _FakeOpenAI()
-    monkeypatch.setattr(
-        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
-    )
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: fake)
 
     response = DeepSeekRegexBuilder().build_pattern("show version", CONTEXT)
 
@@ -125,9 +127,7 @@ def test_response_carries_usage_reason_and_ready(
 def test_truncated_response_is_not_ready(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-key")
     fake = _FakeOpenAI(finish_reason="length")
-    monkeypatch.setattr(
-        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
-    )
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: fake)
 
     response = DeepSeekRegexBuilder().build_pattern("show version", CONTEXT)
 
@@ -145,9 +145,7 @@ def test_retryable_error_returns_not_ready_response(
 
     fake = _FakeOpenAI()
     fake.chat.completions.create = _raise
-    monkeypatch.setattr(
-        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
-    )
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: fake)
 
     response = DeepSeekRegexBuilder().build_pattern("show version", CONTEXT)
 
@@ -165,9 +163,7 @@ def test_non_retryable_error_raises(monkeypatch: pytest.MonkeyPatch) -> None:
 
     fake = _FakeOpenAI()
     fake.chat.completions.create = _raise
-    monkeypatch.setattr(
-        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
-    )
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: fake)
 
     with pytest.raises(openai.OpenAIError, match="malformed"):
         DeepSeekRegexBuilder().build_pattern("show version", CONTEXT)
@@ -180,7 +176,7 @@ def test_client_is_constructed_lazily(monkeypatch: pytest.MonkeyPatch) -> None:
     def _boom(**kwargs):
         raise AssertionError("OpenAI() should not be constructed eagerly")
 
-    monkeypatch.setattr("parseforge.naming.providers.deepseek.OpenAI", _boom)
+    monkeypatch.setattr(openai, "OpenAI", _boom)
 
     DeepSeekRegexBuilder()  # must not raise
 
@@ -193,7 +189,7 @@ def test_api_key_argument_is_passed_through(monkeypatch: pytest.MonkeyPatch) -> 
         captured.update(kwargs)
         return _FakeOpenAI(**kwargs)
 
-    monkeypatch.setattr("parseforge.naming.providers.deepseek.OpenAI", _fake_ctor)
+    monkeypatch.setattr(openai, "OpenAI", _fake_ctor)
 
     builder = DeepSeekRegexBuilder(api_key="sk-test-123")
     builder.build_pattern("show version", CONTEXT)
@@ -217,9 +213,7 @@ def test_kwargs_override_max_tokens_and_extra_body_and_pass_through_extras(
 ) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-key")
     fake = _FakeOpenAI()
-    monkeypatch.setattr(
-        "parseforge.naming.providers.deepseek.OpenAI", lambda **kw: fake
-    )
+    monkeypatch.setattr(openai, "OpenAI", lambda **kw: fake)
 
     builder = DeepSeekRegexBuilder()
     builder.build_pattern(

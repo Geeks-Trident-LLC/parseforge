@@ -24,12 +24,35 @@ wired into the CLI below. A few things are intentionally not there yet:
 - **One sampling connector** (Netmiko/SSH). The CLI's `--connector` registry
   is built to hold more without a redesign, but nothing else is wired in yet.
 
+## Installation
+
+```
+pip install parseforge[anthropic]
+```
+`pip install parseforge` alone installs no AI-provider SDK at all — every
+command that's pure local processing (`canonical`/`readable`/`recognizers`,
+`integration`, `promotion`) works with nothing further. Anything that calls an
+LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
+extra for whichever provider it uses: `anthropic` or `deepseek`. `--provider`
+defaults to `anthropic` wherever it isn't required, so that's the one most
+setups need. `pip install parseforge[sampling]` adds Netmiko for live device
+sampling; combine extras as needed, e.g.
+`pip install parseforge[anthropic,deepseek,sampling]`.
+
 ## Development
 
 ```
 pip install -e ".[dev,sampling]"
 pytest
 ```
+`dev` already includes both `anthropic` and `openai` (tests exercise both
+providers, never silently skip) — add `,anthropic`/`,deepseek` explicitly only
+if installing outside of `dev`.
+
+Linting/formatting/type-checking/docs run through tox instead of extras — see
+`tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own
+tools in an isolated env. Cutting a release needs `pip install -e ".[release]"`
+(`bump2version`, `build`) — see `scripts/release.ps1`.
 
 ## CLI
 

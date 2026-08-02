@@ -78,7 +78,12 @@ def generate(
     forwards to ``run_pipeline()`` for everything else (``endpoint``,
     ``region``, ``max_tries``, ...).
 
-    Never raises for a failed generation — check ``.ready``.
+    Never raises for a failed *generation* (a bad/truncated LLM response) —
+    check ``.ready`` for that. Does raise ``ImportError`` if ``provider``'s
+    SDK isn't installed (textfsm-ai's own lazy provider registry, pointing
+    at the right ``pip install textfsm-ai[<provider>]`` extra) — a missing
+    package is an environment problem, not a generation outcome, and is
+    treated the same way here as in :mod:`parseforge.naming.providers`.
     """
     result = run_pipeline(
         sample, provider, api_key, model, mode="debug", as_json=True, **kwargs

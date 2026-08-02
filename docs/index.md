@@ -36,7 +36,7 @@ production use, drift-monitored).
 ## Try it
 
 ```bash
-pip install parseforge
+pip install parseforge[anthropic]
 
 # Resolve a raw CLI command to its canonical cli-name
 parseforge name --vendor cisco --family catalyst9200 --os ios-xe --version 17.9.1 \
