@@ -73,6 +73,7 @@ def test_load_trial_config_full(tmp_path: Path) -> None:
         deployment="my-deployment",
         project="my-gcp-project",
         location="us-central1",
+        region="us-east-1",
     )
     path = _write(tmp_path / "trial.yaml", data)
 
@@ -92,6 +93,7 @@ def test_load_trial_config_full(tmp_path: Path) -> None:
     assert cfg.deployment == "my-deployment"
     assert cfg.project == "my-gcp-project"
     assert cfg.location == "us-central1"
+    assert cfg.region == "us-east-1"
 
 
 def test_load_trial_config_defaults(tmp_path: Path) -> None:
@@ -108,6 +110,7 @@ def test_load_trial_config_defaults(tmp_path: Path) -> None:
     assert cfg.deployment is None
     assert cfg.project is None
     assert cfg.location is None
+    assert cfg.region is None
 
 
 def test_load_trial_config_missing_api_key_for_normal_provider_raises(
@@ -133,6 +136,19 @@ def test_load_trial_config_vertexai_needs_no_api_key(tmp_path: Path) -> None:
     assert cfg.api_key is None
     assert cfg.project == "my-gcp-project"
     assert cfg.location == "us-central1"
+
+
+def test_load_trial_config_bedrock_needs_no_api_key(tmp_path: Path) -> None:
+    assert "bedrock" in NO_API_KEY_PROVIDERS
+    data = dict(_VALID_TRIAL, provider="bedrock", region="us-east-1")
+    del data["api_key"]
+    path = _write(tmp_path / "trial.yaml", data)
+
+    cfg = load_trial_config(path)
+
+    assert cfg.provider == "bedrock"
+    assert cfg.api_key is None
+    assert cfg.region == "us-east-1"
 
 
 def test_load_generation_config_missing_required_keys(tmp_path: Path) -> None:
@@ -161,6 +177,7 @@ def test_load_generation_config_full(tmp_path: Path) -> None:
     assert cfg.deployment is None
     assert cfg.project is None
     assert cfg.location is None
+    assert cfg.region is None
 
 
 def test_load_generation_config_azure_fields(tmp_path: Path) -> None:
@@ -197,3 +214,18 @@ def test_load_generation_config_vertexai_fields(tmp_path: Path) -> None:
     assert cfg.api_key is None
     assert cfg.project == "my-gcp-project"
     assert cfg.location == "us-central1"
+
+
+def test_load_generation_config_bedrock_fields(tmp_path: Path) -> None:
+    data = {
+        "provider": "bedrock",
+        "model": "anthropic.claude-haiku-4-5-v1:0",
+        "sample_file": "sample.txt",
+        "region": "us-east-1",
+    }
+    path = _write(tmp_path / "gen.yaml", data)
+
+    cfg = load_generation_config(path)
+
+    assert cfg.api_key is None
+    assert cfg.region == "us-east-1"

@@ -16,13 +16,13 @@ import click
 import yaml
 
 # Providers that don't take an API key at all — Vertex AI relies on GCP's
-# Application Default Credentials instead (see
-# naming/providers/vertexai.py). api_key is required for every other
-# provider, but never for these; kept as a small named set (rather than a
-# scattered `provider != "vertexai"` check) so a future provider with the
-# same trait (e.g. Bedrock, which textfsm-ai also treats this way) is a
-# one-line addition.
-NO_API_KEY_PROVIDERS = frozenset({"vertexai"})
+# Application Default Credentials, Bedrock on AWS's own credential chain
+# (see naming/providers/vertexai.py and naming/providers/bedrock.py).
+# api_key is required for every other provider, but never for these;
+# kept as a small named set (rather than scattered
+# `provider not in (...)` checks) so a future provider with the same
+# trait is a one-line addition.
+NO_API_KEY_PROVIDERS = frozenset({"vertexai", "bedrock"})
 
 
 @dataclass(frozen=True)
@@ -68,6 +68,10 @@ class TrialConfig:
     # provider's own env var.
     project: str | None = None
     location: str | None = None
+    # Only meaningful for provider: bedrock — see
+    # naming/providers/bedrock.py. Falls back to BEDROCK_REGION, then
+    # BEDROCK_DEFAULT_REGION, if omitted.
+    region: str | None = None
 
 
 @dataclass(frozen=True)
@@ -90,6 +94,8 @@ class GenerationRequestConfig:
     # Only meaningful for provider: vertexai — see TrialConfig above.
     project: str | None = None
     location: str | None = None
+    # Only meaningful for provider: bedrock — see TrialConfig above.
+    region: str | None = None
 
 
 _TRIAL_REQUIRED = (
@@ -165,6 +171,7 @@ def load_trial_config(path: Path) -> TrialConfig:
         deployment=raw.get("deployment"),
         project=raw.get("project"),
         location=raw.get("location"),
+        region=raw.get("region"),
     )
 
 
@@ -189,4 +196,5 @@ def load_generation_config(path: Path) -> GenerationRequestConfig:
         deployment=raw.get("deployment"),
         project=raw.get("project"),
         location=raw.get("location"),
+        region=raw.get("region"),
     )

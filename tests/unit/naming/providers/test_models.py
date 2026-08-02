@@ -22,6 +22,7 @@ PROVIDERS = [
     "cohere",
     "gemini",
     "vertexai",
+    "bedrock",
 ]
 
 
