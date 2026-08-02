@@ -1,3 +1,28 @@
+# v0.2.10 — Gemini Joins the Native-SDK Club
+
+## ✨ Fifteen Providers Now
+`parseforge` can now resolve cli-names with Google's Gemini models too:
+
+```
+pip install parseforge[gemini]
+```
+```
+parseforge name --provider gemini --api-key $GEMINI_API_KEY show version
+```
+
+Like Mistral, Cohere, and Azure before it, Gemini's official SDK
+(`google-genai`) has its own client shape rather than the OpenAI-compatible
+dialect most providers speak — `GeminiRegexBuilder` talks to it directly,
+with the same status-code-based error classification the other native-SDK
+providers already use. Two small Gemini-specific quirks got ironed out
+along the way: its `finish_reason` is an enum that stringifies ugly
+(`"FinishReason.STOP"`) unless you reach for `.value`, and "thinking mode"
+is switched off by default so a naming call doesn't pay for reasoning it
+doesn't need.
+
+## 📦 Version
+`0.2.9 → 0.2.10`
+
 # v0.2.9 — Azure OpenAI, the Odd One Out
 
 ## ☁️ A Provider That Breaks the Mold

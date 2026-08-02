@@ -1,3 +1,27 @@
+## v0.2.10 — 2026-08-02
+
+### Added
+- `GeminiRegexBuilder` (`parseforge[gemini]`) — the fifteenth naming
+  provider. Like Mistral/Cohere/Azure, Google's official Python SDK
+  (`google-genai`) isn't built on the OpenAI client library; it has its
+  own client shape (`client.models.generate_content()`), talked to
+  directly. Error classification is status-code-based (`exc.code` on the
+  single `APIError` class the SDK raises for every HTTP failure), same
+  approach as Mistral/Cohere/Azure. Two Gemini-specific wrinkles:
+  `finish_reason` is a str-subclassed enum whose own `__str__` prints
+  `"FinishReason.STOP"` rather than `"STOP"` (`.value` is used instead),
+  and thinking mode is explicitly disabled by default
+  (`thinking_budget=0`, overridable via a `thinking_budget` kwarg),
+  matching textfsm-ai's own `GeminiProvider` default
+- `models.yaml` gained a `gemini` entry (default `gemini-2.5-flash`,
+  matching textfsm-ai's `model_catalog` default) plus 6 other supported
+  models from textfsm-ai's `pricing.yaml`
+- New `pyproject.toml` `gemini` extra (`google-genai>=0.2.0` +
+  `textfsm-ai[gemini]>=0.6.1`). Also added to `dev` so gemini's tests
+  never silently skip
+- `--api-key`/`--provider` help text (CLI) and the provider extras list
+  (README) now enumerate all fifteen providers
+
 ## v0.2.9 — 2026-08-02
 
 ### Added
