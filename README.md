@@ -34,11 +34,11 @@ command that's pure local processing (`canonical`/`readable`/`recognizers`,
 `integration`, `promotion`) works with nothing further. Anything that calls an
 LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
 extra for whichever provider it uses: `anthropic`, `openai`, `deepseek`,
-`groq`, or `xai`. `--provider` defaults to `anthropic` wherever it isn't
-required, so that's the one most setups need. `pip install
+`groq`, `xai`, or `together`. `--provider` defaults to `anthropic` wherever it
+isn't required, so that's the one most setups need. `pip install
 parseforge[sampling]` adds Netmiko for live device sampling; combine extras
 as needed, e.g.
-`pip install parseforge[anthropic,openai,deepseek,groq,xai,sampling]`.
+`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,sampling]`.
 
 ## Development
 
@@ -47,10 +47,10 @@ pip install -e ".[dev,sampling]"
 pytest
 ```
 `dev` already includes both the `anthropic` and `openai` SDKs (tests exercise
-all five providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai` share
-just those two packages — and never silently skip) — add
-`,anthropic`/`,openai`/`,deepseek`/`,groq`/`,xai`
-explicitly only if installing outside of `dev`.
+all six providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai`,
+`together` share just those two packages — and never silently skip) — add
+the specific `,<provider>` extra explicitly only if installing outside of
+`dev`.
 
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own

@@ -67,6 +67,7 @@ deepseek = ["openai>=1.0.0", "textfsm-ai[deepseek]>=0.6.1"]
 openai = ["openai>=1.0.0", "textfsm-ai[openai]>=0.6.1"]
 groq = ["openai>=1.0.0", "textfsm-ai[groq]>=0.6.1"]
 xai = ["openai>=1.0.0", "textfsm-ai[xai]>=0.6.1"]
+together = ["openai>=1.0.0", "textfsm-ai[together]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
