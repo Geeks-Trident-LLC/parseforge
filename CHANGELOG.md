@@ -1,3 +1,37 @@
+## v0.2.9 — 2026-08-02
+
+### Added
+- `AzureRegexBuilder` (`parseforge[azure]`) — the fourteenth naming
+  provider, and the first that doesn't fit the `api_key`+`model` shape
+  every prior provider used. Azure OpenAI has no fixed `base_url` or
+  model catalog: `endpoint` is the caller's own Azure resource, and the
+  usual "model" concept is replaced by an account-specific `deployment`
+  name (`AZURE_API_KEY`/`AZURE_ENDPOINT`/`AZURE_API_VERSION`/
+  `AZURE_DEPLOYMENT`). Talks to the `azure-ai-inference` SDK's
+  `ChatCompletionsClient` directly; error classification is
+  status-code-based (`exc.status_code` on the single `HttpResponseError`
+  class the SDK raises for every HTTP failure), same approach as
+  Mistral/Cohere
+- New `--endpoint`/`--api-version`/`--deployment` options on `name`,
+  `check --provider`, and `generate-template`; `run` gets both
+  `--naming-endpoint`/`--naming-api-version`/`--naming-deployment`
+  (naming side) and `--endpoint`/`--api-version`/`--deployment`
+  (generation side); `trial.yaml`/`generate-template.yaml` config files
+  gain matching `endpoint`/`api_version`/`deployment` keys
+- New pyproject.toml `azure` extra (`azure-ai-inference>=1.0.0b9`,
+  matching textfsm-ai's own floor). Also added to `dev` so azure's
+  tests never silently skip
+
+### Fixed
+- `_build_regex_builder()` would have raised a plain `TypeError` for any
+  azure trial/config, since `TrialConfig.model` is always present but
+  `AzureRegexBuilder` has no `model` parameter at all — deployment now
+  takes precedence and `model` is simply not forwarded when it's set
+- The generation-side `api_version` had no default anywhere unlike
+  naming's builder, which would have silently sent an empty string to a
+  real Azure API call — the same default is now applied at the
+  `pipeline.py`/`generate-template` call sites
+
 ## v0.2.8 — 2026-08-02
 
 ### Added

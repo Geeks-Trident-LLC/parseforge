@@ -1,3 +1,42 @@
+# v0.2.9 — Azure OpenAI, the Odd One Out
+
+## ☁️ A Provider That Breaks the Mold
+Every provider so far — thirteen of them — needed just an API key and a
+model name. Azure OpenAI doesn't work that way: there's no public
+`base_url` (it's your own Azure resource) and no fixed model catalog
+(it's your own account-specific *deployment* name instead). `parseforge`
+now handles that shape natively:
+
+```
+pip install parseforge[azure]
+```
+```
+parseforge name --provider azure --api-key $AZURE_API_KEY \
+  --endpoint https://my-resource.openai.azure.com \
+  --deployment my-gpt4-deployment \
+  show version
+```
+
+New `--endpoint`/`--api-version`/`--deployment` options show up wherever
+`--provider azure` is usable — `name`, `run` (both its naming and
+generation sides), `check --provider`, `generate-template`, and both
+`trial.yaml`/`generate-template.yaml` config files — falling back to
+`AZURE_ENDPOINT`/`AZURE_API_VERSION`/`AZURE_DEPLOYMENT` the same way every
+other provider's `--api-key` falls back to its own env var.
+
+## 🐛 Two Bugs Caught Before They Shipped
+Building out Azure's real tests surfaced two gaps that would have bitten
+real users:
+- A trial config for `azure` would have crashed with a raw `TypeError`
+  (Azure has no `model` parameter, but `model` is always present in a
+  trial config) — fixed so `deployment` now correctly takes over instead.
+- Generation would have silently sent an empty `api_version` to a live
+  Azure endpoint if you didn't set one explicitly — fixed with the same
+  sensible default the naming side already had.
+
+## 📦 Version
+`0.2.8 → 0.2.9`
+
 # v0.2.8 — Native-SDK Providers: Mistral and Cohere
 
 ## 🧬 Beyond OpenAI-Compatible
