@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parseforge"
-version = "0.2.4"
+version = "0.2.5"
 description = "LLM-driven pipeline that forges, validates, and promotes TextFSM templates from network CLI output"
 readme = "README.md"
 license = { text = "MIT" }
@@ -64,6 +64,7 @@ keywords = [
 # provider(s) you actually use.
 anthropic = ["anthropic>=0.40.0", "textfsm-ai[anthropic]>=0.6.1"]
 deepseek = ["openai>=1.0.0", "textfsm-ai[deepseek]>=0.6.1"]
+openai = ["openai>=1.0.0", "textfsm-ai[openai]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
