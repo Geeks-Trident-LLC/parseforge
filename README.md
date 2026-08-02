@@ -35,11 +35,11 @@ command that's pure local processing (`canonical`/`readable`/`recognizers`,
 LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
 extra for whichever provider it uses: `anthropic`, `openai`, `deepseek`,
 `groq`, `xai`, `together`, `fireworks`, `perplexity`, `openrouter`,
-`moonshot`, `cerebras`, `mistral`, `cohere`, or `azure`. `--provider` defaults
-to `anthropic` wherever it isn't required, so that's the one most setups
-need. `pip install parseforge[sampling]` adds Netmiko for live device
-sampling; combine extras as needed, e.g.
-`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,cerebras,mistral,cohere,azure,sampling]`.
+`moonshot`, `cerebras`, `mistral`, `cohere`, `azure`, or `gemini`.
+`--provider` defaults to `anthropic` wherever it isn't required, so that's
+the one most setups need. `pip install parseforge[sampling]` adds Netmiko
+for live device sampling; combine extras as needed, e.g.
+`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,cerebras,mistral,cohere,azure,gemini,sampling]`.
 
 ## Development
 
@@ -47,13 +47,13 @@ sampling; combine extras as needed, e.g.
 pip install -e ".[dev,sampling]"
 pytest
 ```
-`dev` already includes the `anthropic`, `openai`, `mistralai`, `cohere`, and
-`azure-ai-inference` SDKs (tests exercise all fourteen providers —
-`anthropic`, `openai`, `deepseek`, `groq`, `xai`, `together`, `fireworks`,
-`perplexity`, `openrouter`, `moonshot`, `cerebras` share just the first two
-packages, and `mistral`/`cohere`/`azure` each need their own SDK — and never
-silently skip) — add the specific `,<provider>` extra explicitly only if
-installing outside of `dev`.
+`dev` already includes the `anthropic`, `openai`, `mistralai`, `cohere`,
+`azure-ai-inference`, and `google-genai` SDKs (tests exercise all fifteen
+providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai`, `together`,
+`fireworks`, `perplexity`, `openrouter`, `moonshot`, `cerebras` share just
+the first two packages, and `mistral`/`cohere`/`azure`/`gemini` each need
+their own SDK — and never silently skip) — add the specific `,<provider>`
+extra explicitly only if installing outside of `dev`.
 
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own

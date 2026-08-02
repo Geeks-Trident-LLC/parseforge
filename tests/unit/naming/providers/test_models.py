@@ -20,6 +20,7 @@ PROVIDERS = [
     "cerebras",
     "mistral",
     "cohere",
+    "gemini",
 ]
 
 
