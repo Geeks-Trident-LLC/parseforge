@@ -1,3 +1,20 @@
+# v0.2.5 — OpenAI Joins the Party
+
+## 🤖 A Real OpenAI Naming Provider
+`deepseek`'s builder always used the `openai` SDK under the hood — but pointed
+at DeepSeek's own API, not OpenAI's. `OpenAIRegexBuilder` closes that gap:
+`pip install parseforge[openai]` gets you OpenAI's own models (`gpt-5.4-mini`
+by default) for cli-name resolution, same lazy-import/optional-extra treatment
+as `anthropic` and `deepseek` already have.
+
+## ✅ Live Test Coverage
+New real tests for the OpenAI provider (naming + generation), gated the same
+way as every other live-API test in this project — `pytest --real` plus
+`OPENAI_API_KEY`.
+
+## 📦 Version
+`0.2.4 → 0.2.5`
+
 # v0.2.4 — A Minimal Core, Finally
 
 ## 📦 `pip install parseforge` Is Actually Minimal Now
