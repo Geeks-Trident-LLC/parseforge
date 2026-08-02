@@ -1,14 +1,10 @@
-# Everything needed to install parseforge and run its test suite against
-# the openai naming provider, in one `pip install -r ...` -- no separate
-# `pip install -e .` or `pytest`/`pytest-cov` install needed first.
-# Mirrors pyproject.toml's [project.optional-dependencies] "openai" extra
-# plus the "dev" extra's test-running essentials (not its lint/format/
-# typecheck tools -- this file is for testing, not development tooling).
+# Mirrors pyproject.toml's [project.optional-dependencies] "openai" extra --
+# use `pip install parseforge[openai]` instead if pip's extras syntax works
+# for your setup. For running parseforge's test suite against this
+# provider, use dev-openai.txt instead (adds pytest/pytest-cov).
 #
 # Usage (from the repo root): pip install -r requirements/requirements-openai.txt
 
 -e .
-pytest>=8.0.0
-pytest-cov>=5.0.0
 openai>=1.0.0
 textfsm-ai[openai]>=0.6.1

@@ -57,16 +57,19 @@ workflow commands that drive the full pipeline end to end.
 
 Cloning the repo to work on (or test) one specific naming provider doesn't
 require `pip install -e ".[dev]"` and every provider SDK at once — each
-provider has its own self-contained `requirements/requirements-<provider>.txt`
-that installs `parseforge` itself, `pytest`/`pytest-cov`, and just that
-provider's SDK:
+provider has its own `requirements/dev-<provider>.txt` that installs
+`parseforge` itself, `pytest`/`pytest-cov`, and just that provider's SDK:
 
 ```bash
 git clone https://github.com/Geeks-Trident-LLC/parseforge.git
 cd parseforge
-pip install -r requirements/requirements-oci.txt
+pip install -r requirements/dev-oci.txt
 pytest tests/unit/naming/providers/test_oci.py
 ```
+
+(`requirements/requirements-<provider>.txt` is the leaner counterpart —
+just `parseforge` plus that provider's SDK, no test tooling — for
+installs that don't need to run the test suite.)
 
 See the [README's Development section](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md#development)
 for the full local dev setup.

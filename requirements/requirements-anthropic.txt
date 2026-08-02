@@ -1,0 +1,10 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "anthropic"
+# extra -- use `pip install parseforge[anthropic]` instead if pip's extras
+# syntax works for your setup. For running parseforge's test suite against
+# this provider, use dev-anthropic.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-anthropic.txt
+
+-e .
+anthropic>=0.40.0
+textfsm-ai[anthropic]>=0.6.1
