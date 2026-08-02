@@ -1,3 +1,24 @@
+## v0.2.5 — 2026-08-02
+
+### Added
+- `OpenAIRegexBuilder` — OpenAI as a third naming provider alongside `anthropic`
+  and `deepseek` (`pip install parseforge[openai]`). Previously `deepseek`'s
+  builder used the `openai` SDK too, but pointed at DeepSeek's own API — there
+  was no way to actually use OpenAI's own models for naming until now.
+  `--provider`/`--naming-provider` list `anthropic|deepseek|openai`
+  automatically wherever they're used, since every occurrence already derives
+  its choices from the same builder registry
+- `models.yaml` gained an `openai` entry (default `gpt-5.4-mini`, matching the
+  cheap/fast-tier default convention already used for `anthropic`/`deepseek`)
+- Live-API test coverage for the new provider: `tests/real/naming/
+  test_openai_naming.py` and `tests/real/generation/test_openai_generation.py`,
+  mirroring the existing anthropic/deepseek real tests exactly, plus a new
+  `openai_key` fixture in `tests/conftest.py`
+
+### Fixed
+- Two stale `--api-key` help strings (CLI and README) that only listed
+  `ANTHROPIC_API_KEY`/`DEEPSEEK_API_KEY`, missing `OPENAI_API_KEY`
+
 ## v0.2.4 — 2026-08-02
 
 ### Changed
