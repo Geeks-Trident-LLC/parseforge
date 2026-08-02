@@ -1,3 +1,32 @@
+## v0.2.8 — 2026-08-02
+
+### Added
+- Two new naming providers, both using their vendor's *native* SDK rather
+  than the `openai`-compat shape every prior provider used — the first
+  providers in this project that aren't OpenAI-compatible:
+  - `MistralRegexBuilder` (`parseforge[mistral]`, `MISTRAL_API_KEY`,
+    default `mistral-small-latest`) — talks to the native `mistralai` SDK's
+    `client.chat.complete()`. The SDK raises a single `SDKError` for every
+    HTTP failure (status on `exc.raw_response.status_code`) rather than a
+    family of named exception classes, so retryability is classified by
+    status code instead of reusing `providers/errors.py`'s
+    class-name-based classification. Pinned to `mistralai==1.10.0` (the
+    last release supporting Python 3.9, matching textfsm-ai's own pin)
+  - `CohereRegexBuilder` (`parseforge[cohere]`, `COHERE_API_KEY`, default
+    `command-light`) — talks to the native `cohere` SDK's synchronous
+    `ClientV2.chat()`. Cohere raises a family of named exceptions
+    (`BadRequestError`, `UnauthorizedError`, ...) whose names don't line
+    up with OpenAI/Anthropic's, but all carry `exc.status_code`, so
+    retryability is likewise classified by status code. Response content
+    is a list of text/thinking blocks rather than a plain string, and
+    `usage.tokens` has no `total_tokens` field at all (computed locally).
+    Pinned to `cohere==5.21.1` for the same Python 3.9 reason
+- `dev` extra now also pulls in `mistralai==1.10.0` and `cohere==5.21.1`
+  directly, alongside the existing `anthropic`/`openai`, so both providers'
+  tests always run rather than silently skipping
+- `--api-key`/`--provider` help text (CLI) and the provider extras list
+  (README) now enumerate all thirteen providers
+
 ## v0.2.6 — 2026-08-02
 
 ### Added
