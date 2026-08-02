@@ -34,11 +34,11 @@ command that's pure local processing (`canonical`/`readable`/`recognizers`,
 `integration`, `promotion`) works with nothing further. Anything that calls an
 LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
 extra for whichever provider it uses: `anthropic`, `openai`, `deepseek`,
-`groq`, `xai`, `together`, `fireworks`, `perplexity`, or `openrouter`.
-`--provider` defaults to `anthropic` wherever it isn't required, so that's
-the one most setups need. `pip install parseforge[sampling]` adds Netmiko
-for live device sampling; combine extras as needed, e.g.
-`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,sampling]`.
+`groq`, `xai`, `together`, `fireworks`, `perplexity`, `openrouter`, or
+`moonshot`. `--provider` defaults to `anthropic` wherever it isn't required,
+so that's the one most setups need. `pip install parseforge[sampling]` adds
+Netmiko for live device sampling; combine extras as needed, e.g.
+`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,sampling]`.
 
 ## Development
 
@@ -47,10 +47,10 @@ pip install -e ".[dev,sampling]"
 pytest
 ```
 `dev` already includes both the `anthropic` and `openai` SDKs (tests exercise
-all nine providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai`,
-`together`, `fireworks`, `perplexity`, `openrouter` share just those two
-packages — and never silently skip) — add the specific `,<provider>` extra
-explicitly only if installing outside of `dev`.
+all ten providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai`,
+`together`, `fireworks`, `perplexity`, `openrouter`, `moonshot` share just
+those two packages — and never silently skip) — add the specific
+`,<provider>` extra explicitly only if installing outside of `dev`.
 
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own
