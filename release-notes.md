@@ -1,3 +1,24 @@
+# v0.2.4 — A Minimal Core, Finally
+
+## 📦 `pip install parseforge` Is Actually Minimal Now
+Every AI-provider SDK (`anthropic`, `openai`) moved out of the base install
+into opt-in extras — `pip install parseforge[anthropic]` or
+`parseforge[deepseek]` — matching the same move `textfsm-ai` v0.6.0 made
+upstream. Anything that's pure local processing (`canonical`/`readable`/
+`recognizers`, `integration`, `promotion`) now works with nothing beyond the
+core install; only an actual LLM call needs the matching extra, and you get a
+clear, actionable error if it's missing rather than a crash at import time.
+
+## 🧹 Cleanup
+- Retired `requirements.txt`/`requirements-dev.txt` — stale duplicates of
+  `pyproject.toml`, which is now the single source of truth for every
+  dependency, including a new `release` extra for `bump2version`/`build`
+- Fixed a docstring in `generation.py` that claimed to never raise, when a
+  missing provider SDK correctly does
+
+## 📦 Version
+`0.2.3 → 0.2.4`
+
 # v0.2.3 — Drift Monitoring and a Real CLI
 
 ## 🌊 Drift Monitoring
