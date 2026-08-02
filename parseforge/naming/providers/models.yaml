@@ -51,3 +51,13 @@ xai:
     - grok-4
     - grok-2-vision-1212
   deprecated: []
+
+together:
+  default: meta-llama/Llama-3.1-8B-Instruct-Turbo
+  supported:
+    - meta-llama/Llama-3.1-8B-Instruct-Turbo
+    - meta-llama/Llama-3.3-70B-Instruct-Turbo
+    - Qwen/Qwen2.5-32B-Instruct
+    - mistralai/Mixtral-8x7B-Instruct-v0.1
+    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
+  deprecated: []

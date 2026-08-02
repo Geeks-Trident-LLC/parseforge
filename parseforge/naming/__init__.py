@@ -13,6 +13,7 @@ from .providers import (
     DeepSeekRegexBuilder,
     GroqRegexBuilder,
     OpenAIRegexBuilder,
+    TogetherRegexBuilder,
     XAIRegexBuilder,
 )
 from .resolver import NamingResolution, cli_name, resolve_cli_name
@@ -28,6 +29,7 @@ __all__ = [
     "DeepSeekRegexBuilder",
     "GroqRegexBuilder",
     "OpenAIRegexBuilder",
+    "TogetherRegexBuilder",
     "XAIRegexBuilder",
     "LLMCLIResponse",
     "TokenUsage",
