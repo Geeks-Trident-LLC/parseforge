@@ -18,6 +18,8 @@ PROVIDERS = [
     "openrouter",
     "moonshot",
     "cerebras",
+    "mistral",
+    "cohere",
 ]
 
 

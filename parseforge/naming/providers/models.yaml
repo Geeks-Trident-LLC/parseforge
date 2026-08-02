@@ -110,3 +110,22 @@ cerebras:
     - qwen-3-32b
     - gpt-oss-120b
   deprecated: []
+
+mistral:
+  default: mistral-small-latest
+  supported:
+    - mistral-small-latest
+    - mistral-medium-latest
+    - mistral-large-latest
+    - magistral-medium-latest
+    - codestral-latest
+  deprecated: []
+
+cohere:
+  default: command-light
+  supported:
+    - command-light
+    - command-r
+    - command-r-plus
+    - command-a
+  deprecated: []
