@@ -3,6 +3,7 @@ from .deepseek import DeepSeekRegexBuilder
 from .fireworks import FireworksRegexBuilder
 from .groq import GroqRegexBuilder
 from .openai import OpenAIRegexBuilder
+from .openrouter import OpenRouterRegexBuilder
 from .perplexity import PerplexityRegexBuilder
 from .together import TogetherRegexBuilder
 from .xai import XAIRegexBuilder
@@ -13,6 +14,7 @@ __all__ = [
     "FireworksRegexBuilder",
     "GroqRegexBuilder",
     "OpenAIRegexBuilder",
+    "OpenRouterRegexBuilder",
     "PerplexityRegexBuilder",
     "TogetherRegexBuilder",
     "XAIRegexBuilder",

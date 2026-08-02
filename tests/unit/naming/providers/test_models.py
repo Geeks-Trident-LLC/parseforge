@@ -15,6 +15,7 @@ PROVIDERS = [
     "together",
     "fireworks",
     "perplexity",
+    "openrouter",
 ]
 
 

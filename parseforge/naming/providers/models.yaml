@@ -81,3 +81,12 @@ perplexity:
     - sonar-reasoning-pro
     - sonar-deep-research
   deprecated: []
+
+openrouter:
+  default: google/gemini-2.5-flash-lite
+  supported:
+    - google/gemini-2.5-flash-lite
+    - deepseek/deepseek-r1
+    - anthropic/claude-3.5-sonnet
+    - openai/gpt-4o
+  deprecated: []
