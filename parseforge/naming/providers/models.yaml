@@ -90,3 +90,13 @@ openrouter:
     - anthropic/claude-3.5-sonnet
     - openai/gpt-4o
   deprecated: []
+
+moonshot:
+  default: moonshot-v1-8k
+  supported:
+    - moonshot-v1-8k
+    - moonshot-v1-32k
+    - moonshot-v1-128k
+    - kimi-k2-0711-preview
+    - kimi-k2-turbo-preview
+  deprecated: []

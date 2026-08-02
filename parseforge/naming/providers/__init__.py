@@ -2,6 +2,7 @@ from .anthropic import AnthropicRegexBuilder
 from .deepseek import DeepSeekRegexBuilder
 from .fireworks import FireworksRegexBuilder
 from .groq import GroqRegexBuilder
+from .moonshot import MoonshotRegexBuilder
 from .openai import OpenAIRegexBuilder
 from .openrouter import OpenRouterRegexBuilder
 from .perplexity import PerplexityRegexBuilder
@@ -13,6 +14,7 @@ __all__ = [
     "DeepSeekRegexBuilder",
     "FireworksRegexBuilder",
     "GroqRegexBuilder",
+    "MoonshotRegexBuilder",
     "OpenAIRegexBuilder",
     "OpenRouterRegexBuilder",
     "PerplexityRegexBuilder",

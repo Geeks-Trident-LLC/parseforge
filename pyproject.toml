@@ -71,6 +71,7 @@ together = ["openai>=1.0.0", "textfsm-ai[together]>=0.6.1"]
 fireworks = ["openai>=1.0.0", "textfsm-ai[fireworks]>=0.6.1"]
 perplexity = ["openai>=1.0.0", "textfsm-ai[perplexity]>=0.6.1"]
 openrouter = ["openai>=1.0.0", "textfsm-ai[openrouter]>=0.6.1"]
+moonshot = ["openai>=1.0.0", "textfsm-ai[moonshot]>=0.6.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
