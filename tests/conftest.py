@@ -49,6 +49,11 @@ def deepseek_key(require_real_tests: None) -> str:
 
 
 @pytest.fixture(scope="session")
+def openai_key(require_real_tests: None) -> str:
+    return _require_env("OPENAI_API_KEY")
+
+
+@pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
     """Generic sandbox connection — any vendor.
 
