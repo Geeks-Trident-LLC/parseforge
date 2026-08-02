@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parseforge"
-version = "0.2.7"
+version = "0.2.8"
 description = "LLM-driven pipeline that forges, validates, and promotes TextFSM templates from network CLI output"
 readme = "README.md"
 license = { text = "MIT" }
