@@ -134,6 +134,11 @@ def vertexai_location(require_real_tests: None) -> str:
 
 
 @pytest.fixture(scope="session")
+def bedrock_region(require_real_tests: None) -> str:
+    return _require_env("BEDROCK_REGION")
+
+
+@pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
     """Generic sandbox connection — any vendor.
 

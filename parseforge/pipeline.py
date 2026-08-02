@@ -63,10 +63,16 @@ class LLMProviderConfig:
     ``endpoint``/``api_version`` are ignored by every provider except
     azure, and ``project``/``location`` by every provider except
     vertexai (see textfsm-ai's generation_engine.run()). ``api_key`` has
-    no real value for provider="vertexai" (see
-    naming/providers/vertexai.py) — the CLI passes an empty string
-    there, which generation_engine.run() simply never reads for that
-    provider."""
+    no real value for provider="vertexai"/"bedrock" (see
+    naming/providers/vertexai.py, naming/providers/bedrock.py) — the CLI
+    passes an empty string there, which generation_engine.run() simply
+    never reads for those providers.
+
+    ``region`` is only meaningful for provider="bedrock" — it and
+    ``location`` (vertexai's own region-shaped field) both ultimately
+    populate run_pipeline()'s single ``region=`` kwarg (see
+    run_command_pipeline() below); only one of the two is ever set for a
+    given trial, since a trial has exactly one generation provider."""
 
     provider: str
     api_key: str
@@ -75,6 +81,7 @@ class LLMProviderConfig:
     api_version: str | None = None
     project: str | None = None
     location: str | None = None
+    region: str | None = None
 
 
 @dataclass(frozen=True)
@@ -182,8 +189,10 @@ def run_command_pipeline(
         # with bedrock/oci) — location is the user-facing name (matching
         # VertexAIProvider's own constructor param and VERTEXAI_REGION's
         # naming intent), mapped here the same way --deployment maps onto
-        # the positional model arg above.
-        region=generation_config.location or "",
+        # the positional model arg above. generation_config.region is
+        # bedrock's own already-correctly-named field, forwarded as-is;
+        # only one of region/location is ever set for a given provider.
+        region=generation_config.region or generation_config.location or "",
     )
     (derive_dir / "llm-template.textfsm").write_text(
         gen_result.raw_template, encoding="utf-8"

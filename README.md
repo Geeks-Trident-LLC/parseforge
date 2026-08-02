@@ -35,12 +35,12 @@ command that's pure local processing (`canonical`/`readable`/`recognizers`,
 LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
 extra for whichever provider it uses: `anthropic`, `openai`, `deepseek`,
 `groq`, `xai`, `together`, `fireworks`, `perplexity`, `openrouter`,
-`moonshot`, `cerebras`, `mistral`, `cohere`, `azure`, `gemini`, or
-`vertexai`. `--provider` defaults to `anthropic` wherever it isn't
+`moonshot`, `cerebras`, `mistral`, `cohere`, `azure`, `gemini`, `vertexai`, or
+`bedrock`. `--provider` defaults to `anthropic` wherever it isn't
 required, so that's the one most setups need. `pip install
 parseforge[sampling]` adds Netmiko for live device sampling; combine
 extras as needed, e.g.
-`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,cerebras,mistral,cohere,azure,gemini,vertexai,sampling]`.
+`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,cerebras,mistral,cohere,azure,gemini,vertexai,bedrock,sampling]`.
 
 ## Development
 
@@ -49,13 +49,13 @@ pip install -e ".[dev,sampling]"
 pytest
 ```
 `dev` already includes the `anthropic`, `openai`, `mistralai`, `cohere`,
-`azure-ai-inference`, and `google-genai` SDKs (tests exercise all sixteen
-providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai`, `together`,
-`fireworks`, `perplexity`, `openrouter`, `moonshot`, `cerebras` share just
-the first two packages, `mistral`/`cohere`/`azure` each need their own SDK,
-and `gemini`/`vertexai` share `google-genai` — and never silently skip) —
-add the specific `,<provider>` extra explicitly only if installing outside
-of `dev`.
+`azure-ai-inference`, `google-genai`, and `boto3` SDKs (tests exercise all
+seventeen providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai`,
+`together`, `fireworks`, `perplexity`, `openrouter`, `moonshot`, `cerebras`
+share just the first two packages, `mistral`/`cohere`/`azure`/`bedrock` each
+need their own SDK, and `gemini`/`vertexai` share `google-genai` — and never
+silently skip) — add the specific `,<provider>` extra explicitly only if
+installing outside of `dev`.
 
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own
@@ -80,15 +80,18 @@ and `--api-key` falls back to that provider's own env var (`ANTHROPIC_API_KEY`/
 `OPENAI_API_KEY`/`DEEPSEEK_API_KEY`/etc.). A cache hit (a command already seen
 before) never touches the LLM, so no key is needed at all in that case.
 
-`--provider azure`/`--provider vertexai` are the two exceptions to the usual
-`--api-key`/`--model` shape. Azure has no fixed base_url or model catalog,
-so it also needs `--endpoint` (`AZURE_ENDPOINT`), `--api-version`
-(`AZURE_API_VERSION`), and `--deployment` (`AZURE_DEPLOYMENT`, replacing
-`--model`). Vertex AI has no API key at all — it authenticates via GCP's own
-Application Default Credentials — so `--api-key`/`AZURE_API_KEY`-style env
-vars don't apply; it needs `--gcp-project` (`VERTEXAI_PROJECT`) and
-`--gcp-location` (`VERTEXAI_REGION`) instead. Same options exist on
-`check --provider`, `run`, and `generate-template` below.
+`--provider azure`/`--provider vertexai`/`--provider bedrock` are the three
+exceptions to the usual `--api-key`/`--model` shape. Azure has no fixed
+base_url or model catalog, so it also needs `--endpoint` (`AZURE_ENDPOINT`),
+`--api-version` (`AZURE_API_VERSION`), and `--deployment`
+(`AZURE_DEPLOYMENT`, replacing `--model`). Vertex AI has no API key at all —
+it authenticates via GCP's own Application Default Credentials — so
+`--api-key`/`AZURE_API_KEY`-style env vars don't apply; it needs
+`--gcp-project` (`VERTEXAI_PROJECT`) and `--gcp-location` (`VERTEXAI_REGION`)
+instead. Bedrock likewise has no API key at all — it authenticates via AWS's
+own credential chain — and just needs `--region` (`BEDROCK_REGION`, then
+`BEDROCK_DEFAULT_REGION`). Same options exist on `check --provider`, `run`,
+and `generate-template` below.
 
 **`check`** — validate a connector or provider before spending time/tokens on a real
 run. With neither `--env` nor explicit connection flags, prints what a connector needs
@@ -130,7 +133,7 @@ parseforge run --vendor cisco --family catalyst9200 --os ios-xe --version 17.9.1
   show clock
 ```
 `--provider`/`--api-key`/`--model` are for generation (`--api-key` isn't
-required for `--provider vertexai`). Naming has its own separate
+required for `--provider vertexai`/`--provider bedrock`). Naming has its own separate
 `--naming-provider`/`--naming-api-key`/`--naming-model`, defaulting independently
 (`--naming-provider` defaults to `anthropic`; the other two fall back to that
 provider's own env var/default model) — set them explicitly if naming needs a
@@ -139,7 +142,9 @@ each get their own `--endpoint`/`--api-version`/`--deployment` (generation) and
 `--naming-endpoint`/`--naming-api-version`/`--naming-deployment` (naming);
 `--provider vertexai`/`--naming-provider vertexai` similarly get
 `--gcp-project`/`--gcp-location` and `--naming-gcp-project`/
-`--naming-gcp-location` — see the `name` section above for what they're for.
+`--naming-gcp-location`; `--provider bedrock`/`--naming-provider bedrock` get
+`--region` and `--naming-region` — see the `name` section above for what
+they're for.
 
 **`init-trial-config`** — write a placeholder `trial.yaml` to fill in, instead of
 writing one by hand:
@@ -176,7 +181,9 @@ instead if a trial actually needs two different providers. For `provider: azure`
 also set `endpoint`/`api_version`/`deployment` (`deployment` replaces `model`).
 For `provider: vertexai`, set `project`/`location` instead — `api_key` can be
 omitted entirely (Vertex AI authenticates via GCP's own Application Default
-Credentials). See `parseforge init-trial-config`'s generated placeholder for
+Credentials). For `provider: bedrock`, set `region` instead — `api_key` can
+likewise be omitted entirely (Bedrock authenticates via AWS's own credential
+chain). See `parseforge init-trial-config`'s generated placeholder for
 the exact keys.
 
 **`integration`** — rebuild `integration/` for every case under `trials/` (SPEC §5

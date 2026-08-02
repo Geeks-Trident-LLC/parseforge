@@ -11,6 +11,7 @@ from .llm import (
 from .providers import (
     AnthropicRegexBuilder,
     AzureRegexBuilder,
+    BedrockRegexBuilder,
     CerebrasRegexBuilder,
     CohereRegexBuilder,
     DeepSeekRegexBuilder,
@@ -37,6 +38,7 @@ __all__ = [
     "UnimplementedRegexBuilder",
     "AnthropicRegexBuilder",
     "AzureRegexBuilder",
+    "BedrockRegexBuilder",
     "CerebrasRegexBuilder",
     "CohereRegexBuilder",
     "DeepSeekRegexBuilder",
