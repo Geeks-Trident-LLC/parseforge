@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Any
 
 from parseforge import generation, naming, paths, sampling, validation
+from parseforge.naming.providers.azure import DEFAULT_API_VERSION
 
 
 class Mode(str, Enum):
@@ -55,9 +56,18 @@ class Mode(str, Enum):
 
 @dataclass(frozen=True)
 class LLMProviderConfig:
+    """``model`` doubles as the deployment name for provider="azure" (no
+    fixed model catalog there — see naming/providers/azure.py); the CLI
+    resolves --deployment into this field so this dataclass and
+    generation.generate()'s positional model arg stay untouched.
+    ``endpoint``/``api_version`` are ignored by every provider except
+    azure (see textfsm-ai's generation_engine.run())."""
+
     provider: str
     api_key: str
     model: str
+    endpoint: str | None = None
+    api_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -153,6 +163,13 @@ def run_command_pipeline(
         generation_config.provider,
         generation_config.api_key,
         generation_config.model,
+        endpoint=generation_config.endpoint or "",
+        # Only meaningful for provider="azure" (ignored by every other
+        # provider — see textfsm-ai's generation_engine.run()), which has
+        # no from_env()-style fallback of its own on this path, unlike
+        # naming/providers/azure.py's own AzureRegexBuilder — so the same
+        # default is applied here explicitly.
+        api_version=generation_config.api_version or DEFAULT_API_VERSION,
     )
     (derive_dir / "llm-template.textfsm").write_text(
         gen_result.raw_template, encoding="utf-8"

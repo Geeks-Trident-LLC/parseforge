@@ -104,6 +104,21 @@ def cohere_key(require_real_tests: None) -> str:
 
 
 @pytest.fixture(scope="session")
+def azure_key(require_real_tests: None) -> str:
+    return _require_env("AZURE_API_KEY")
+
+
+@pytest.fixture(scope="session")
+def azure_endpoint(require_real_tests: None) -> str:
+    return _require_env("AZURE_ENDPOINT")
+
+
+@pytest.fixture(scope="session")
+def azure_deployment(require_real_tests: None) -> str:
+    return _require_env("AZURE_DEPLOYMENT")
+
+
+@pytest.fixture(scope="session")
 def sandbox_connection(require_real_tests: None) -> DeviceConnection:
     """Generic sandbox connection — any vendor.
 
