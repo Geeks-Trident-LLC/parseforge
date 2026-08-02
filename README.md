@@ -57,6 +57,16 @@ each need their own SDK, and `gemini`/`vertexai` share `google-genai` — and
 never silently skip) — add the specific `,<provider>` extra explicitly only
 if installing outside of `dev`.
 
+For tooling that expects plain `requirements.txt` files instead of pip
+extras (Docker layers, offline pins, etc), `requirements/` has one
+`requirements-<provider>.txt` per provider whose SDK isn't already
+pinned by a shared package (`openai`/`azure`/`bedrock`/`oci`/`cohere`/
+`mistral`/`gemini`/`vertexai`). Each is self-contained — `parseforge`
+itself, `pytest`/`pytest-cov`, and that provider's SDK, mirroring the
+matching `pyproject.toml` extra — so cloning the repo and running
+`pip install -r requirements/requirements-oci.txt` is enough to install
+and test that one provider, no separate `pip install -e .` needed.
+
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own
 tools in an isolated env. Cutting a release needs `pip install -e ".[release]"`

@@ -1,0 +1,20 @@
+# Everything needed to install parseforge and run its test suite against
+# the oci naming provider, in one `pip install -r ...` -- no separate
+# `pip install -e .` or `pytest`/`pytest-cov` install needed first.
+# Mirrors pyproject.toml's [project.optional-dependencies] "oci" extra
+# plus the "dev" extra's test-running essentials (not its lint/format/
+# typecheck tools -- this file is for testing, not development tooling).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-oci.txt
+#
+# oci pinned exactly for reproducibility, matching textfsm-ai's own pin.
+# Much heavier than every other provider SDK here (~36MB) -- Oracle's
+# single all-services SDK (compute, storage, IAM, ...), not a
+# Generative-AI-only package -- plus the crypto libs (cryptography,
+# pyOpenSSL) its request-signing auth model needs.
+
+-e .
+pytest>=8.0.0
+pytest-cov>=5.0.0
+oci==2.182.0
+textfsm-ai[oci]>=0.6.1

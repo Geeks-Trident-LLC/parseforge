@@ -1,0 +1,18 @@
+# Everything needed to install parseforge and run its test suite against
+# the bedrock naming provider, in one `pip install -r ...` -- no separate
+# `pip install -e .` or `pytest`/`pytest-cov` install needed first.
+# Mirrors pyproject.toml's [project.optional-dependencies] "bedrock" extra
+# plus the "dev" extra's test-running essentials (not its lint/format/
+# typecheck tools -- this file is for testing, not development tooling).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-bedrock.txt
+#
+# boto3 pinned exactly: the newest release with a Python 3.9-compatible
+# botocore, matching textfsm-ai's own pin (boto3 bumps its Python floor
+# frequently) -- see pyproject.toml for the full rationale.
+
+-e .
+pytest>=8.0.0
+pytest-cov>=5.0.0
+boto3==1.42.97
+textfsm-ai[bedrock]>=0.6.1

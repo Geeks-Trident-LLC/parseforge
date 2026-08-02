@@ -53,6 +53,24 @@ See the [README](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/READM
 for every command, including the config-file-driven `trial`/`integration`/`promotion`
 workflow commands that drive the full pipeline end to end.
 
+## Contributing / testing a single provider
+
+Cloning the repo to work on (or test) one specific naming provider doesn't
+require `pip install -e ".[dev]"` and every provider SDK at once — each
+provider has its own self-contained `requirements/requirements-<provider>.txt`
+that installs `parseforge` itself, `pytest`/`pytest-cov`, and just that
+provider's SDK:
+
+```bash
+git clone https://github.com/Geeks-Trident-LLC/parseforge.git
+cd parseforge
+pip install -r requirements/requirements-oci.txt
+pytest tests/unit/naming/providers/test_oci.py
+```
+
+See the [README's Development section](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md#development)
+for the full local dev setup.
+
 ## Status
 
 Early beta: the full pipeline — naming, sampling, generation, self-validation,
