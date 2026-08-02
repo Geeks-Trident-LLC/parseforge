@@ -35,11 +35,11 @@ command that's pure local processing (`canonical`/`readable`/`recognizers`,
 LLM (`name`, `check --provider`, `run`, `generate-template`, `trial`) needs the
 extra for whichever provider it uses: `anthropic`, `openai`, `deepseek`,
 `groq`, `xai`, `together`, `fireworks`, `perplexity`, `openrouter`,
-`moonshot`, or `cerebras`. `--provider` defaults to `anthropic` wherever it
-isn't required, so that's the one most setups need. `pip install
+`moonshot`, `cerebras`, or `mistral`. `--provider` defaults to `anthropic`
+wherever it isn't required, so that's the one most setups need. `pip install
 parseforge[sampling]` adds Netmiko for live device sampling; combine extras
 as needed, e.g.
-`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,cerebras,sampling]`.
+`pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,cerebras,mistral,sampling]`.
 
 ## Development
 
@@ -47,11 +47,12 @@ as needed, e.g.
 pip install -e ".[dev,sampling]"
 pytest
 ```
-`dev` already includes both the `anthropic` and `openai` SDKs (tests exercise
-all eleven providers — `anthropic`, `openai`, `deepseek`, `groq`, `xai`,
-`together`, `fireworks`, `perplexity`, `openrouter`, `moonshot`, `cerebras`
-share just those two packages — and never silently skip) — add the specific
-`,<provider>` extra explicitly only if installing outside of `dev`.
+`dev` already includes the `anthropic`, `openai`, and `mistralai` SDKs (tests
+exercise all twelve providers — `anthropic`, `openai`, `deepseek`, `groq`,
+`xai`, `together`, `fireworks`, `perplexity`, `openrouter`, `moonshot`,
+`cerebras` share just the first two packages, and `mistral` needs its own
+native SDK — and never silently skip) — add the specific `,<provider>` extra
+explicitly only if installing outside of `dev`.
 
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own

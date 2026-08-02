@@ -3,6 +3,7 @@ from .cerebras import CerebrasRegexBuilder
 from .deepseek import DeepSeekRegexBuilder
 from .fireworks import FireworksRegexBuilder
 from .groq import GroqRegexBuilder
+from .mistral import MistralRegexBuilder
 from .moonshot import MoonshotRegexBuilder
 from .openai import OpenAIRegexBuilder
 from .openrouter import OpenRouterRegexBuilder
@@ -16,6 +17,7 @@ __all__ = [
     "DeepSeekRegexBuilder",
     "FireworksRegexBuilder",
     "GroqRegexBuilder",
+    "MistralRegexBuilder",
     "MoonshotRegexBuilder",
     "OpenAIRegexBuilder",
     "OpenRouterRegexBuilder",
