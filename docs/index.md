@@ -58,5 +58,9 @@ intentionally not there yet:
 
 - [Installation](getting-started/installation.md) — pip extras, dev setup, per-provider requirements files
 - [Quickstart](getting-started/quickstart.md) — naming, checks, one-shot generation, and the full trial → integration → promotion workflow
-- [README](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md) — package layout, the full CLI reference, and the Python API
+- [Providers](guides/providers.md) — all eighteen supported providers, their extras, and auth requirements
+- [CLI Guide](guides/cli.md) — every command, in full
+- [Python API](guides/python-api.md) — calling parseforge from Python instead of the CLI
+- [API Reference](reference/api.md) — every public function/class, by pipeline stage
+- [Changelog](changelog.md) — what shipped in each release
 - [SPEC](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/SPEC.md) — full design plan and open questions

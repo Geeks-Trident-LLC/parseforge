@@ -110,10 +110,11 @@ parseforge promotion --user alice
 
 ## Next steps
 
-- Full CLI reference, the four providers with a non-standard auth shape,
-  and the config-file schemas: see the
-  [README](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md#cli).
+- Full CLI reference and the config-file schemas: see the
+  [CLI Guide](../guides/cli.md).
+- The four providers with a non-standard auth shape: see
+  [Providers](../guides/providers.md).
 - Calling parseforge from Python instead of the CLI: see the
-  [README's Python API section](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md#python-api).
+  [Python API guide](../guides/python-api.md).
 - Full design plan, storage tier layout, and open questions:
   [SPEC.md](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/SPEC.md).
