@@ -1,3 +1,24 @@
+# v0.3.1 — Docs That Actually Cover Everything
+
+## 📖 Five New Pages, One Front Door
+`README.md` was doing double duty as both a pitch and a reference manual,
+and the docs site had exactly two pages. This release moves the reference
+material where it belongs:
+
+- **[Providers](https://geeks-trident-llc.github.io/parseforge/guides/providers/)** — all eighteen at a glance, plus a full breakdown of the four with non-standard auth (Azure, Vertex AI, Bedrock, OCI).
+- **[CLI Guide](https://geeks-trident-llc.github.io/parseforge/guides/cli/)** — every command, in full, no longer squeezed into a README section.
+- **[Python API](https://geeks-trident-llc.github.io/parseforge/guides/python-api/)** — the whole pipeline in one call, and every stage called on its own.
+- **[API Reference](https://geeks-trident-llc.github.io/parseforge/reference/api/)** — every public name, organized by pipeline stage.
+- **[Changelog](https://geeks-trident-llc.github.io/parseforge/changelog/)** — this file, live on the docs site via a snippet include, so it's never out of sync with the real one.
+
+`README.md` is now what a README should be: what parseforge does, why the
+trial → integration → promotion workflow exists (it's a Human-in-the-Loop
+review system, not a one-shot template generator), a three-line install,
+and links to everything else.
+
+## 📦 Version
+`0.3.0 → 0.3.1`
+
 # v0.3.0 — A Real Public API, and a Dependency Diet
 
 ## 🚪 `from parseforge import ...` Now Actually Means Something
