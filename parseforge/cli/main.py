@@ -659,6 +659,7 @@ def run_cmd(
     click.echo(f"cli_name : {result.cli_name}")
     click.echo(f"passed   : {result.passed}")
     click.echo(f"run_dir  : {result.run_dir}")
+    click.echo(f"usage    : {result.total_usage}")
 
 
 def _check_connector(
@@ -1200,7 +1201,7 @@ def trial_cmd(config_path: str, store_root_opt: str | None) -> None:
     for command, result in zip(cfg.commands, results):
         click.echo(
             f"{command} -> cli_name={result.cli_name} passed={result.passed} "
-            f"run_dir={result.run_dir}"
+            f"run_dir={result.run_dir} usage={result.total_usage}"
         )
         passed_count += int(result.passed)
     click.echo(f"{passed_count}/{len(results)} passed")
