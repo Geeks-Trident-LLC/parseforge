@@ -1,0 +1,15 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "vertexai" extra
+# -- use `pip install parseforge[vertexai]` instead if pip's extras syntax
+# works for your setup. For running parseforge's test suite against this
+# provider, use dev-vertexai.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-vertexai.txt
+#
+# Same underlying google-genai package as gemini (Client(vertexai=True,
+# project=, location=) vs. Client(api_key=)) -- kept as its own file
+# anyway, matching pyproject.toml's separate gemini/vertexai extras and
+# the CLI's own --provider vertexai vs. gemini distinction.
+
+-e .
+google-genai>=0.2.0
+textfsm-ai[vertexai]>=0.7.1

@@ -1,0 +1,19 @@
+# Everything needed to test, lint, format, and type-check parseforge
+# against the gemini naming provider: requirements-gemini.txt plus
+# pytest/pytest-cov (pyproject.toml hardcodes --cov=parseforge in
+# addopts, so pytest won't even start without pytest-cov installed) and
+# the same ruff/black/mypy/tox versions tox.ini's lint/format/typecheck
+# envs and pyproject.toml's "dev" extra both pin.
+#
+# Usage (from the repo root): pip install -r requirements/dev-gemini.txt
+#   pytest tests/unit/naming/providers/test_gemini.py
+#   ruff check .  &&  black . --check  &&  mypy parseforge
+#   tox -e lint / -e format / -e typecheck / -e docs  (isolated envs, same tools)
+
+-r requirements-gemini.txt
+pytest>=8.0.0
+pytest-cov>=5.0.0
+ruff>=0.4.0
+black>=24.0.0
+mypy>=1.10.0
+tox

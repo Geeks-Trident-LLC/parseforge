@@ -1,0 +1,14 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "mistral" extra --
+# use `pip install parseforge[mistral]` instead if pip's extras syntax works
+# for your setup. For running parseforge's test suite against this
+# provider, use dev-mistral.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-mistral.txt
+#
+# mistralai pinned exactly: 1.10.0 is the last release supporting Python
+# 3.9 (1.10.1+ and all 2.x require Python >=3.10), matching textfsm-ai's
+# own pin.
+
+-e .
+mistralai==1.10.0
+textfsm-ai[mistral]>=0.7.1

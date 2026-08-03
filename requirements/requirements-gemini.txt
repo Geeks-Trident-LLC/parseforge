@@ -1,0 +1,10 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "gemini" extra --
+# use `pip install parseforge[gemini]` instead if pip's extras syntax works
+# for your setup. For running parseforge's test suite against this
+# provider, use dev-gemini.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-gemini.txt
+
+-e .
+google-genai>=0.2.0
+textfsm-ai[gemini]>=0.7.1

@@ -26,7 +26,6 @@ def _debug_json(
     input_tokens: int = 10,
     output_tokens: int = 5,
     total_tokens: int = 15,
-    estimated_cost: float = 0.0042,
     duration_ms: float = 123.0,
 ) -> str:
     return json.dumps(
@@ -42,7 +41,6 @@ def _debug_json(
                 "input_tokens": input_tokens,
                 "output_tokens": output_tokens,
                 "total_tokens": total_tokens,
-                "estimated_cost": estimated_cost,
             },
             "generation_pipeline": {
                 "model": "claude-haiku-4-5-20251001",
@@ -109,7 +107,6 @@ def test_generate_parses_successful_debug_payload(
     assert result.usage.input_tokens == 10
     assert result.usage.output_tokens == 5
     assert result.usage.total_tokens == 15
-    assert result.usage.estimated_cost == 0.0042
     assert result.duration_ms == 123.0
     assert result.ready is True
     assert result.reason == ""

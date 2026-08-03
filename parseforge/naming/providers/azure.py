@@ -17,7 +17,6 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
-from .cost import estimate_cost
 from .text import extract_pattern
 
 if TYPE_CHECKING:
@@ -161,9 +160,7 @@ class AzureRegexBuilder:
             return LLMCLIResponse(
                 content="",
                 raw=exc,
-                usage=TokenUsage(
-                    input_tokens=0, output_tokens=0, total_tokens=0, estimated_cost=0.0
-                ),
+                usage=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0),
                 duration_ms=(time.monotonic() - start) * 1000,
                 reason=_format_error_reason(exc),
                 ready=False,
@@ -178,18 +175,6 @@ class AzureRegexBuilder:
                 input_tokens=response.usage.prompt_tokens,
                 output_tokens=response.usage.completion_tokens,
                 total_tokens=response.usage.total_tokens,
-                estimated_cost=estimate_cost(
-                    input_tokens=response.usage.prompt_tokens,
-                    output_tokens=response.usage.completion_tokens,
-                    total_tokens=response.usage.total_tokens,
-                    provider=self.provider,
-                    # No public pricing table for a customer's own Azure
-                    # deployment — estimate_cost() falls back to 0.0 with
-                    # a warning for an unrecognized (provider, model) pair,
-                    # which is the correct/expected outcome here, not an
-                    # error condition.
-                    model=self._resolved_deployment or "",
-                ),
             ),
             duration_ms=duration_ms,
             reason=choice.finish_reason or "",

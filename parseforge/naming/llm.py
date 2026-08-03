@@ -37,7 +37,6 @@ class TokenUsage:
     input_tokens: int
     output_tokens: int
     total_tokens: int
-    estimated_cost: float
 
 
 @dataclass(frozen=True)

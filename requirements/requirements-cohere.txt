@@ -1,0 +1,13 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "cohere" extra --
+# use `pip install parseforge[cohere]` instead if pip's extras syntax works
+# for your setup. For running parseforge's test suite against this
+# provider, use dev-cohere.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-cohere.txt
+#
+# cohere pinned exactly: 5.21.1 is the last release supporting Python 3.9
+# (6.x/7.x require Python >=3.10), matching textfsm-ai's own pin.
+
+-e .
+cohere==5.21.1
+textfsm-ai[cohere]>=0.7.1

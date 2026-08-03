@@ -47,9 +47,7 @@ class FakeRegexBuilder:
         return LLMCLIResponse(
             content=self.content,
             raw=None,
-            usage=NamingTokenUsage(
-                input_tokens=1, output_tokens=1, total_tokens=2, estimated_cost=0.0
-            ),
+            usage=NamingTokenUsage(input_tokens=1, output_tokens=1, total_tokens=2),
             duration_ms=1.0,
             reason=self.reason,
             ready=self.ready,
@@ -85,9 +83,7 @@ def _fake_generation_result(ready: bool = True, reason: str = "") -> GenerationR
         readable_dsl="readable description",
         recognizers=["r1", "r2"],
         records=[{"LINE": "hello"}],
-        usage=GenerationTokenUsage(
-            input_tokens=1, output_tokens=1, total_tokens=2, estimated_cost=0.0
-        ),
+        usage=GenerationTokenUsage(input_tokens=1, output_tokens=1, total_tokens=2),
         duration_ms=1.0,
         ready=ready,
         reason=reason,
@@ -337,7 +333,11 @@ def test_run_azure_generation_config_uses_deployment_and_endpoint(
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=tmp_path, cli_name="show-clock", passed=True, duration_ms=1
+            run_dir=tmp_path,
+            cli_name="show-clock",
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -406,7 +406,11 @@ def test_run_vertexai_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> None
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=tmp_path, cli_name="show-clock", passed=True, duration_ms=1
+            run_dir=tmp_path,
+            cli_name="show-clock",
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -471,7 +475,11 @@ def test_run_bedrock_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> None:
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=tmp_path, cli_name="show-clock", passed=True, duration_ms=1
+            run_dir=tmp_path,
+            cli_name="show-clock",
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -533,7 +541,11 @@ def test_run_oci_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> None:
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=tmp_path, cli_name="show-clock", passed=True, duration_ms=1
+            run_dir=tmp_path,
+            cli_name="show-clock",
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -1647,6 +1659,7 @@ def test_trial_runs_every_command(monkeypatch: Any, tmp_path: Path) -> None:
             cli_name=command.replace(" ", "-"),
             passed=True,
             duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -1667,7 +1680,13 @@ def test_trial_path_flag_overrides_config(monkeypatch: Any, tmp_path: Path) -> N
 
     def _fake_pipeline(command: str, *args: Any, **kwargs: Any) -> TrialResult:
         seen_store_roots.append(kwargs["store_root"])
-        return TrialResult(run_dir=Path("x"), cli_name="x", passed=True, duration_ms=1)
+        return TrialResult(
+            run_dir=Path("x"),
+            cli_name="x",
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
+        )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
 
@@ -1691,7 +1710,11 @@ def test_trial_workers_runs_concurrently(monkeypatch: Any, tmp_path: Path) -> No
 
     def _fake_pipeline(command: str, *args: Any, **kwargs: Any) -> TrialResult:
         return TrialResult(
-            run_dir=Path("x"), cli_name=command, passed=True, duration_ms=1
+            run_dir=Path("x"),
+            cli_name=command,
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -1728,7 +1751,11 @@ def test_trial_azure_generation_config_uses_deployment_and_endpoint(
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=store_root, cli_name=command, passed=True, duration_ms=1
+            run_dir=store_root,
+            cli_name=command,
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -1778,7 +1805,11 @@ def test_trial_vertexai_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> No
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=store_root, cli_name=command, passed=True, duration_ms=1
+            run_dir=store_root,
+            cli_name=command,
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -1827,7 +1858,11 @@ def test_trial_bedrock_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> Non
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=store_root, cli_name=command, passed=True, duration_ms=1
+            run_dir=store_root,
+            cli_name=command,
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)
@@ -1876,7 +1911,11 @@ def test_trial_oci_needs_no_api_key(monkeypatch: Any, tmp_path: Path) -> None:
     ) -> TrialResult:
         captured["generation_config"] = generation_config
         return TrialResult(
-            run_dir=store_root, cli_name=command, passed=True, duration_ms=1
+            run_dir=store_root,
+            cli_name=command,
+            passed=True,
+            duration_ms=1,
+            total_usage={"input_tokens": 0, "output_tokens": 0, "total_tokens": 0},
         )
 
     monkeypatch.setattr(cli_main.pipeline, "run_command_pipeline", _fake_pipeline)

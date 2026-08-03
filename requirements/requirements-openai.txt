@@ -1,0 +1,10 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "openai" extra --
+# use `pip install parseforge[openai]` instead if pip's extras syntax works
+# for your setup. For running parseforge's test suite against this
+# provider, use dev-openai.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-openai.txt
+
+-e .
+openai>=1.0.0
+textfsm-ai[openai]>=0.7.1

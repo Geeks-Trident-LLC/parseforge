@@ -12,7 +12,6 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
-from .cost import estimate_cost
 from .errors import format_llm_error_reason, is_retryable
 from .models import default_model
 from .text import extract_pattern
@@ -95,9 +94,7 @@ class GroqRegexBuilder:
             return LLMCLIResponse(
                 content="",
                 raw=exc,
-                usage=TokenUsage(
-                    input_tokens=0, output_tokens=0, total_tokens=0, estimated_cost=0.0
-                ),
+                usage=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0),
                 duration_ms=(time.monotonic() - start) * 1000,
                 reason=format_llm_error_reason(exc),
                 ready=False,
@@ -112,13 +109,6 @@ class GroqRegexBuilder:
                 input_tokens=response.usage.prompt_tokens,
                 output_tokens=response.usage.completion_tokens,
                 total_tokens=response.usage.total_tokens,
-                estimated_cost=estimate_cost(
-                    input_tokens=response.usage.prompt_tokens,
-                    output_tokens=response.usage.completion_tokens,
-                    total_tokens=response.usage.total_tokens,
-                    provider=self.provider,
-                    model=self.model,
-                ),
             ),
             duration_ms=duration_ms,
             reason=choice.finish_reason or "",

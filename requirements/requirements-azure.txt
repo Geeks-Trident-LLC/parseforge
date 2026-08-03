@@ -1,0 +1,10 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "azure" extra --
+# use `pip install parseforge[azure]` instead if pip's extras syntax works
+# for your setup. For running parseforge's test suite against this
+# provider, use dev-azure.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-azure.txt
+
+-e .
+azure-ai-inference>=1.0.0b9
+textfsm-ai[azure]>=0.7.1

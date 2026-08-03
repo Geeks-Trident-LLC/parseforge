@@ -44,7 +44,6 @@ class TokenUsage:
     input_tokens: int
     output_tokens: int
     total_tokens: int
-    estimated_cost: float
 
 
 @dataclass(frozen=True)
@@ -95,7 +94,6 @@ def generate(
         input_tokens=usage_data.get("input_tokens", 0),
         output_tokens=usage_data.get("output_tokens", 0),
         total_tokens=usage_data.get("total_tokens", 0),
-        estimated_cost=usage_data.get("estimated_cost", 0.0),
     )
 
     gen_stage = (debug.get("generation_pipeline") or {}).get("last_stage") or {}

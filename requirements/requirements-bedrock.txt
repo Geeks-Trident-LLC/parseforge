@@ -1,0 +1,14 @@
+# Mirrors pyproject.toml's [project.optional-dependencies] "bedrock" extra --
+# use `pip install parseforge[bedrock]` instead if pip's extras syntax works
+# for your setup. For running parseforge's test suite against this
+# provider, use dev-bedrock.txt instead (adds pytest/pytest-cov).
+#
+# Usage (from the repo root): pip install -r requirements/requirements-bedrock.txt
+#
+# boto3 pinned exactly: the newest release with a Python 3.9-compatible
+# botocore, matching textfsm-ai's own pin (boto3 bumps its Python floor
+# frequently) -- see pyproject.toml for the full rationale.
+
+-e .
+boto3==1.42.97
+textfsm-ai[bedrock]>=0.7.1

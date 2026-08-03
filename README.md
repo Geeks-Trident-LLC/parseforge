@@ -57,6 +57,19 @@ each need their own SDK, and `gemini`/`vertexai` share `google-genai` — and
 never silently skip) — add the specific `,<provider>` extra explicitly only
 if installing outside of `dev`.
 
+For tooling that expects plain `requirements.txt` files instead of pip
+extras (Docker layers, offline pins, etc), `requirements/` has one
+`requirements-<provider>.txt` per provider whose SDK isn't already
+pinned by a shared package (`anthropic`/`openai`/`azure`/`bedrock`/`oci`/
+`cohere`/`mistral`/`gemini`/`vertexai`) — each mirrors the matching
+`pyproject.toml` extra exactly (`-e .` plus that provider's SDK pin), so
+`pip install -r requirements/requirements-oci.txt` is equivalent to
+`pip install -e ".[oci]"`. To also run that provider's tests, use the
+matching `dev-<provider>.txt` instead — it layers `pytest`/`pytest-cov`
+on top via `-r requirements-<provider>.txt`, so cloning the repo and
+running `pip install -r requirements/dev-oci.txt` is enough on its own,
+no separate install step needed.
+
 Linting/formatting/type-checking/docs run through tox instead of extras — see
 `tox.ini` (`tox -e lint`/`format`/`typecheck`/`docs`), each installing its own
 tools in an isolated env. Cutting a release needs `pip install -e ".[release]"`
@@ -228,6 +241,38 @@ currently on disk, and `promotion` always refreshes integration itself before
 evaluating any gate — so running `promotion` alone after a `trial` run is enough to
 pick up new evidence; a separate `integration` run is only useful if you want to
 inspect `reference-summary.json` without also promoting.
+
+## Python API
+
+Everything the CLI does is also a plain Python call — `parseforge/api.py` is the
+single supported place to import from (also re-exported at the package root):
+
+```python
+from parseforge import CliContext, LLMProviderConfig, run_command_pipeline
+from parseforge.naming import AnthropicRegexBuilder
+from parseforge.sampling.backends import NetmikoSampler
+from parseforge.sampling import DeviceConnection
+
+result = run_command_pipeline(
+    "show clock",
+    CliContext(vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"),
+    DeviceConnection(host="10.0.0.1", username="admin", password="secret", device_type="cisco_ios"),
+    AnthropicRegexBuilder(api_key="sk-..."),
+    NetmikoSampler(),
+    LLMProviderConfig(provider="anthropic", api_key="sk-...", model="claude-haiku-4-5-20251001"),
+)
+print(result.cli_name, result.passed, result.total_usage)
+```
+
+One function per pipeline stage (SPEC.md §5): `cli_name`/`resolve_cli_name` (naming),
+`sample` (sampling), `generate` (generation), `parse` (self-validation),
+`run_command_pipeline` (steps 1-7 in one call), `build_integration`/
+`write_reference_summary` (integration), `promote_auto`/`promote_user_reviewed`
+(promotion), `check_drift` (drift monitoring) — plus the dataclasses/enums each one
+returns or accepts. Provider-specific naming builders (`AnthropicRegexBuilder`,
+`OCIRegexBuilder`, ...) aren't re-exported at the root — import them from
+`parseforge.naming` directly. Anything not in `parseforge.api.__all__` is internal
+and may change without notice.
 
 ## Reference
 

@@ -12,7 +12,6 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from ..llm import CliContext, LLMCLIResponse, TokenUsage, build_prompt
-from .cost import estimate_cost
 from .models import default_model
 from .text import extract_pattern
 
@@ -119,9 +118,7 @@ class GeminiRegexBuilder:
             return LLMCLIResponse(
                 content="",
                 raw=exc,
-                usage=TokenUsage(
-                    input_tokens=0, output_tokens=0, total_tokens=0, estimated_cost=0.0
-                ),
+                usage=TokenUsage(input_tokens=0, output_tokens=0, total_tokens=0),
                 duration_ms=(time.monotonic() - start) * 1000,
                 reason=_format_error_reason(exc),
                 ready=False,
@@ -142,13 +139,6 @@ class GeminiRegexBuilder:
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 total_tokens=total_tokens,
-                estimated_cost=estimate_cost(
-                    input_tokens=input_tokens,
-                    output_tokens=output_tokens,
-                    total_tokens=total_tokens,
-                    provider=self.provider,
-                    model=self.model,
-                ),
             ),
             duration_ms=duration_ms,
             # finish_reason is a str-subclassed enum whose own __str__
