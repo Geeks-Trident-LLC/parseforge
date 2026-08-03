@@ -40,9 +40,7 @@ class FakeRegexBuilder:
         return LLMCLIResponse(
             content=self.pattern,
             raw=None,
-            usage=NamingTokenUsage(
-                input_tokens=10, output_tokens=5, total_tokens=15, estimated_cost=0.002
-            ),
+            usage=NamingTokenUsage(input_tokens=10, output_tokens=5, total_tokens=15),
             duration_ms=1.0,
             reason="stop",
             ready=True,
@@ -68,9 +66,7 @@ def _fake_generation_result(
         readable_dsl="readable dsl text",
         recognizers=["r1", "r2"],
         records=[{"LINE": "hello world"}],
-        usage=GenerationTokenUsage(
-            input_tokens=20, output_tokens=8, total_tokens=28, estimated_cost=0.001
-        ),
+        usage=GenerationTokenUsage(input_tokens=20, output_tokens=8, total_tokens=28),
         duration_ms=456.0,
         ready=ready,
         reason="",
@@ -280,13 +276,11 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         "input_tokens": 10,
         "output_tokens": 5,
         "total_tokens": 15,
-        "estimated_cost": 0.002,
     }
     assert summary["usage"]["generation"] == {
         "input_tokens": 20,
         "output_tokens": 8,
         "total_tokens": 28,
-        "estimated_cost": 0.001,
     }
     assert summary["provider_info"] == {
         "provider": "anthropic",

@@ -5,9 +5,6 @@
 #
 # Usage (from the repo root): pip install -r requirements/requirements-openai.txt
 
-# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
-# entirely (a deliberate, permanent upstream change), which
-# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 openai>=1.0.0
-textfsm-ai[openai]>=0.6.1,<0.7.0
+textfsm-ai[openai]>=0.7.1

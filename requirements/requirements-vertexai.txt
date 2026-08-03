@@ -10,9 +10,6 @@
 # anyway, matching pyproject.toml's separate gemini/vertexai extras and
 # the CLI's own --provider vertexai vs. gemini distinction.
 
-# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
-# entirely (a deliberate, permanent upstream change), which
-# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 google-genai>=0.2.0
-textfsm-ai[vertexai]>=0.6.1,<0.7.0
+textfsm-ai[vertexai]>=0.7.1

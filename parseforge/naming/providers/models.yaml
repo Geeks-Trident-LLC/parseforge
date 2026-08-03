@@ -1,182 +1,30 @@
-# Model registry — one place to update when a provider deprecates or adds a
-# model, instead of hunting for a hardcoded string in provider code.
-#
-# default:    used when no --model is given
-# supported:  currently usable model IDs
-# deprecated: known expired/unsupported IDs, kept here for reference so
-#             nobody has to rediscover "why did this stop working" from
-#             a provider's changelog
-
-anthropic:
-  default: claude-haiku-4-5-20251001
-  supported:
-    - claude-haiku-4-5-20251001
-    - claude-sonnet-5
-    - claude-opus-4-8
-    - claude-fable-5
-  deprecated: []
-
-deepseek:
-  default: deepseek-v4-flash
-  supported:
-    - deepseek-v4-flash
-    - deepseek-v4-pro
-  deprecated: []
-
-openai:
-  default: gpt-5.4-mini
-  supported:
-    - gpt-5.4-mini
-    - gpt-5.4
-    - gpt-5.4-nano
-    - gpt-5.5
-  deprecated: []
-
-groq:
-  default: llama-3.1-8b-instant
-  supported:
-    - llama-3.1-8b-instant
-    - llama-3.3-70b-versatile
-    - gemma2-9b-it
-    - qwen-2.5-32b
-    - mixtral-8x7b-32768
-    - deepseek-r1-distill-llama-70b
-  deprecated: []
-
-xai:
-  default: grok-3-mini
-  supported:
-    - grok-3-mini
-    - grok-3
-    - grok-4
-    - grok-2-vision-1212
-  deprecated: []
-
-together:
-  default: meta-llama/Llama-3.1-8B-Instruct-Turbo
-  supported:
-    - meta-llama/Llama-3.1-8B-Instruct-Turbo
-    - meta-llama/Llama-3.3-70B-Instruct-Turbo
-    - Qwen/Qwen2.5-32B-Instruct
-    - mistralai/Mixtral-8x7B-Instruct-v0.1
-    - deepseek-ai/DeepSeek-R1-Distill-Llama-70B
-  deprecated: []
-
-fireworks:
-  default: accounts/fireworks/models/llama-v3p1-8b-instruct
-  supported:
-    - accounts/fireworks/models/llama-v3p1-8b-instruct
-    - accounts/fireworks/models/llama-v3p3-70b-instruct
-    - accounts/fireworks/models/qwen2p5-32b-instruct
-    - accounts/fireworks/models/mixtral-8x22b-instruct
-    - accounts/fireworks/models/deepseek-r1
-  deprecated: []
-
-perplexity:
-  default: sonar
-  supported:
-    - sonar
-    - sonar-pro
-    - sonar-reasoning
-    - sonar-reasoning-pro
-    - sonar-deep-research
-  deprecated: []
-
-openrouter:
-  default: google/gemini-2.5-flash-lite
-  supported:
-    - google/gemini-2.5-flash-lite
-    - deepseek/deepseek-r1
-    - anthropic/claude-3.5-sonnet
-    - openai/gpt-4o
-  deprecated: []
-
-moonshot:
-  default: moonshot-v1-8k
-  supported:
-    - moonshot-v1-8k
-    - moonshot-v1-32k
-    - moonshot-v1-128k
-    - kimi-k2-0711-preview
-    - kimi-k2-turbo-preview
-  deprecated: []
-
-cerebras:
-  default: llama3.1-8b
-  supported:
-    - llama3.1-8b
-    - llama-4-maverick-17b-128e-instruct
-    - llama-4-scout-17b-16e-instruct
-    - qwen-3-32b
-    - gpt-oss-120b
-  deprecated: []
-
-mistral:
-  default: mistral-small-latest
-  supported:
-    - mistral-small-latest
-    - mistral-medium-latest
-    - mistral-large-latest
-    - magistral-medium-latest
-    - codestral-latest
-  deprecated: []
-
-cohere:
-  default: command-light
-  supported:
-    - command-light
-    - command-r
-    - command-r-plus
-    - command-a
-  deprecated: []
-
-gemini:
-  default: gemini-2.5-flash
-  supported:
-    - gemini-2.5-flash
-    - gemini-2.5-flash-lite
-    - gemini-2.5-pro
-    - gemini-3-flash
-    - gemini-3.1-flash-lite
-    - gemini-3.1-pro
-    - gemini-3.5-flash
-  deprecated: []
-
+# Default model ID per provider, used as the fallback DEFAULT_MODEL value
+# in each provider's builder class (see models.py). Not a quality/speed
+# opinion -- just "a real, working model ID for this provider" for
+# callers that don't pass --model explicitly. Matches the flat shape of
+# textfsm-ai's own model_catalog/providers.yaml.
+anthropic: claude-haiku-4-5-20251001
+deepseek: deepseek-v4-flash
+openai: gpt-5.4-mini
+groq: llama-3.1-8b-instant
+xai: grok-3-mini
+together: meta-llama/Llama-3.1-8B-Instruct-Turbo
+fireworks: accounts/fireworks/models/llama-v3p1-8b-instruct
+perplexity: sonar
+openrouter: google/gemini-2.5-flash-lite
+moonshot: moonshot-v1-8k
+cerebras: llama3.1-8b
+mistral: mistral-small-latest
+cohere: command-light
+gemini: gemini-2.5-flash
 # Vertex AI serves the SAME Gemini model catalog as the native Gemini
 # Developer API (see "gemini:" above) under identical model IDs -- just
 # through GCP's separate enterprise billing, so it gets its own entry
-# rather than sharing "gemini:"'s, matching textfsm-ai's own separate
-# vertexai pricing block.
-vertexai:
-  default: gemini-2.5-flash
-  supported:
-    - gemini-2.5-flash
-    - gemini-2.5-flash-lite
-    - gemini-2.5-pro
-  deprecated: []
-
-bedrock:
-  default: anthropic.claude-haiku-4-5-v1:0
-  supported:
-    - anthropic.claude-haiku-4-5-v1:0
-    - anthropic.claude-sonnet-4-6-v1:0
-    - anthropic.claude-opus-4-8-v1:0
-    - meta.llama4-scout-v1:0
-    - meta.llama4-maverick-v1:0
-    - meta.llama3-1-8b-instruct-v1:0
-    - mistral.mistral-large-2-v1:0
-    - amazon.titan-text-premier-v1:0
-    - cohere.command-r-plus-v1:0
-  deprecated: []
-
-# Deliberately minimal: unlike every other provider's catalog, OCI model
-# IDs aren't easily fabricated as plausible-future-names (they're closer
-# to identifiers than product names), so only the two model IDs directly
-# confirmed against Oracle's own docs are listed here, matching
-# textfsm-ai's own model_catalog/providers.yaml oci: block.
-oci:
-  default: meta.llama-3.3-70b-instruct
-  supported:
-    - meta.llama-3.3-70b-instruct
-    - xai.grok-4-fast-reasoning
-  deprecated: []
+# rather than sharing "gemini:"'s.
+vertexai: gemini-2.5-flash
+bedrock: anthropic.claude-haiku-4-5-v1:0
+# Not a "cheap/fast" pick like every other provider's default -- it's
+# the only OCI model ID confirmed against Oracle's own docs. Use
+# `textfsm-ai list-models oci --latest` (requires real OCI credentials)
+# for the live catalog.
+oci: meta.llama-3.3-70b-instruct

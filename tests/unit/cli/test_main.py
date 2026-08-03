@@ -47,9 +47,7 @@ class FakeRegexBuilder:
         return LLMCLIResponse(
             content=self.content,
             raw=None,
-            usage=NamingTokenUsage(
-                input_tokens=1, output_tokens=1, total_tokens=2, estimated_cost=0.0
-            ),
+            usage=NamingTokenUsage(input_tokens=1, output_tokens=1, total_tokens=2),
             duration_ms=1.0,
             reason=self.reason,
             ready=self.ready,
@@ -85,9 +83,7 @@ def _fake_generation_result(ready: bool = True, reason: str = "") -> GenerationR
         readable_dsl="readable description",
         recognizers=["r1", "r2"],
         records=[{"LINE": "hello"}],
-        usage=GenerationTokenUsage(
-            input_tokens=1, output_tokens=1, total_tokens=2, estimated_cost=0.0
-        ),
+        usage=GenerationTokenUsage(input_tokens=1, output_tokens=1, total_tokens=2),
         duration_ms=1.0,
         ready=ready,
         reason=reason,

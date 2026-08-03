@@ -9,9 +9,6 @@
 # botocore, matching textfsm-ai's own pin (boto3 bumps its Python floor
 # frequently) -- see pyproject.toml for the full rationale.
 
-# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
-# entirely (a deliberate, permanent upstream change), which
-# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 boto3==1.42.97
-textfsm-ai[bedrock]>=0.6.1,<0.7.0
+textfsm-ai[bedrock]>=0.7.1

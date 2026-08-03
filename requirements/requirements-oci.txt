@@ -11,9 +11,6 @@
 # Generative-AI-only package -- plus the crypto libs (cryptography,
 # pyOpenSSL) its request-signing auth model needs.
 
-# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
-# entirely (a deliberate, permanent upstream change), which
-# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 oci==2.182.0
-textfsm-ai[oci]>=0.6.1,<0.7.0
+textfsm-ai[oci]>=0.7.1

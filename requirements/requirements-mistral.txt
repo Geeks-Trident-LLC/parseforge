@@ -9,9 +9,6 @@
 # 3.9 (1.10.1+ and all 2.x require Python >=3.10), matching textfsm-ai's
 # own pin.
 
-# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
-# entirely (a deliberate, permanent upstream change), which
-# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 mistralai==1.10.0
-textfsm-ai[mistral]>=0.6.1,<0.7.0
+textfsm-ai[mistral]>=0.7.1
