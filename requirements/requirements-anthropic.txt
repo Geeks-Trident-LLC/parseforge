@@ -5,6 +5,9 @@
 #
 # Usage (from the repo root): pip install -r requirements/requirements-anthropic.txt
 
+# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
+# entirely (a deliberate, permanent upstream change), which
+# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 anthropic>=0.40.0
-textfsm-ai[anthropic]>=0.6.1
+textfsm-ai[anthropic]>=0.6.1,<0.7.0

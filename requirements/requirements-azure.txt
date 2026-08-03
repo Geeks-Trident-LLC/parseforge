@@ -5,6 +5,9 @@
 #
 # Usage (from the repo root): pip install -r requirements/requirements-azure.txt
 
+# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
+# entirely (a deliberate, permanent upstream change), which
+# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 azure-ai-inference>=1.0.0b9
-textfsm-ai[azure]>=0.6.1
+textfsm-ai[azure]>=0.6.1,<0.7.0

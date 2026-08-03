@@ -8,6 +8,9 @@
 # cohere pinned exactly: 5.21.1 is the last release supporting Python 3.9
 # (6.x/7.x require Python >=3.10), matching textfsm-ai's own pin.
 
+# Upper-bounded on textfsm-ai: 0.7.0 removed cost/pricing estimation
+# entirely (a deliberate, permanent upstream change), which
+# parseforge's cost.py depends on -- see pyproject.toml for details.
 -e .
 cohere==5.21.1
-textfsm-ai[cohere]>=0.6.1
+textfsm-ai[cohere]>=0.6.1,<0.7.0

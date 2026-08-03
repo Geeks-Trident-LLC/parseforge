@@ -22,7 +22,15 @@ dependencies = [
     "click>=8.1",
     "PyYAML>=6.0",
     "textfsm>=1.1.0",
-    "textfsm-ai>=0.6.1",
+    # Upper-bounded: textfsm-ai 0.7.0 removed cost/pricing estimation
+    # entirely (textfsm_ai.core.pricing no longer exists) -- a deliberate,
+    # permanent upstream change, not a bug -- which naming/providers/
+    # cost.py depends on for every provider's TokenUsage.estimated_cost.
+    # Without this bound, a fresh install resolves the newest textfsm-ai
+    # release and breaks at import time with ModuleNotFoundError. Bump
+    # past 0.7.0 only alongside removing/reimplementing cost estimation
+    # here.
+    "textfsm-ai>=0.6.1,<0.7.0",
 ]
 
 classifiers = [
@@ -62,43 +70,43 @@ keywords = [
 # parseforge mirrors that per-provider: `pip install parseforge` alone
 # now installs no AI-provider SDK at all -- add the extra(s) for the
 # provider(s) you actually use.
-anthropic = ["anthropic>=0.40.0", "textfsm-ai[anthropic]>=0.6.1"]
-deepseek = ["openai>=1.0.0", "textfsm-ai[deepseek]>=0.6.1"]
-openai = ["openai>=1.0.0", "textfsm-ai[openai]>=0.6.1"]
-groq = ["openai>=1.0.0", "textfsm-ai[groq]>=0.6.1"]
-xai = ["openai>=1.0.0", "textfsm-ai[xai]>=0.6.1"]
-together = ["openai>=1.0.0", "textfsm-ai[together]>=0.6.1"]
-fireworks = ["openai>=1.0.0", "textfsm-ai[fireworks]>=0.6.1"]
-perplexity = ["openai>=1.0.0", "textfsm-ai[perplexity]>=0.6.1"]
-openrouter = ["openai>=1.0.0", "textfsm-ai[openrouter]>=0.6.1"]
-moonshot = ["openai>=1.0.0", "textfsm-ai[moonshot]>=0.6.1"]
-cerebras = ["openai>=1.0.0", "textfsm-ai[cerebras]>=0.6.1"]
+anthropic = ["anthropic>=0.40.0", "textfsm-ai[anthropic]>=0.6.1,<0.7.0"]
+deepseek = ["openai>=1.0.0", "textfsm-ai[deepseek]>=0.6.1,<0.7.0"]
+openai = ["openai>=1.0.0", "textfsm-ai[openai]>=0.6.1,<0.7.0"]
+groq = ["openai>=1.0.0", "textfsm-ai[groq]>=0.6.1,<0.7.0"]
+xai = ["openai>=1.0.0", "textfsm-ai[xai]>=0.6.1,<0.7.0"]
+together = ["openai>=1.0.0", "textfsm-ai[together]>=0.6.1,<0.7.0"]
+fireworks = ["openai>=1.0.0", "textfsm-ai[fireworks]>=0.6.1,<0.7.0"]
+perplexity = ["openai>=1.0.0", "textfsm-ai[perplexity]>=0.6.1,<0.7.0"]
+openrouter = ["openai>=1.0.0", "textfsm-ai[openrouter]>=0.6.1,<0.7.0"]
+moonshot = ["openai>=1.0.0", "textfsm-ai[moonshot]>=0.6.1,<0.7.0"]
+cerebras = ["openai>=1.0.0", "textfsm-ai[cerebras]>=0.6.1,<0.7.0"]
 # Pinned exactly: 1.10.0 is the last mistralai release supporting Python
 # 3.9 (1.10.1+ and all 2.x require Python >=3.10), matching textfsm-ai's
 # own pin for the same reason -- this package also supports >=3.9.
-mistral = ["mistralai==1.10.0", "textfsm-ai[mistral]>=0.6.1"]
+mistral = ["mistralai==1.10.0", "textfsm-ai[mistral]>=0.6.1,<0.7.0"]
 # Pinned exactly for the same reason: 5.21.1 is the last cohere release
 # supporting Python 3.9 (6.x/7.x require Python >=3.10), matching
 # textfsm-ai's own pin.
-cohere = ["cohere==5.21.1", "textfsm-ai[cohere]>=0.6.1"]
-azure = ["azure-ai-inference>=1.0.0b9", "textfsm-ai[azure]>=0.6.1"]
-gemini = ["google-genai>=0.2.0", "textfsm-ai[gemini]>=0.6.1"]
+cohere = ["cohere==5.21.1", "textfsm-ai[cohere]>=0.6.1,<0.7.0"]
+azure = ["azure-ai-inference>=1.0.0b9", "textfsm-ai[azure]>=0.6.1,<0.7.0"]
+gemini = ["google-genai>=0.2.0", "textfsm-ai[gemini]>=0.6.1,<0.7.0"]
 # Same underlying google-genai package as gemini (Client(vertexai=True,
 # project=, location=) vs. Client(api_key=)) -- kept as its own extra
 # anyway, matching textfsm-ai's own separate gemini/vertexai extras and
 # the CLI's own --provider vertexai vs. gemini distinction.
-vertexai = ["google-genai>=0.2.0", "textfsm-ai[vertexai]>=0.6.1"]
+vertexai = ["google-genai>=0.2.0", "textfsm-ai[vertexai]>=0.6.1,<0.7.0"]
 # Pinned exactly: the newest boto3 release with a Python 3.9-compatible
 # botocore, matching textfsm-ai's own pin (boto3 bumps its Python floor
 # frequently).
-bedrock = ["boto3==1.42.97", "textfsm-ai[bedrock]>=0.6.1"]
+bedrock = ["boto3==1.42.97", "textfsm-ai[bedrock]>=0.6.1,<0.7.0"]
 # Pinned exactly for reproducibility (matching textfsm-ai's own pin).
 # Much heavier than every other provider SDK here (~36MB) -- Oracle's
 # single all-services SDK (compute, storage, IAM, ...), not a
 # Generative-AI-only package (no such package exists on PyPI) -- plus
 # the crypto libs (cryptography, pyOpenSSL) its request-signing auth
 # model needs.
-oci = ["oci==2.182.0", "textfsm-ai[oci]>=0.6.1"]
+oci = ["oci==2.182.0", "textfsm-ai[oci]>=0.6.1,<0.7.0"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
