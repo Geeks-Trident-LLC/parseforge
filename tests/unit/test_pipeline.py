@@ -226,6 +226,13 @@ def test_naming_cache_hit_has_no_naming_usage_in_summary(
     summary = json.loads((result.run_dir / "summary.json").read_text(encoding="utf-8"))
     assert summary["usage"]["naming"] is None
     assert summary["usage"]["generation"]["total_tokens"] == 28
+    # No naming usage on a cache hit -- total must equal generation alone.
+    assert summary["usage"]["total"] == {
+        "input_tokens": 20,
+        "output_tokens": 8,
+        "total_tokens": 28,
+    }
+    assert result.total_usage == summary["usage"]["total"]
 
 
 def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -282,6 +289,13 @@ def test_summary_json_shape(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> 
         "output_tokens": 8,
         "total_tokens": 28,
     }
+    # total must be naming + (already-accumulated) generation usage.
+    assert summary["usage"]["total"] == {
+        "input_tokens": 30,
+        "output_tokens": 13,
+        "total_tokens": 43,
+    }
+    assert result.total_usage == summary["usage"]["total"]
     assert summary["provider_info"] == {
         "provider": "anthropic",
         "model": "claude-haiku-4-5-20251001",

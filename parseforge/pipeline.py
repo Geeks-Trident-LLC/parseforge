@@ -107,6 +107,7 @@ class TrialResult:
     cli_name: str
     passed: bool
     duration_ms: int
+    total_usage: dict[str, int]
 
 
 def _build_sample_for_prompt(
@@ -134,6 +135,22 @@ def _usage_dict(usage: Any | None) -> dict[str, Any] | None:
     if usage is None:
         return None
     return asdict(usage)
+
+
+def _total_usage(naming_usage: Any | None, generation_usage: Any) -> dict[str, int]:
+    """Sum naming + generation usage — generation_usage is already
+    accumulated across every LLM call in its own pipeline (every
+    base-prompt attempt and correction-prompt retry, see textfsm-ai's
+    accumulate_usage()); naming_usage is a single build_pattern() call's
+    usage, or None on a cache hit (no LLM call at all)."""
+    naming_input = naming_usage.input_tokens if naming_usage else 0
+    naming_output = naming_usage.output_tokens if naming_usage else 0
+    naming_total = naming_usage.total_tokens if naming_usage else 0
+    return {
+        "input_tokens": naming_input + generation_usage.input_tokens,
+        "output_tokens": naming_output + generation_usage.output_tokens,
+        "total_tokens": naming_total + generation_usage.total_tokens,
+    }
 
 
 def run_command_pipeline(
@@ -234,6 +251,11 @@ def run_command_pipeline(
     ended_at = datetime.now(timezone.utc)
     duration_ms = round((time.monotonic() - start) * 1000)
 
+    naming_usage = (
+        naming_resolution.response.usage if naming_resolution.response else None
+    )
+    total_usage = _total_usage(naming_usage, gen_result.usage)
+
     summary = {
         "created_at": started_at.isoformat(),
         "ended_at": ended_at.isoformat(),
@@ -250,10 +272,9 @@ def run_command_pipeline(
             "command": command,
         },
         "usage": {
-            "naming": _usage_dict(
-                naming_resolution.response.usage if naming_resolution.response else None
-            ),
+            "naming": _usage_dict(naming_usage),
             "generation": _usage_dict(gen_result.usage),
+            "total": total_usage,
         },
         "provider_info": {
             "provider": generation_config.provider,
@@ -269,4 +290,5 @@ def run_command_pipeline(
         cli_name=naming_resolution.name,
         passed=passed,
         duration_ms=duration_ms,
+        total_usage=total_usage,
     )
