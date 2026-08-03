@@ -24,9 +24,8 @@ for live device sampling. Combine extras as needed:
 pip install parseforge[anthropic,openai,deepseek,groq,xai,together,fireworks,perplexity,openrouter,moonshot,cerebras,mistral,cohere,azure,gemini,vertexai,bedrock,oci,sampling]
 ```
 
-Four providers don't fit the usual `--api-key`/`--model` shape — see the
-[README's naming section](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md#cli)
-for what each one needs instead:
+Four providers don't fit the usual `--api-key`/`--model` shape — see
+[Providers](../guides/providers.md) for what each one needs instead:
 
 | Provider | Needs |
 |---|---|
