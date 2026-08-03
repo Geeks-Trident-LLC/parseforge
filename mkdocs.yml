@@ -26,9 +26,18 @@ markdown_extensions:
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.details
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
 
 nav:
   - Home: index.md
   - Getting Started:
       - Installation: getting-started/installation.md
       - Quickstart: getting-started/quickstart.md
+  - Guides:
+      - Providers: guides/providers.md
+      - CLI Guide: guides/cli.md
+      - Python API: guides/python-api.md
+  - API Reference: reference/api.md
+  - Changelog: changelog.md
