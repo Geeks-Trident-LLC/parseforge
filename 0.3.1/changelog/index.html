@@ -1,0 +1,1590 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://geeks-trident-llc.github.io/parseforge/0.3.1/changelog/">
+      
+      
+        <link rel="prev" href="../reference/api/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Changelog - parseforge</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="parseforge" class="md-header__button md-logo" aria-label="parseforge" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            parseforge
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Geeks-Trident-LLC/parseforge" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Geeks-Trident-LLC/parseforge
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="parseforge" class="md-nav__button md-logo" aria-label="parseforge" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    parseforge
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Geeks-Trident-LLC/parseforge" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Geeks-Trident-LLC/parseforge
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/python-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#v030-2026-08-03" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.3.0 — 2026-08-03
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.3.0 — 2026-08-03">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v0212-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.12 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.12 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v0211-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.11 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.11 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v0210-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.10 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.10 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v029-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.9 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.9 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v028-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.8 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.8 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v026-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.6 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.6 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v025-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.5 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.5 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v024-2026-08-02" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.4 — 2026-08-02
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.4 — 2026-08-02">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#added_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v023-2026-07-31" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.3 — 2026-07-31
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.3 — 2026-07-31">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v022-2026-07-30" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.2 — 2026-07-30
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.2 — 2026-07-30">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changed_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#removed_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fixed_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v021-2026-07-16" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.1 — 2026-07-16
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.1 — 2026-07-16">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#added_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Added
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<h2 id="v030-2026-08-03">v0.3.0 — 2026-08-03<a class="headerlink" href="#v030-2026-08-03" title="Permanent link">&para;</a></h2>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>parseforge/api.py</code> — the package's first real public API surface.
+  <code>parseforge/__init__.py</code> previously exported nothing but
+  <code>__version__</code>; every real caller had to reach into individual
+  submodules directly with no documented public/internal boundary.
+  Mirrors textfsm-ai's own <code>api.py</code> convention: one entry point per
+  pipeline stage (SPEC.md §5) — <code>cli_name</code>/<code>resolve_cli_name</code>,
+  <code>sample</code>, <code>generate</code>, <code>parse</code>, <code>run_command_pipeline</code>,
+  <code>build_integration</code>/<code>write_reference_summary</code>,
+  <code>promote_auto</code>/<code>promote_user_reviewed</code>, <code>check_drift</code> — plus the
+  dataclasses/enums each one returns or accepts, re-exported at the
+  package root the same way <code>textfsm_ai/__init__.py</code> re-exports from
+  its own <code>api.py</code>. <code>naming.TokenUsage</code>/<code>generation.TokenUsage</code> are
+  separate classes that happen to share a name, aliased as
+  <code>NamingTokenUsage</code>/<code>GenerationTokenUsage</code> to avoid the collision.
+  Provider-specific naming builders aren't re-exported at the root —
+  <code>parseforge.naming</code> is already a clean, documented import path for
+  those</li>
+<li><code>TrialResult.total_usage</code> and a new <code>"total"</code> key in
+  <code>summary.json</code>'s <code>usage</code> block — the sum of naming usage (0 on a
+  cache hit, since no LLM call happens) plus generation's usage (which
+  was already correctly accumulated across every LLM call in its own
+  pipeline — every base-prompt attempt and correction-prompt retry —
+  by textfsm-ai's own <code>accumulate_usage()</code>). Surfaced in <code>run</code>/<code>trial</code>
+  CLI output</li>
+<li>Per-provider <code>requirements/requirements-&lt;provider&gt;.txt</code> (mirrors the
+  matching <code>pyproject.toml</code> extra exactly) and
+  <code>requirements/dev-&lt;provider&gt;.txt</code> (adds <code>pytest</code>/<code>pytest-cov</code> plus
+  the same <code>ruff</code>/<code>black</code>/<code>mypy</code>/<code>tox</code> versions <code>tox.ini</code>'s
+  lint/format/typecheck envs and the <code>dev</code> extra already pin) for
+  every provider, including the previously-missing <code>anthropic</code> pair —
+  <code>pip install -r requirements/dev-oci.txt</code> alone is now enough to
+  install and test one provider, no separate <code>pip install -e .</code> step
+  or every other provider's SDK</li>
+<li>A "Getting Started" section on the docs site
+  (<a href="https://geeks-trident-llc.github.io/parseforge/getting-started/installation/">Installation</a>,
+  <a href="https://geeks-trident-llc.github.io/parseforge/getting-started/quickstart/">Quickstart</a>),
+  split out of the single overview page that previously mixed
+  conceptual docs with a truncated "Try it" snippet</li>
+</ul>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Breaking:</strong> <code>TokenUsage.estimated_cost</code> is gone from both
+  <code>naming.llm.TokenUsage</code> and <code>generation.TokenUsage</code>, and
+  <code>naming/providers/cost.py</code> is deleted entirely, following
+  textfsm-ai 0.7.0's own deliberate, permanent removal of cost/pricing
+  estimation (<code>textfsm_ai.core.pricing</code> no longer exists — a genuine
+  maintenance-burden call by the textfsm-ai maintainers, not a bug).
+  <code>textfsm-ai</code> bumped back up to <code>&gt;=0.7.1</code> everywhere (base dependency,
+  all 18 <code>pyproject.toml</code> extras, all 9 <code>requirements-&lt;provider&gt;.txt</code>
+  files) now that parseforge no longer touches the removed module</li>
+<li><strong>Breaking:</strong> <code>models.yaml</code>/<code>models.py</code> simplified from a
+  <code>default</code>/<code>supported</code>/<code>deprecated</code> structure to a flat
+  <code>provider: model</code> mapping, matching textfsm-ai's own
+  <code>model_catalog/providers.yaml</code> shape — <code>supported_models()</code>/
+  <code>deprecated_models()</code> are dropped, since nothing in the real
+  codebase used them beyond their own tests</li>
+</ul>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>textfsm-ai&gt;=0.6.1</code> had no upper bound, so a fresh install could
+  silently resolve to <code>textfsm-ai==0.7.0</code>/<code>0.7.1</code> and break at import
+  time with <code>ModuleNotFoundError: No module named
+  'textfsm_ai.core.pricing'</code> — briefly pinned to <code>&lt;0.7.0</code> as an
+  intermediate fix before the cost-estimation removal above restored
+  compatibility with the current release properly</li>
+</ul>
+<h2 id="v0212-2026-08-02">v0.2.12 — 2026-08-02<a class="headerlink" href="#v0212-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>BedrockRegexBuilder</code> (<code>parseforge[bedrock]</code>) — the seventeenth naming
+  provider. Like Vertex AI, Bedrock has no API key at all — it
+  authenticates via AWS's own credential chain — and needs only a
+  <code>region</code>. Talks to <code>boto3</code>'s bedrock-runtime Converse API directly;
+  unlike Mistral/Cohere/Azure/Gemini/Vertex AI's single status-coded
+  error class, Bedrock raises a family of named <code>ClientError</code>
+  subclasses, classified by class name — the same approach already used
+  for Anthropic/OpenAI's own named-exception families</li>
+<li><code>OCIRegexBuilder</code> (<code>parseforge[oci]</code>) — the eighteenth naming
+  provider, and the most complex auth shape yet: no API key at all
+  (Oracle Cloud signs each request cryptographically against local
+  <code>~/.oci/config</code> credentials), plus <em>two</em> app-specific parameters —
+  <code>region</code> and <code>compartment_id</code> (the OCID of the compartment/tenancy to
+  bill and scope requests to). Talks to the native <code>oci</code> SDK's
+  <code>GenerativeAiInferenceClient.chat()</code> Generic chat format directly
+  (OpenAI-shaped messages/choices, the format shared by Meta Llama and
+  xAI Grok models on OCI); errors are a single <code>ServiceError</code> class
+  classified by its HTTP-style <code>.status</code> code, same approach as
+  Mistral/Cohere/Azure/Gemini</li>
+<li><code>NO_API_KEY_PROVIDERS</code> gains <code>bedrock</code>/<code>oci</code>. New <code>--region</code>/
+  <code>--compartment-id</code> options (and <code>--naming-region</code>/
+  <code>--naming-compartment-id</code> on <code>run</code>) across <code>name</code>, <code>run</code>, <code>check
+  --provider</code>, <code>generate-template</code>, and <code>trial.yaml</code>/
+  <code>generate-template.yaml</code> config files</li>
+<li><code>pipeline.py</code>'s <code>LLMProviderConfig</code> gains <code>region</code>/<code>compartment_id</code>
+  fields. <code>region</code> is shared across vertexai/bedrock/oci (only one is
+  ever set for a given trial, since a trial has exactly one generation
+  provider); <code>compartment_id</code> is oci-only and has its own dedicated
+  kwarg on <code>run_pipeline()</code>, needing no such sharing</li>
+</ul>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A new <code>test_oci.py</code> unit test file was missing <code>from __future__
+  import annotations</code>, which broke collection on Python 3.9 (<code>str |
+  None</code> union syntax needs the future import before Python 3.10) —
+  caught by CI before merge, not shipped</li>
+</ul>
+<h2 id="v0211-2026-08-02">v0.2.11 — 2026-08-02<a class="headerlink" href="#v0211-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>VertexAIRegexBuilder</code> (<code>parseforge[vertexai]</code>) — the sixteenth
+  naming provider, and the first after Azure to break the usual
+  <code>api_key</code>+<code>model</code> shape. Vertex AI has no API key at all — it
+  authenticates via GCP's own Application Default Credentials — and
+  needs a <code>project</code>/<code>location</code> pair instead. Reuses the <code>google-genai</code>
+  SDK already installed for Gemini (<code>Client(vertexai=True, project=,
+  location=)</code> vs. Gemini's own <code>Client(api_key=)</code>), serving the
+  identical Gemini model catalog under GCP's separate enterprise
+  billing</li>
+<li>New <code>NO_API_KEY_PROVIDERS</code> set (<code>cli/config.py</code>) — providers that
+  authenticate without any API key at all; <code>--api-key</code>/<code>api_key</code> is now
+  required conditionally on provider instead of unconditionally</li>
+<li>New <code>--gcp-project</code>/<code>--gcp-location</code> CLI flags — prefixed <code>gcp-</code>
+  specifically to avoid colliding with <code>run</code>'s pre-existing free-text
+  <code>--project</code> trial-label flag — across <code>name</code>, <code>run</code> (both naming and
+  generation sides), <code>check --provider</code>, and <code>generate-template</code>;
+  <code>trial.yaml</code>/<code>generate-template.yaml</code> config files gain matching
+  <code>project</code>/<code>location</code> keys</li>
+<li><code>pipeline.py</code>'s <code>LLMProviderConfig</code> gains <code>project</code>/<code>location</code>
+  fields, mapped onto <code>generation.generate()</code>'s <code>region=</code> kwarg — the
+  name <code>run_pipeline()</code> itself expects, not <code>location</code></li>
+</ul>
+<h2 id="v0210-2026-08-02">v0.2.10 — 2026-08-02<a class="headerlink" href="#v0210-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>GeminiRegexBuilder</code> (<code>parseforge[gemini]</code>) — the fifteenth naming
+  provider. Like Mistral/Cohere/Azure, Google's official Python SDK
+  (<code>google-genai</code>) isn't built on the OpenAI client library; it has its
+  own client shape (<code>client.models.generate_content()</code>), talked to
+  directly. Error classification is status-code-based (<code>exc.code</code> on the
+  single <code>APIError</code> class the SDK raises for every HTTP failure), same
+  approach as Mistral/Cohere/Azure. Two Gemini-specific wrinkles:
+  <code>finish_reason</code> is a str-subclassed enum whose own <code>__str__</code> prints
+  <code>"FinishReason.STOP"</code> rather than <code>"STOP"</code> (<code>.value</code> is used instead),
+  and thinking mode is explicitly disabled by default
+  (<code>thinking_budget=0</code>, overridable via a <code>thinking_budget</code> kwarg),
+  matching textfsm-ai's own <code>GeminiProvider</code> default</li>
+<li><code>models.yaml</code> gained a <code>gemini</code> entry (default <code>gemini-2.5-flash</code>,
+  matching textfsm-ai's <code>model_catalog</code> default) plus 6 other supported
+  models from textfsm-ai's <code>pricing.yaml</code></li>
+<li>New <code>pyproject.toml</code> <code>gemini</code> extra (<code>google-genai&gt;=0.2.0</code> +
+  <code>textfsm-ai[gemini]&gt;=0.6.1</code>). Also added to <code>dev</code> so gemini's tests
+  never silently skip</li>
+<li><code>--api-key</code>/<code>--provider</code> help text (CLI) and the provider extras list
+  (README) now enumerate all fifteen providers</li>
+</ul>
+<h2 id="v029-2026-08-02">v0.2.9 — 2026-08-02<a class="headerlink" href="#v029-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>AzureRegexBuilder</code> (<code>parseforge[azure]</code>) — the fourteenth naming
+  provider, and the first that doesn't fit the <code>api_key</code>+<code>model</code> shape
+  every prior provider used. Azure OpenAI has no fixed <code>base_url</code> or
+  model catalog: <code>endpoint</code> is the caller's own Azure resource, and the
+  usual "model" concept is replaced by an account-specific <code>deployment</code>
+  name (<code>AZURE_API_KEY</code>/<code>AZURE_ENDPOINT</code>/<code>AZURE_API_VERSION</code>/
+  <code>AZURE_DEPLOYMENT</code>). Talks to the <code>azure-ai-inference</code> SDK's
+  <code>ChatCompletionsClient</code> directly; error classification is
+  status-code-based (<code>exc.status_code</code> on the single <code>HttpResponseError</code>
+  class the SDK raises for every HTTP failure), same approach as
+  Mistral/Cohere</li>
+<li>New <code>--endpoint</code>/<code>--api-version</code>/<code>--deployment</code> options on <code>name</code>,
+  <code>check --provider</code>, and <code>generate-template</code>; <code>run</code> gets both
+  <code>--naming-endpoint</code>/<code>--naming-api-version</code>/<code>--naming-deployment</code>
+  (naming side) and <code>--endpoint</code>/<code>--api-version</code>/<code>--deployment</code>
+  (generation side); <code>trial.yaml</code>/<code>generate-template.yaml</code> config files
+  gain matching <code>endpoint</code>/<code>api_version</code>/<code>deployment</code> keys</li>
+<li>New pyproject.toml <code>azure</code> extra (<code>azure-ai-inference&gt;=1.0.0b9</code>,
+  matching textfsm-ai's own floor). Also added to <code>dev</code> so azure's
+  tests never silently skip</li>
+</ul>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>_build_regex_builder()</code> would have raised a plain <code>TypeError</code> for any
+  azure trial/config, since <code>TrialConfig.model</code> is always present but
+  <code>AzureRegexBuilder</code> has no <code>model</code> parameter at all — deployment now
+  takes precedence and <code>model</code> is simply not forwarded when it's set</li>
+<li>The generation-side <code>api_version</code> had no default anywhere unlike
+  naming's builder, which would have silently sent an empty string to a
+  real Azure API call — the same default is now applied at the
+  <code>pipeline.py</code>/<code>generate-template</code> call sites</li>
+</ul>
+<h2 id="v028-2026-08-02">v0.2.8 — 2026-08-02<a class="headerlink" href="#v028-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="added_5">Added<a class="headerlink" href="#added_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Two new naming providers, both using their vendor's <em>native</em> SDK rather
+  than the <code>openai</code>-compat shape every prior provider used — the first
+  providers in this project that aren't OpenAI-compatible:</li>
+<li><code>MistralRegexBuilder</code> (<code>parseforge[mistral]</code>, <code>MISTRAL_API_KEY</code>,
+    default <code>mistral-small-latest</code>) — talks to the native <code>mistralai</code> SDK's
+    <code>client.chat.complete()</code>. The SDK raises a single <code>SDKError</code> for every
+    HTTP failure (status on <code>exc.raw_response.status_code</code>) rather than a
+    family of named exception classes, so retryability is classified by
+    status code instead of reusing <code>providers/errors.py</code>'s
+    class-name-based classification. Pinned to <code>mistralai==1.10.0</code> (the
+    last release supporting Python 3.9, matching textfsm-ai's own pin)</li>
+<li><code>CohereRegexBuilder</code> (<code>parseforge[cohere]</code>, <code>COHERE_API_KEY</code>, default
+    <code>command-light</code>) — talks to the native <code>cohere</code> SDK's synchronous
+    <code>ClientV2.chat()</code>. Cohere raises a family of named exceptions
+    (<code>BadRequestError</code>, <code>UnauthorizedError</code>, ...) whose names don't line
+    up with OpenAI/Anthropic's, but all carry <code>exc.status_code</code>, so
+    retryability is likewise classified by status code. Response content
+    is a list of text/thinking blocks rather than a plain string, and
+    <code>usage.tokens</code> has no <code>total_tokens</code> field at all (computed locally).
+    Pinned to <code>cohere==5.21.1</code> for the same Python 3.9 reason</li>
+<li><code>dev</code> extra now also pulls in <code>mistralai==1.10.0</code> and <code>cohere==5.21.1</code>
+  directly, alongside the existing <code>anthropic</code>/<code>openai</code>, so both providers'
+  tests always run rather than silently skipping</li>
+<li><code>--api-key</code>/<code>--provider</code> help text (CLI) and the provider extras list
+  (README) now enumerate all thirteen providers</li>
+</ul>
+<h2 id="v026-2026-08-02">v0.2.6 — 2026-08-02<a class="headerlink" href="#v026-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="added_6">Added<a class="headerlink" href="#added_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Eight new naming providers, each with a lazily-imported <code>openai</code>-SDK-backed
+  <code>RegexBuilder</code>, an optional <code>pyproject.toml</code> extra, a <code>models.yaml</code> entry,
+  live-API test coverage (<code>tests/real/naming/</code>, <code>tests/real/generation/</code>), and
+  unit tests (<code>tests/unit/naming/providers/</code>) — all wired automatically into
+  every <code>--provider</code>/<code>--naming-provider</code> CLI surface via the shared
+  <code>_BUILDERS</code> registry:</li>
+<li><code>GroqRegexBuilder</code> (<code>parseforge[groq]</code>, <code>GROQ_API_KEY</code>,
+    default <code>llama-3.1-8b-instant</code>)</li>
+<li><code>XAIRegexBuilder</code> (<code>parseforge[xai]</code>, <code>XAI_API_KEY</code>,
+    default <code>grok-3-mini</code>)</li>
+<li><code>TogetherRegexBuilder</code> (<code>parseforge[together]</code>, <code>TOGETHER_API_KEY</code>,
+    default <code>meta-llama/Llama-3.1-8B-Instruct-Turbo</code>)</li>
+<li><code>FireworksRegexBuilder</code> (<code>parseforge[fireworks]</code>, <code>FIREWORKS_API_KEY</code>,
+    default <code>accounts/fireworks/models/llama-v3p1-8b-instruct</code>)</li>
+<li><code>PerplexityRegexBuilder</code> (<code>parseforge[perplexity]</code>, <code>PERPLEXITY_API_KEY</code>,
+    default <code>sonar</code>)</li>
+<li><code>OpenRouterRegexBuilder</code> (<code>parseforge[openrouter]</code>, <code>OPENROUTER_API_KEY</code>,
+    default <code>google/gemini-2.5-flash-lite</code>) — a model aggregator/router that
+    re-exposes many upstream providers under a <code>vendor/model</code> namespace</li>
+<li><code>MoonshotRegexBuilder</code> (<code>parseforge[moonshot]</code>, <code>MOONSHOT_API_KEY</code>,
+    default <code>moonshot-v1-8k</code>) — uses the global <code>api.moonshot.ai</code> endpoint</li>
+<li><code>CerebrasRegexBuilder</code> (<code>parseforge[cerebras]</code>, <code>CEREBRAS_API_KEY</code>,
+    default <code>llama3.1-8b</code>)</li>
+<li><code>dev</code> extra unchanged (still just <code>anthropic</code>/<code>openai</code> directly) — the new
+  providers all reuse the <code>openai</code> SDK against a different <code>base_url</code>, so no
+  new SDK dependency was needed for tests to exercise them</li>
+<li><code>--api-key</code>/<code>--provider</code> help text (CLI) and the provider extras list
+  (README) now enumerate all eleven providers</li>
+</ul>
+<h2 id="v025-2026-08-02">v0.2.5 — 2026-08-02<a class="headerlink" href="#v025-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="added_7">Added<a class="headerlink" href="#added_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>OpenAIRegexBuilder</code> — OpenAI as a third naming provider alongside <code>anthropic</code>
+  and <code>deepseek</code> (<code>pip install parseforge[openai]</code>). Previously <code>deepseek</code>'s
+  builder used the <code>openai</code> SDK too, but pointed at DeepSeek's own API — there
+  was no way to actually use OpenAI's own models for naming until now.
+  <code>--provider</code>/<code>--naming-provider</code> list <code>anthropic|deepseek|openai</code>
+  automatically wherever they're used, since every occurrence already derives
+  its choices from the same builder registry</li>
+<li><code>models.yaml</code> gained an <code>openai</code> entry (default <code>gpt-5.4-mini</code>, matching the
+  cheap/fast-tier default convention already used for <code>anthropic</code>/<code>deepseek</code>)</li>
+<li>Live-API test coverage for the new provider: <code>tests/real/naming/
+  test_openai_naming.py</code> and <code>tests/real/generation/test_openai_generation.py</code>,
+  mirroring the existing anthropic/deepseek real tests exactly, plus a new
+  <code>openai_key</code> fixture in <code>tests/conftest.py</code></li>
+</ul>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Two stale <code>--api-key</code> help strings (CLI and README) that only listed
+  <code>ANTHROPIC_API_KEY</code>/<code>DEEPSEEK_API_KEY</code>, missing <code>OPENAI_API_KEY</code></li>
+</ul>
+<h2 id="v024-2026-08-02">v0.2.4 — 2026-08-02<a class="headerlink" href="#v024-2026-08-02" title="Permanent link">&para;</a></h2>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Breaking:</strong> <code>pip install parseforge</code> no longer installs any AI-provider SDK —
+  <code>anthropic</code> and <code>openai</code>/<code>deepseek</code> moved into optional extras
+  (<code>pip install parseforge[anthropic]</code>, <code>parseforge[deepseek]</code>), mirroring
+  <code>textfsm-ai</code> v0.6.0's own per-provider extras model. Both providers'
+  <code>naming/providers/*.py</code> builders now import their SDK lazily, only when a
+  client is actually constructed — a cache-hit naming lookup, or any purely
+  local command (<code>canonical</code>/<code>readable</code>/<code>recognizers</code>/<code>integration</code>/
+  <code>promotion</code>), never touches either package, and neither does importing the
+  CLI itself</li>
+<li><code>dev</code> extra keeps both <code>anthropic</code> and <code>openai</code> directly, so tests always
+  exercise both providers instead of silently skipping</li>
+<li>Fixed <code>generation.generate()</code>'s docstring, which claimed to "never raise for
+  a failed generation" — a missing provider SDK actually raises <code>ImportError</code>
+  (uncaught, from <code>textfsm-ai</code>'s own lazy provider registry), which is correct
+  and intentional, matching how a missing SDK is treated as a hard
+  environment error everywhere else in this release, not a soft failure</li>
+</ul>
+<h3 id="added_8">Added<a class="headerlink" href="#added_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li>New <code>release</code> extra (<code>bump2version</code>, <code>build</code>) for <code>scripts/release.ps1</code> and
+  local package builds — the one piece of tooling <code>requirements-dev.txt</code>
+  covered that had no other home after being retired</li>
+</ul>
+<h3 id="removed">Removed<a class="headerlink" href="#removed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>requirements.txt</code>/<code>requirements-dev.txt</code> — already stale (unconditional
+  <code>anthropic</code>/<code>openai</code>/<code>netmiko</code>, an old <code>textfsm-ai&gt;=0.5.1</code> floor) and
+  duplicated what <code>pyproject.toml</code> now owns as the single source of truth.
+  <code>docs.yml</code>'s deploy job (the only real consumer) didn't need any of
+  parseforge's own runtime dependencies in the first place — it now installs
+  <code>mkdocs</code>/<code>mkdocs-material</code>/<code>mike</code> directly</li>
+</ul>
+<h2 id="v023-2026-07-31">v0.2.3 — 2026-07-31<a class="headerlink" href="#v023-2026-07-31" title="Permanent link">&para;</a></h2>
+<h3 id="added_9">Added<a class="headerlink" href="#added_9" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>drift.py</code> (SPEC.md §5 step 10): <code>check_drift()</code> runs an authoritative template
+  against a new production sample, tracks a rolling match rate per variant in that
+  cli-name's <code>drift-log.json</code>, and requeues failing samples into <code>trials/</code> as a new
+  run so drift closes the loop back through generation/integration instead of being
+  a one-off alert</li>
+<li>CLI: <code>check</code> (validate a connector/provider, or report what it needs before
+  spending tokens), <code>generate-template</code>/<code>canonical</code>/<code>readable</code>/<code>recognizers</code>
+  (one-shot generation and template inspection, no trial persistence), and
+  <code>trial</code>/<code>integration</code>/<code>promotion</code> (config-file-driven workflow commands wrapping
+  <code>pipeline.py</code>/<code>integration.py</code>/<code>promotion.py</code> end to end — <code>promotion</code> covers
+  <code>AUTO_PROMOTED</code> mode only)</li>
+<li>CLI: <code>init-trial-config</code>/<code>init-generate-template-config</code> — write placeholder YAML
+  configs for <code>trial --config</code>/<code>generate-template --config</code>, ready to fill in</li>
+<li><code>parseforge/cli/config.py</code> — YAML config loading for the new config-driven commands</li>
+<li><code>pipeline.TrialMetadata</code> gains a <code>note</code> field, for parity with
+  <code>promotion.PromotionMetadata.note</code></li>
+</ul>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li>SPEC.md's <code>trials/</code>/<code>integration/</code>/<code>authoritative/</code> layout sections (§3.1–§3.3)
+  rewritten to match the actual implementation — they'd described the
+  pre-implementation single-template/single-winner design since before this
+  session's integration/promotion work landed</li>
+<li><code>trial.yaml</code>'s <code>naming_provider</code>/<code>generation_provider</code>/<code>generation_api_key</code>/
+  <code>generation_model</code> fields collapsed into one shared <code>provider</code>/<code>api_key</code>/<code>model</code>,
+  used for both naming and generation</li>
+<li><code>run</code>'s <code>--generation-provider</code>/<code>--generation-api-key</code>/<code>--generation-model</code>
+  renamed to <code>--provider</code>/<code>--api-key</code>/<code>--model</code></li>
+<li><code>promotion</code>'s <code>--match-rate-threshold</code>/<code>--min-sample-count</code> renamed to
+  <code>--threshold</code>/<code>--min-samples</code></li>
+<li>README.md and docs/index.md rewritten to describe the now-complete pipeline
+  instead of the earlier "early-stage scaffold" status; README's <code>## Layout</code>
+  section removed (duplicated each module's own docstring) in favor of a
+  <code>## Reference</code> section linking the docs site and SPEC.md</li>
+</ul>
+<h2 id="v022-2026-07-30">v0.2.2 — 2026-07-30<a class="headerlink" href="#v022-2026-07-30" title="Permanent link">&para;</a></h2>
+<h3 id="added_10">Added<a class="headerlink" href="#added_10" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Full trial pipeline (SPEC.md §5 steps 1–7): <code>pipeline.run_command_pipeline()</code> wires
+  sampling → naming → generation → validation end to end, writing a per-run
+  <code>summary.json</code> (command info, pass/fail, duration, token usage/cost, provider info)</li>
+<li><code>naming</code>: <code>AnthropicRegexBuilder</code> and <code>DeepSeekRegexBuilder</code>, structured
+  <code>LLMCLIResponse</code> with token usage and retryable-vs-fatal error classification;
+  cost estimation via <code>textfsm-ai</code>'s pricing module</li>
+<li><code>sampling</code>: Netmiko backend (<code>parseforge.sampling.netmiko</code>), generic + Cisco sandbox
+  fixtures for live device testing</li>
+<li><code>generation.py</code>: wired to <code>textfsm-ai</code>'s delivery pipeline for LLM-backed TextFSM
+  template generation</li>
+<li><code>validation.py</code>: <code>parse()</code>/<code>ParseResult</code> — thin TextFSM wrapper used by both
+  integration clustering and promotion's <code>records.json</code> output</li>
+<li><code>integration.py</code> (SPEC.md §5 step 8, §3.2, §6 multi-variant): clusters trial runs
+  into output-schema groups, tracks per-variant template/record counts, and reports
+  <code>total_case_count</code>/<code>total_passed_case_count</code> per case plus a project-wide
+  <code>reference-summary.json</code> with <code>ratio_of_total</code>/<code>ratio_of_passed</code> at group and
+  variant level — only trials that actually passed are eligible for clustering</li>
+<li><code>promotion.py</code>: reworked into a project-wide, mode-aware promotion workflow —
+  <code>AUTO_PROMOTED</code> (gate-driven, every qualifying group across every case) and
+  <code>USER_REVIEWED</code> (scoped to caller-reviewed case/suffix requests); flat
+  <code>authoritative/</code> layout (<code>template.textfsm</code>, <code>template-v2.textfsm</code>, ... — no
+  per-group subdirectory); singular per-cli-name <code>golden.hash</code>/<code>artifact.json</code>
+  reflecting the most recent promotion; project-wide append-only
+  <code>authoritative-log.json</code> and per-run <code>authoritative-summary.json</code>;
+  <code>history/</code> retention archiving prior content before it's overwritten by a
+  differing re-promotion</li>
+</ul>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Dropped the <code>&lt;version&gt;</code> path segment from trial/integration/authoritative
+  storage paths — a cli-name's output structure rarely changes across minor OS
+  versions, and when it does, <code>integration.py</code>'s group clustering is what's meant
+  to catch it (SPEC.md §3, §3.1)</li>
+<li>Simplified <code>summary.json</code>: explicit <code>error</code> field, flattened <code>usage</code>/<code>provider_info</code>
+  blocks, <code>--username-ref</code> CLI flag renamed to <code>--email</code></li>
+</ul>
+<h3 id="removed_1">Removed<a class="headerlink" href="#removed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Dead <code>store/</code> scaffold directory (never referenced by code) and its <code>.gitignore</code>
+  entries</li>
+</ul>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>build_integration()</code> now checks a trial's own recorded pass/fail verdict before
+  clustering it, instead of only re-deriving it by re-parsing the template against
+  its own sample — closes a gap where a truncated/not-ready generation could still
+  coincidentally self-parse and get counted as evidence</li>
+</ul>
+<h2 id="v021-2026-07-16">v0.2.1 — 2026-07-16<a class="headerlink" href="#v021-2026-07-16" title="Permanent link">&para;</a></h2>
+<h3 id="added_11">Added<a class="headerlink" href="#added_11" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Initial project scaffold per SPEC.md: <code>naming</code>, <code>paths</code>, <code>pipeline</code>, <code>sampling</code>,
+  <code>generation</code>, <code>validation</code>, <code>promotion</code> modules, packaged as <code>parseforge</code></li>
+<li><code>naming</code> package: LLM-backed cli-name resolver (<code>parseforge.naming.cli_name</code>) —
+  builds a regex per CLI command via a pluggable <code>RegexBuilder</code>, validates it with
+  <code>re.fullmatch</code>, and caches <code>cli-name -&gt; pattern</code> in <code>~/.parseforge/.cli-name.json</code>
+  so a given command is only ever sent to the LLM once</li>
+<li><code>parseforge</code> CLI (<code>name</code>, <code>run</code> subcommands)</li>
+<li><code>Tests</code> workflow (GitHub Actions) running pytest on push/PR to <code>main</code> and <code>develop</code></li>
+<li>tox setup: <code>py39</code>/<code>py312</code> test envs, <code>lint</code>/<code>format</code> (ruff + black), <code>typecheck</code>
+  (mypy), <code>docs</code> (<code>mkdocs build --strict</code>)</li>
+<li><code>docs/index.md</code> and mkdocs (Material theme) with <code>mike</code>-based versioned docs
+  deployment (<code>Deploy Docs</code> workflow, gated on lint/format/typecheck)</li>
+<li><code>MANIFEST.in</code> for sdist packaging (LICENSE/README/SPEC included; tests/docs/store
+  pruned)</li>
+<li><code>bump2version</code> setup (<code>.bumpversion.cfg</code>) tracking version across
+  <code>parseforge/__init__.py</code> and <code>pyproject.toml</code></li>
+<li><code>Makefile</code> and <code>scripts/release.ps1</code>: <code>bump-patch</code>/<code>bump-minor</code>/<code>bump-major</code>,
+  <code>release-test</code> (tags <code>v$(VERSION)-test</code>, triggers TestPyPI), <code>release-prod</code>
+  (tags <code>v$(VERSION)</code>, creates a GitHub Release, requires <code>main</code>)</li>
+<li><code>publish-testpypi.yml</code> / <code>publish-pypi.yml</code> workflows — build + publish gated on
+  the full test/lint/format/typecheck suite; validated end-to-end at <code>v0.2.1-test</code>
+  (https://test.pypi.org/project/parseforge/0.2.1/)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate", "toc.integrate"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
