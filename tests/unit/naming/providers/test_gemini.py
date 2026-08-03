@@ -106,7 +106,6 @@ def test_response_carries_usage_reason_and_ready(
     assert response.usage.input_tokens == 33
     assert response.usage.output_tokens == 9
     assert response.usage.total_tokens == 42
-    assert response.usage.estimated_cost > 0
     # finish_reason is a str-subclassed enum -- reason should be the
     # plain value ("STOP"), not e.g. "FinishReason.STOP".
     assert response.reason == "STOP"
@@ -143,7 +142,6 @@ def test_retryable_error_returns_not_ready_response(
     assert response.ready is False
     assert response.reason.startswith("LLM-ERROR-gemini_sdk-429-")
     assert response.content == ""
-    assert response.usage.estimated_cost == 0.0
 
 
 def test_non_retryable_error_raises(monkeypatch: pytest.MonkeyPatch) -> None:

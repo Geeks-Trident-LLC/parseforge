@@ -79,7 +79,7 @@ Keep the timestamp+shortid directories (not `result1..N`) — chronological orde
 | `derive/template.textfsm` | Cleaned, DSL-compiled TextFSM template candidate (`.textfsm` extension — recognized by TextFSM tooling/linters, unlike `textfsm.template`) |
 | `derive/readable-dsl.txt` | Human-readable description of what the template captures |
 | `derive/recognizers.txt` | Heuristics/signatures for detecting this output type at runtime |
-| `summary.json` | Everything else about the run: `created_at`/`ended_at`/`duration_ms`, `passed`, `error` (when `passed` is false), `metadata` (project/username/email/description), `command_info` (vendor/family/os/version/device_type/command), `usage` (naming + generation token counts/cost), and `provider_info` (the generation provider/model) |
+| `summary.json` | Everything else about the run: `created_at`/`ended_at`/`duration_ms`, `passed`, `error` (when `passed` is false), `metadata` (project/username/email/description), `command_info` (vendor/family/os/version/device_type/command), `usage` (naming + generation token counts), and `provider_info` (the generation provider/model) |
 
 ### 3.2 `integration/` (no human review yet)
 
@@ -180,4 +180,4 @@ Where a fourth tier is tempting but better handled as **metadata instead of a ne
 - Do you want a **registry/index file** (e.g. `catalog.json`) at the repo root listing every `<vendor>/<family>/<os>/<cli-name>` combination that exists, plus its authoritative status, for fast lookup without walking the filesystem?
 - What **confidence threshold** (match-rate %, sample count minimum) should gate auto-promotion vs. human review in step 9 — worth making this configurable per-project rather than hardcoded?
 - Should `recognizers.txt` support **one-of-many matching** from day one (per the multi-variant note in §6), or is that a v2 concern?
-- What's the **LLM provider/model** for generation — worth pinning per-project so `summary.json`'s usage costs are comparable across runs?
+- What's the **LLM provider/model** for generation — worth pinning per-project so `summary.json`'s token usage is comparable across runs?

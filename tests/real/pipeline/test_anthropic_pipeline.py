@@ -89,4 +89,3 @@ def test_full_trial_pipeline_show_clock(
     # so this run must be a genuine cache miss (real LLM call happened).
     assert summary["usage"]["naming"] is not None
     assert summary["usage"]["naming"]["total_tokens"] > 0
-    assert summary["usage"]["naming"]["estimated_cost"] > 0
