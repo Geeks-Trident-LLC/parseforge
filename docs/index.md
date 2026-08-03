@@ -5,6 +5,9 @@ promotes [TextFSM](https://github.com/google/textfsm) templates from network
 device CLI output — turning a raw `show` command's output into a validated,
 production-ready parser.
 
+New here? Start with [Installation](getting-started/installation.md), then
+[Quickstart](getting-started/quickstart.md).
+
 ## How it works
 
 1. **Naming** — an LLM turns a raw CLI command into a canonical, indexed
@@ -33,47 +36,6 @@ Templates move through three storage tiers as they earn trust:
 evidence, grouped by output schema) → `authoritative/` (approved, in
 production use, drift-monitored).
 
-## Try it
-
-```bash
-pip install parseforge[anthropic]
-
-# Resolve a raw CLI command to its canonical cli-name
-parseforge name --vendor cisco --family catalyst9200 --os ios-xe --version 17.9.1 \
-  show interface GE1.1 status
-
-# Check a device connector or LLM provider is reachable before a real run
-parseforge check --provider anthropic
-
-# Inspect an existing template — no LLM call
-parseforge canonical template.textfsm --sample sample.txt
-```
-
-See the [README](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md#cli)
-for every command, including the config-file-driven `trial`/`integration`/`promotion`
-workflow commands that drive the full pipeline end to end.
-
-## Contributing / testing a single provider
-
-Cloning the repo to work on (or test) one specific naming provider doesn't
-require `pip install -e ".[dev]"` and every provider SDK at once — each
-provider has its own `requirements/dev-<provider>.txt` that installs
-`parseforge` itself, `pytest`/`pytest-cov`, and just that provider's SDK:
-
-```bash
-git clone https://github.com/Geeks-Trident-LLC/parseforge.git
-cd parseforge
-pip install -r requirements/dev-oci.txt
-pytest tests/unit/naming/providers/test_oci.py
-```
-
-(`requirements/requirements-<provider>.txt` is the leaner counterpart —
-just `parseforge` plus that provider's SDK, no test tooling — for
-installs that don't need to run the test suite.)
-
-See the [README's Development section](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md#development)
-for the full local dev setup.
-
 ## Status
 
 Early beta: the full pipeline — naming, sampling, generation, self-validation,
@@ -94,5 +56,7 @@ intentionally not there yet:
 
 ## Explore further
 
-- [README](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md) — package layout, local development setup, and the full CLI reference
+- [Installation](getting-started/installation.md) — pip extras, dev setup, per-provider requirements files
+- [Quickstart](getting-started/quickstart.md) — naming, checks, one-shot generation, and the full trial → integration → promotion workflow
+- [README](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/README.md) — package layout, the full CLI reference, and the Python API
 - [SPEC](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/SPEC.md) — full design plan and open questions
