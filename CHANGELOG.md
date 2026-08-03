@@ -1,3 +1,70 @@
+## v0.3.0 — 2026-08-03
+
+### Added
+- `parseforge/api.py` — the package's first real public API surface.
+  `parseforge/__init__.py` previously exported nothing but
+  `__version__`; every real caller had to reach into individual
+  submodules directly with no documented public/internal boundary.
+  Mirrors textfsm-ai's own `api.py` convention: one entry point per
+  pipeline stage (SPEC.md §5) — `cli_name`/`resolve_cli_name`,
+  `sample`, `generate`, `parse`, `run_command_pipeline`,
+  `build_integration`/`write_reference_summary`,
+  `promote_auto`/`promote_user_reviewed`, `check_drift` — plus the
+  dataclasses/enums each one returns or accepts, re-exported at the
+  package root the same way `textfsm_ai/__init__.py` re-exports from
+  its own `api.py`. `naming.TokenUsage`/`generation.TokenUsage` are
+  separate classes that happen to share a name, aliased as
+  `NamingTokenUsage`/`GenerationTokenUsage` to avoid the collision.
+  Provider-specific naming builders aren't re-exported at the root —
+  `parseforge.naming` is already a clean, documented import path for
+  those
+- `TrialResult.total_usage` and a new `"total"` key in
+  `summary.json`'s `usage` block — the sum of naming usage (0 on a
+  cache hit, since no LLM call happens) plus generation's usage (which
+  was already correctly accumulated across every LLM call in its own
+  pipeline — every base-prompt attempt and correction-prompt retry —
+  by textfsm-ai's own `accumulate_usage()`). Surfaced in `run`/`trial`
+  CLI output
+- Per-provider `requirements/requirements-<provider>.txt` (mirrors the
+  matching `pyproject.toml` extra exactly) and
+  `requirements/dev-<provider>.txt` (adds `pytest`/`pytest-cov` plus
+  the same `ruff`/`black`/`mypy`/`tox` versions `tox.ini`'s
+  lint/format/typecheck envs and the `dev` extra already pin) for
+  every provider, including the previously-missing `anthropic` pair —
+  `pip install -r requirements/dev-oci.txt` alone is now enough to
+  install and test one provider, no separate `pip install -e .` step
+  or every other provider's SDK
+- A "Getting Started" section on the docs site
+  ([Installation](https://geeks-trident-llc.github.io/parseforge/getting-started/installation/),
+  [Quickstart](https://geeks-trident-llc.github.io/parseforge/getting-started/quickstart/)),
+  split out of the single overview page that previously mixed
+  conceptual docs with a truncated "Try it" snippet
+
+### Changed
+- **Breaking:** `TokenUsage.estimated_cost` is gone from both
+  `naming.llm.TokenUsage` and `generation.TokenUsage`, and
+  `naming/providers/cost.py` is deleted entirely, following
+  textfsm-ai 0.7.0's own deliberate, permanent removal of cost/pricing
+  estimation (`textfsm_ai.core.pricing` no longer exists — a genuine
+  maintenance-burden call by the textfsm-ai maintainers, not a bug).
+  `textfsm-ai` bumped back up to `>=0.7.1` everywhere (base dependency,
+  all 18 `pyproject.toml` extras, all 9 `requirements-<provider>.txt`
+  files) now that parseforge no longer touches the removed module
+- **Breaking:** `models.yaml`/`models.py` simplified from a
+  `default`/`supported`/`deprecated` structure to a flat
+  `provider: model` mapping, matching textfsm-ai's own
+  `model_catalog/providers.yaml` shape — `supported_models()`/
+  `deprecated_models()` are dropped, since nothing in the real
+  codebase used them beyond their own tests
+
+### Fixed
+- `textfsm-ai>=0.6.1` had no upper bound, so a fresh install could
+  silently resolve to `textfsm-ai==0.7.0`/`0.7.1` and break at import
+  time with `ModuleNotFoundError: No module named
+  'textfsm_ai.core.pricing'` — briefly pinned to `<0.7.0` as an
+  intermediate fix before the cost-estimation removal above restored
+  compatibility with the current release properly
+
 ## v0.2.12 — 2026-08-02
 
 ### Added

@@ -1,3 +1,57 @@
+# v0.3.0 — A Real Public API, and a Dependency Diet
+
+## 🚪 `from parseforge import ...` Now Actually Means Something
+Every provider was in place, but the package's own front door was empty —
+`parseforge/__init__.py` exported nothing but `__version__`. This release
+adds `parseforge/api.py`, one entry point per pipeline stage, re-exported
+at the root the same way `textfsm-ai` does its own:
+
+```python
+from parseforge import CliContext, LLMProviderConfig, run_command_pipeline
+```
+
+`cli_name`, `sample`, `generate`, `parse`, `run_command_pipeline`,
+`build_integration`, `promote_auto`, `check_drift` — plus the
+dataclasses/enums each one hands back. Provider-specific naming builders
+stay where they already made sense (`parseforge.naming`), so this isn't a
+bloated everything-and-the-kitchen-sink export — it's the actual supported
+surface, finally documented as one.
+
+## 🧮 Total Usage, Not Just Two Separate Numbers
+`summary.json` used to report naming and generation token usage as two
+disconnected sub-objects. A quick audit confirmed both were individually
+correct — generation usage was already summed across every retry by
+textfsm-ai itself — but nothing ever added them together. `TrialResult`
+now carries a `total_usage` field, and `run`/`trial` print it directly.
+
+## ✂️ Cost Estimation Is Gone
+textfsm-ai 0.7.0 made a deliberate call: maintaining a per-provider,
+per-model price table for eighteen providers is a different job than
+turning samples into templates, and it doesn't belong in a
+template-generation tool. `parseforge` follows suit — `estimated_cost` is
+gone from `TokenUsage` everywhere, and `naming/providers/cost.py` is
+deleted. (`models.yaml` got the same treatment: a flat `provider: model`
+map instead of a `default`/`supported`/`deprecated` structure nobody but
+its own tests ever read the extra two fields of.)
+
+If you're pulling in `textfsm-ai` directly for the first time since
+`v0.2.12`: that release briefly pinned `<0.7.0` to avoid a fresh install
+silently breaking on the removed pricing module. This release removes
+that pin — parseforge now expects `textfsm-ai>=0.7.1`.
+
+## 📚 A Front Door for the Docs, Too
+The docs site was one page mixing concepts with a truncated "Try it"
+snippet. It now has a proper Getting Started section:
+[Installation](https://geeks-trident-llc.github.io/parseforge/getting-started/installation/)
+and
+[Quickstart](https://geeks-trident-llc.github.io/parseforge/getting-started/quickstart/) —
+plus one `requirements/dev-<provider>.txt` per provider, so cloning the
+repo and testing a single provider no longer means installing every
+other provider's SDK first.
+
+## 📦 Version
+`0.2.12 → 0.3.0`
+
 # v0.2.12 — Bedrock and OCI Round Out the Cloud Trio
 
 ## ☁️ AWS and Oracle Join Google in the No-API-Key Club
