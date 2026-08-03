@@ -242,6 +242,38 @@ evaluating any gate — so running `promotion` alone after a `trial` run is enou
 pick up new evidence; a separate `integration` run is only useful if you want to
 inspect `reference-summary.json` without also promoting.
 
+## Python API
+
+Everything the CLI does is also a plain Python call — `parseforge/api.py` is the
+single supported place to import from (also re-exported at the package root):
+
+```python
+from parseforge import CliContext, LLMProviderConfig, run_command_pipeline
+from parseforge.naming import AnthropicRegexBuilder
+from parseforge.sampling.backends import NetmikoSampler
+from parseforge.sampling import DeviceConnection
+
+result = run_command_pipeline(
+    "show clock",
+    CliContext(vendor="cisco", family="catalyst9200", os="ios-xe", version="17.9.1"),
+    DeviceConnection(host="10.0.0.1", username="admin", password="secret", device_type="cisco_ios"),
+    AnthropicRegexBuilder(api_key="sk-..."),
+    NetmikoSampler(),
+    LLMProviderConfig(provider="anthropic", api_key="sk-...", model="claude-haiku-4-5-20251001"),
+)
+print(result.cli_name, result.passed, result.total_usage)
+```
+
+One function per pipeline stage (SPEC.md §5): `cli_name`/`resolve_cli_name` (naming),
+`sample` (sampling), `generate` (generation), `parse` (self-validation),
+`run_command_pipeline` (steps 1-7 in one call), `build_integration`/
+`write_reference_summary` (integration), `promote_auto`/`promote_user_reviewed`
+(promotion), `check_drift` (drift monitoring) — plus the dataclasses/enums each one
+returns or accepts. Provider-specific naming builders (`AnthropicRegexBuilder`,
+`OCIRegexBuilder`, ...) aren't re-exported at the root — import them from
+`parseforge.naming` directly. Anything not in `parseforge.api.__all__` is internal
+and may change without notice.
+
 ## Reference
 
 - [Documentation site](https://geeks-trident-llc.github.io/parseforge/) ([source](./docs/index.md))
