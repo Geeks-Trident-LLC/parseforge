@@ -1,3 +1,26 @@
+## v0.3.1 — 2026-08-03
+
+### Added
+- Docs site expanded from two pages to a real reference: `Providers`
+  (all eighteen at a glance, plus a detailed section for each of the
+  four with a non-standard auth shape), `CLI Guide` (every command, in
+  full), `Python API` (the whole pipeline in one call, each stage
+  called standalone, integration/promotion, drift monitoring), and
+  `API Reference` (every name in `parseforge.api.__all__`, by pipeline
+  stage). `Changelog` now lives on the docs site too, included from the
+  repo-root `CHANGELOG.md` verbatim via `pymdownx.snippets` — one
+  source of truth, no drift risk
+
+### Changed
+- README.md trimmed down to an overview: adds a **Features** section
+  (the trial → integration → promotion Human-in-the-Loop review
+  workflow, eighteen-provider support, self-caching naming,
+  self-validation, drift monitoring); removes the CLI, Development, and
+  Python API sections entirely — all superseded by the docs site;
+  Installation trimmed to a minimal three-line snippet plus a link to
+  the full Installation page; Reference section expanded to link every
+  new docs page
+
 ## v0.3.0 — 2026-08-03
 
 ### Added
