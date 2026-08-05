@@ -20,7 +20,7 @@ from parseforge import (
     validation,
 )
 from parseforge.cli import config as cli_config
-from parseforge.naming.providers.azure import DEFAULT_API_VERSION
+from parseforge.naming.providers.anyask_builder import DEFAULT_API_VERSION
 
 _BUILDERS: dict[str, type[naming.RegexBuilder]] = {
     "anthropic": naming.AnthropicRegexBuilder,

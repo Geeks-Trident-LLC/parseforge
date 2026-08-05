@@ -13,9 +13,8 @@ from typing import Any
 
 import pytest
 
-from parseforge.naming import CliContext, cli_name
+from parseforge.naming import AzureRegexBuilder, CliContext, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
-from parseforge.naming.providers.azure import AzureRegexBuilder
 
 pytestmark = pytest.mark.real
 

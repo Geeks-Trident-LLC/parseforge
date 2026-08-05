@@ -12,9 +12,8 @@ from typing import Any
 
 import pytest
 
-from parseforge.naming import CliContext, cli_name
+from parseforge.naming import CliContext, FireworksRegexBuilder, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
-from parseforge.naming.providers.fireworks import FireworksRegexBuilder
 
 pytestmark = pytest.mark.real
 

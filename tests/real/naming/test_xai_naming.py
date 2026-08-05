@@ -12,9 +12,8 @@ from typing import Any
 
 import pytest
 
-from parseforge.naming import CliContext, cli_name
+from parseforge.naming import CliContext, XAIRegexBuilder, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
-from parseforge.naming.providers.xai import XAIRegexBuilder
 
 pytestmark = pytest.mark.real
 

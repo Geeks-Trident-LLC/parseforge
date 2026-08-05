@@ -14,7 +14,7 @@ import pytest
 import textfsm
 
 from parseforge.generation import generate
-from parseforge.naming.providers.azure import DEFAULT_API_VERSION
+from parseforge.naming.providers.anyask_builder import DEFAULT_API_VERSION
 
 pytestmark = pytest.mark.real
 

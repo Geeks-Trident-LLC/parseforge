@@ -12,9 +12,8 @@ from typing import Any
 
 import pytest
 
-from parseforge.naming import CliContext, cli_name
+from parseforge.naming import CliContext, PerplexityRegexBuilder, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
-from parseforge.naming.providers.perplexity import PerplexityRegexBuilder
 
 pytestmark = pytest.mark.real
 

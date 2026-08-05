@@ -12,5 +12,5 @@
 # pyOpenSSL) its request-signing auth model needs.
 
 -e .
-oci==2.182.0
+anyask[oci]>=0.1.1
 textfsm-ai[oci]>=0.7.1

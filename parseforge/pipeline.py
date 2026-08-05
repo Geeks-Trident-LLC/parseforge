@@ -46,7 +46,7 @@ from pathlib import Path
 from typing import Any
 
 from parseforge import generation, naming, paths, sampling, validation
-from parseforge.naming.providers.azure import DEFAULT_API_VERSION
+from parseforge.naming.providers.anyask_builder import DEFAULT_API_VERSION
 
 
 class Mode(str, Enum):
