@@ -1,11 +1,7 @@
-VERSION := $(shell python - <<'EOF'
-try:
-    import tomllib
-except ModuleNotFoundError:
-    import tomli as tomllib
-print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])
-EOF
-)
+# Regex against the raw file text rather than a TOML parser -- avoids
+# needing tomllib (Python 3.11+ only) or a tomli fallback on 3.9/3.10 for
+# a single top-level `version = "..."` line under [project].
+VERSION := $(shell python -c "import re; print(re.search(r'(?m)^version = \"([^\"]+)\"', open('pyproject.toml').read()).group(1))")
 
 CURRENT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 

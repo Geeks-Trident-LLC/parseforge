@@ -87,6 +87,6 @@ jobs:
 
       - name: Deploy versioned docs
         run: |
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          VERSION=$(python -c "import re; print(re.search(r'(?m)^version = \"([^\"]+)\"', open('pyproject.toml').read()).group(1))")
           mike deploy --push --update-aliases $VERSION latest
           mike set-default --push latest
