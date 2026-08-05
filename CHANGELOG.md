@@ -1,3 +1,33 @@
+## v0.3.2 — 2026-08-05
+
+### Changed
+- Naming-side LLM provider integrations replaced under the hood: the 18
+  hand-rolled per-provider files (`naming/providers/{anthropic,azure,
+  bedrock,...}.py`) and the shared `naming/providers/errors.py` are now
+  one generic `anyask_builder.py`, delegating to
+  [anyask](https://github.com/Geeks-Trident-LLC/anyask) — a standalone
+  package from the same author/org that already implements the same 18
+  vendors behind a normalized interface. Every `<Provider>RegexBuilder`
+  class name, CLI flag, and `models.yaml` default is unchanged — this is
+  an internal swap, not a public API change. Each provider's
+  `pyproject.toml`/`requirements/` extra now installs
+  `anyask[<provider>]` instead of the raw SDK directly (`textfsm-ai
+  [<provider>]`, the separate generation-side dependency, is untouched)
+- README.md rewritten for a broader audience: adds "What is ParseForge?"
+  and "Why do you need ParseForge?" sections, compacts the Features
+  bullets, moves the provider list into its own "Supported providers"
+  section, drops the Status section (the pipeline is fully implemented;
+  the docs site is the better home for anything still evolving), and
+  fixes the `SPEC.md` link — was a relative link, which 404s when
+  README.md is rendered as PyPI's long description since `SPEC.md` isn't
+  shipped in the package; now matches the absolute GitHub URL
+  `docs/index.md`/`quickstart.md` already use
+- Version lookup in `Makefile`, `scripts/release.ps1`, and
+  `.github/workflows/docs.yml` now reads `pyproject.toml`'s version with
+  a plain regex instead of `tomllib`/`tomli` — removes the need for a
+  `tomli` fallback on Python <3.11, and `release.ps1` no longer shells
+  out to `python` at all for this step
+
 ## v0.3.1 — 2026-08-03
 
 ### Added

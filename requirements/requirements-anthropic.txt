@@ -6,5 +6,5 @@
 # Usage (from the repo root): pip install -r requirements/requirements-anthropic.txt
 
 -e .
-anthropic>=0.40.0
+anyask[anthropic]>=0.1.1
 textfsm-ai[anthropic]>=0.7.1

@@ -6,5 +6,5 @@
 # Usage (from the repo root): pip install -r requirements/requirements-azure.txt
 
 -e .
-azure-ai-inference>=1.0.0b9
+anyask[azure]>=0.1.1
 textfsm-ai[azure]>=0.7.1

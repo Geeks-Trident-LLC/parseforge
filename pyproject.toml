@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "parseforge"
-version = "0.3.1"
+version = "0.3.2"
 description = "LLM-driven pipeline that forges, validates, and promotes TextFSM templates from network CLI output"
 readme = "README.md"
 license = { text = "MIT" }
@@ -29,6 +29,14 @@ dependencies = [
     # estimated_cost field anywhere in this package either -- see
     # CHANGELOG.md.
     "textfsm-ai>=0.7.1",
+    # anyask (same author/org as textfsm-ai) is the generic naming-side
+    # LLM caller (see naming/providers/anyask_builder.py) -- unconditional
+    # since the generic builder module imports it directly, unlike the 18
+    # per-provider deferred-SDK-import files it replaced. anyask itself has
+    # no heavy dependencies; it lazy-imports each provider SDK internally
+    # (see its own anyask/registry.py), so this alone pulls in nothing
+    # provider-specific.
+    "anyask>=0.1.1",
 ]
 
 classifiers = [
@@ -63,48 +71,39 @@ keywords = [
 ]
 
 [project.optional-dependencies]
-# textfsm-ai v0.6.0+ made every provider SDK an optional extra (lazy
-# import; a clear ImportError only when that provider is actually used).
-# parseforge mirrors that per-provider: `pip install parseforge` alone
-# now installs no AI-provider SDK at all -- add the extra(s) for the
-# provider(s) you actually use.
-anthropic = ["anthropic>=0.40.0", "textfsm-ai[anthropic]>=0.7.1"]
-deepseek = ["openai>=1.0.0", "textfsm-ai[deepseek]>=0.7.1"]
-openai = ["openai>=1.0.0", "textfsm-ai[openai]>=0.7.1"]
-groq = ["openai>=1.0.0", "textfsm-ai[groq]>=0.7.1"]
-xai = ["openai>=1.0.0", "textfsm-ai[xai]>=0.7.1"]
-together = ["openai>=1.0.0", "textfsm-ai[together]>=0.7.1"]
-fireworks = ["openai>=1.0.0", "textfsm-ai[fireworks]>=0.7.1"]
-perplexity = ["openai>=1.0.0", "textfsm-ai[perplexity]>=0.7.1"]
-openrouter = ["openai>=1.0.0", "textfsm-ai[openrouter]>=0.7.1"]
-moonshot = ["openai>=1.0.0", "textfsm-ai[moonshot]>=0.7.1"]
-cerebras = ["openai>=1.0.0", "textfsm-ai[cerebras]>=0.7.1"]
-# Pinned exactly: 1.10.0 is the last mistralai release supporting Python
-# 3.9 (1.10.1+ and all 2.x require Python >=3.10), matching textfsm-ai's
-# own pin for the same reason -- this package also supports >=3.9.
-mistral = ["mistralai==1.10.0", "textfsm-ai[mistral]>=0.7.1"]
-# Pinned exactly for the same reason: 5.21.1 is the last cohere release
-# supporting Python 3.9 (6.x/7.x require Python >=3.10), matching
-# textfsm-ai's own pin.
-cohere = ["cohere==5.21.1", "textfsm-ai[cohere]>=0.7.1"]
-azure = ["azure-ai-inference>=1.0.0b9", "textfsm-ai[azure]>=0.7.1"]
-gemini = ["google-genai>=0.2.0", "textfsm-ai[gemini]>=0.7.1"]
+# Each extra pairs anyask's own per-provider extra (naming-side, lazy SDK
+# import -- see naming/providers/anyask_builder.py) with textfsm-ai's
+# matching extra (generation-side, a wholly separate code path unaffected
+# by naming's anyask migration -- see generation.py). `pip install
+# parseforge` alone installs no AI-provider SDK at all; add the extra(s)
+# for the provider(s) you actually use.
+anthropic = ["anyask[anthropic]>=0.1.1", "textfsm-ai[anthropic]>=0.7.1"]
+deepseek = ["anyask[deepseek]>=0.1.1", "textfsm-ai[deepseek]>=0.7.1"]
+openai = ["anyask[openai]>=0.1.1", "textfsm-ai[openai]>=0.7.1"]
+groq = ["anyask[groq]>=0.1.1", "textfsm-ai[groq]>=0.7.1"]
+xai = ["anyask[xai]>=0.1.1", "textfsm-ai[xai]>=0.7.1"]
+together = ["anyask[together]>=0.1.1", "textfsm-ai[together]>=0.7.1"]
+fireworks = ["anyask[fireworks]>=0.1.1", "textfsm-ai[fireworks]>=0.7.1"]
+perplexity = ["anyask[perplexity]>=0.1.1", "textfsm-ai[perplexity]>=0.7.1"]
+openrouter = ["anyask[openrouter]>=0.1.1", "textfsm-ai[openrouter]>=0.7.1"]
+moonshot = ["anyask[moonshot]>=0.1.1", "textfsm-ai[moonshot]>=0.7.1"]
+cerebras = ["anyask[cerebras]>=0.1.1", "textfsm-ai[cerebras]>=0.7.1"]
+mistral = ["anyask[mistral]>=0.1.1", "textfsm-ai[mistral]>=0.7.1"]
+cohere = ["anyask[cohere]>=0.1.1", "textfsm-ai[cohere]>=0.7.1"]
+azure = ["anyask[azure]>=0.1.1", "textfsm-ai[azure]>=0.7.1"]
+gemini = ["anyask[gemini]>=0.1.1", "textfsm-ai[gemini]>=0.7.1"]
 # Same underlying google-genai package as gemini (Client(vertexai=True,
 # project=, location=) vs. Client(api_key=)) -- kept as its own extra
-# anyway, matching textfsm-ai's own separate gemini/vertexai extras and
-# the CLI's own --provider vertexai vs. gemini distinction.
-vertexai = ["google-genai>=0.2.0", "textfsm-ai[vertexai]>=0.7.1"]
-# Pinned exactly: the newest boto3 release with a Python 3.9-compatible
-# botocore, matching textfsm-ai's own pin (boto3 bumps its Python floor
-# frequently).
-bedrock = ["boto3==1.42.97", "textfsm-ai[bedrock]>=0.7.1"]
-# Pinned exactly for reproducibility (matching textfsm-ai's own pin).
+# anyway, matching anyask's/textfsm-ai's own separate gemini/vertexai
+# extras and the CLI's own --provider vertexai vs. gemini distinction.
+vertexai = ["anyask[vertexai]>=0.1.1", "textfsm-ai[vertexai]>=0.7.1"]
+bedrock = ["anyask[bedrock]>=0.1.1", "textfsm-ai[bedrock]>=0.7.1"]
 # Much heavier than every other provider SDK here (~36MB) -- Oracle's
 # single all-services SDK (compute, storage, IAM, ...), not a
 # Generative-AI-only package (no such package exists on PyPI) -- plus
 # the crypto libs (cryptography, pyOpenSSL) its request-signing auth
 # model needs.
-oci = ["oci==2.182.0", "textfsm-ai[oci]>=0.7.1"]
+oci = ["anyask[oci]>=0.1.1", "textfsm-ai[oci]>=0.7.1"]
 sampling = ["netmiko>=4.0"]
 dev = [
     "pytest>=8.0.0",
@@ -112,19 +111,11 @@ dev = [
     "ruff>=0.4.0",
     "black>=24.0.0",
     "mypy>=1.10.0",
-    # anthropic/openai/mistralai/cohere/azure-ai-inference/google-genai/
-    # boto3/oci are optional at runtime (see the extras above), but every
-    # provider is exercised by the CLI/tests, which should never silently
-    # skip -- so dev always pulls all of them in. google-genai covers both
-    # gemini and vertexai.
-    "anthropic>=0.40.0",
-    "openai>=1.0.0",
-    "mistralai==1.10.0",
-    "cohere==5.21.1",
-    "azure-ai-inference>=1.0.0b9",
-    "google-genai>=0.2.0",
-    "boto3==1.42.97",
-    "oci==2.182.0",
+    # Every provider's raw SDK is optional at runtime (see the extras
+    # above), but every provider is exercised by the CLI/tests, which
+    # should never silently skip -- so dev always pulls all of them in via
+    # anyask's own `all` extra (every raw SDK anyask itself can wrap).
+    "anyask[all]>=0.1.1",
 ]
 # Tooling for scripts/release.ps1 and CI's own package-build step.
 # bump2version isn't otherwise installed anywhere -- release.ps1 assumes

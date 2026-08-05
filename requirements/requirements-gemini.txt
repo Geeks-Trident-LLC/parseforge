@@ -6,5 +6,5 @@
 # Usage (from the repo root): pip install -r requirements/requirements-gemini.txt
 
 -e .
-google-genai>=0.2.0
+anyask[gemini]>=0.1.1
 textfsm-ai[gemini]>=0.7.1

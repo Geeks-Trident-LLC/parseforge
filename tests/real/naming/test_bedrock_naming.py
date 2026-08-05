@@ -13,9 +13,8 @@ from typing import Any
 
 import pytest
 
-from parseforge.naming import CliContext, cli_name
+from parseforge.naming import BedrockRegexBuilder, CliContext, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
-from parseforge.naming.providers.bedrock import BedrockRegexBuilder
 
 pytestmark = pytest.mark.real
 
