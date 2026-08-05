@@ -3,67 +3,69 @@
 LLM-driven pipeline that forges, cross-validates, and promotes [TextFSM](https://github.com/google/textfsm)
 templates from network device CLI output.
 
-Full design plan: [SPEC.md](SPEC.md).
+Full design plan: [SPEC.md](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/SPEC.md).
+
+## What is ParseForge?
+
+Network devices — routers, switches, firewalls — only speak in plain text:
+the output of a `show` command. To use that output in a script, dashboard,
+or automation tool, something has to turn it into structured data first.
+That "something" is a [TextFSM](https://github.com/google/textfsm)
+template: a set of parsing rules for one specific command's output.
+
+ParseForge writes those templates for you. Point it at a device (or a
+saved copy of its output) and an AI provider of your choice, and it
+produces a template, checks that the template actually parses the sample
+it was built from, and tracks the result so you can see exactly how much
+it's been tested before you trust it in production.
+
+## Why do you need ParseForge?
+
+Every network automation project eventually hits the same wall: someone
+has to write and maintain a parser for every command's output, by hand,
+in regex. It's slow, it's easy to get subtly wrong, and it only gets
+worse as you add more device types, vendors, and firmware versions —
+each with its own quirks in how the same command's output is formatted.
+
+ParseForge replaces that manual work with a repeatable pipeline: an AI
+drafts the parser, ParseForge verifies it against real output before
+trusting it, and only well-tested results get promoted to production use
+automatically — anything uncertain is queued for a quick human look
+instead of shipped blind. If your team does network automation and needs
+structured data out of CLI output, ParseForge is the part that used to be
+tedious, made fast and safe instead.
 
 ## Features
 
-- **Trial → integration → promotion: a Human-in-the-Loop review workflow,
-  not a one-shot generator.** Every LLM-generated template starts as
-  unreviewed evidence in `trials/`. `integration` clusters every trial for
-  a command by the *output schema* its parsed records actually have, not
-  exact template text — a command's output can legitimately vary by
-  hardware/firmware, so distinct schemas become separate, independently
-  tracked groups instead of one hand-picked "winner." `promotion` then
-  auto-promotes any group whose match rate against every known sample
-  clears a configurable gate straight into `authoritative/`; anything
-  short of that gate is queued for human review instead of silently
-  shipped. A human-reviewed promotion is recorded as a named snapshot
-  alongside whatever's currently live, never silently overwriting it —
-  so review effort goes only where the evidence is actually ambiguous.
-- **Eighteen LLM providers, one interface.** Anthropic, OpenAI, DeepSeek,
-  Groq, xAI, Together, Fireworks, Perplexity, OpenRouter, Moonshot,
-  Cerebras, Mistral, Cohere, Azure OpenAI, Gemini, Vertex AI, Amazon
-  Bedrock, and Oracle Cloud (OCI) — including four with non-standard auth
-  (deployment names, GCP Application Default Credentials, AWS's
-  credential chain, OCI request-signing) handled transparently. Naming
-  and generation can use two different providers in the same trial. See
-  [Providers](https://geeks-trident-llc.github.io/parseforge/guides/providers/).
-- **Self-caching cli-name resolution.** A raw CLI command
-  (`show interface GE1.1 status`) only ever costs LLM tokens once — it's
-  resolved to a canonical, indexed name
-  (`show-interface-var1-status`) and cached locally; every later trial for
-  that command is a free lookup.
-- **Self-validation, not just "the LLM said so."** Every generated
-  template is immediately run against its own sample before being
-  recorded as passed — a template that doesn't actually parse the output
-  it was generated from never gets a chance to look good on paper.
-- **Drift monitoring.** An authoritative template is periodically checked
-  against new production samples; a failing sample feeds back into the
-  pipeline as a new trial automatically, closing the loop instead of just
-  logging an alert.
-- **CLI and Python API, same underlying calls.** Everything the CLI does
-  — `run`, `trial`, `integration`, `promotion` — is one function call in
-  Python too. See the
-  [Python API guide](https://geeks-trident-llc.github.io/parseforge/guides/python-api/).
+- **Nothing ships unreviewed.** Every AI-generated template starts as
+  unproven evidence. Once it's been tested enough times with consistent
+  results, it's promoted automatically; anything less certain waits for a
+  person to check it.
+- **Learns a command once, reuses it forever.** The first time a command
+  runs, ParseForge asks the AI to name it; every time after that, it's
+  a free, instant lookup — no repeat AI calls, no repeat cost.
+- **Checks its own work.** Every generated template is tested against the
+  real output it was built from before it's ever counted as a pass.
+- **Notices when things change.** If a device's output format changes
+  later, ParseForge catches it and automatically kicks off a retest,
+  instead of quietly parsing it wrong.
+- **Use it your way.** A command-line tool for quick, ad hoc use, or a
+  Python library for wiring straight into your own automation — same
+  functionality either way.
 
-## Status
+## Supported providers
 
-Early beta. The full pipeline is implemented and tested end to end — naming,
-sampling, generation, self-validation, integration (output-schema group/variant
-clustering), promotion (auto and human-reviewed), and drift monitoring — and
-wired into the CLI. A few things are intentionally not there yet:
+Eighteen AI providers behind one common interface — mix and match, or use
+two different ones in the same run:
 
-- **`USER_REVIEWED` promotion has a library entry point but no CLI command**
-  (`promotion.promote_user_reviewed()` works today; there's no
-  `parseforge promotion --mode user-reviewed` yet). Deferred until real
-  human-reviewed cases exist to show what a CLI/config shape for a list of
-  case/suffix/gate requests should actually look like, rather than guessing
-  ahead of need.
-- **Batch sampling mode** (collect several samples per command before
-  generating, SPEC.md §4) is designed but not built — the simpler
-  per-command loop mode is the only one implemented.
-- **One sampling connector** (Netmiko/SSH). The CLI's `--connector` registry
-  is built to hold more without a redesign, but nothing else is wired in yet.
+Anthropic, OpenAI, DeepSeek, Groq, xAI, Together, Fireworks, Perplexity,
+OpenRouter, Moonshot, Cerebras, Mistral, Cohere, Azure OpenAI, Google
+Gemini, Google Vertex AI, Amazon Bedrock, and Oracle Cloud Infrastructure
+(OCI) — including the four with non-standard authentication (Azure
+deployment names, GCP Application Default Credentials, AWS's own
+credential chain, OCI request-signing), handled transparently. See
+[Providers](https://geeks-trident-llc.github.io/parseforge/guides/providers/)
+for each one's install extra, auth requirements, and default model.
 
 ## Installation
 
@@ -92,4 +94,4 @@ setup), see
 - [Python API guide](https://geeks-trident-llc.github.io/parseforge/guides/python-api/) — calling parseforge from Python instead of the CLI
 - [API Reference](https://geeks-trident-llc.github.io/parseforge/reference/api/) — every public function/class, by pipeline stage
 - [Changelog](https://geeks-trident-llc.github.io/parseforge/changelog/) — what shipped in each release
-- [SPEC.md](SPEC.md) — full design plan and open questions
+- [SPEC.md](https://github.com/Geeks-Trident-LLC/parseforge/blob/main/SPEC.md) — full design plan and open questions
