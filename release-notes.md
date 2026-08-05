@@ -1,3 +1,44 @@
+# v0.3.2 — Same 18 Providers, One Engine Underneath
+
+## 🔌 18 Hand-Rolled SDK Integrations Become One
+Every naming provider — Anthropic, OpenAI, DeepSeek, Groq, xAI, Together,
+Fireworks, Perplexity, OpenRouter, Moonshot, Cerebras, Mistral, Cohere,
+Azure OpenAI, Gemini, Vertex AI, Bedrock, OCI — used to be its own file,
+each hand-rolling a client, an error-classification scheme, and response
+parsing for that vendor's specific SDK. They're now one generic builder
+backed by [anyask](https://github.com/Geeks-Trident-LLC/anyask), a
+standalone sibling package (same author/org as textfsm-ai) that already
+solves exactly this problem across the same 18 vendors.
+
+Nothing changes for anyone calling parseforge: every
+`<Provider>RegexBuilder` class, every CLI flag, every default model is
+exactly where it was. `pip install parseforge[<provider>]` now pulls in
+`anyask[<provider>]` instead of the provider's raw SDK directly — same
+install command, one less thing for this repo to independently maintain
+per vendor.
+
+## 📝 A README for Everyone, Not Just Contributors
+The README led with implementation details — trial/integration/promotion
+internals, an eighteen-provider list — before ever saying what the tool
+actually does or why you'd reach for it. It now opens with "What is
+ParseForge?" and "Why do you need ParseForge?", written for someone who's
+never touched TextFSM, and moves the provider list into its own
+"Supported providers" section. The Status section is gone — the pipeline
+is fully built now, so a caveats list calling it "early beta" was stale.
+Also fixed: the `SPEC.md` link, which pointed at a path relative to the
+GitHub repo — fine on GitHub, a dead link on PyPI, where README.md is
+shown without the rest of the repo alongside it.
+
+## 🧰 Lighter Release Tooling
+Version lookups (`Makefile`, `scripts/release.ps1`, the docs-deploy
+workflow) parsed `pyproject.toml` with `tomllib`, falling back to `tomli`
+on older Python — now they just regex-match the `version = "..."` line
+directly. One less dependency to keep installed, and `release.ps1`
+doesn't need to shell out to Python at all for this step anymore.
+
+## 📦 Version
+`0.3.1 → 0.3.2`
+
 # v0.3.1 — Docs That Actually Cover Everything
 
 ## 📖 Five New Pages, One Front Door
