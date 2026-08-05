@@ -10,5 +10,5 @@
 # own pin.
 
 -e .
-mistralai==1.10.0
+anyask[mistral]>=0.1.1
 textfsm-ai[mistral]>=0.7.1

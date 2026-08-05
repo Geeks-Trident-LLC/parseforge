@@ -14,9 +14,8 @@ from typing import Any
 
 import pytest
 
-from parseforge.naming import CliContext, cli_name
+from parseforge.naming import CliContext, OCIRegexBuilder, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
-from parseforge.naming.providers.oci import OCIRegexBuilder
 
 pytestmark = pytest.mark.real
 

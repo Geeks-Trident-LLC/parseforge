@@ -6,5 +6,5 @@
 # Usage (from the repo root): pip install -r requirements/requirements-openai.txt
 
 -e .
-openai>=1.0.0
+anyask[openai]>=0.1.1
 textfsm-ai[openai]>=0.7.1

@@ -6,7 +6,7 @@
 # envs and pyproject.toml's "dev" extra both pin.
 #
 # Usage (from the repo root): pip install -r requirements/dev-anthropic.txt
-#   pytest tests/unit/naming/providers/test_anthropic.py
+#   pytest tests/unit/naming/providers/test_anyask_builder.py
 #   ruff check .  &&  black . --check  &&  mypy parseforge
 #   tox -e lint / -e format / -e typecheck / -e docs  (isolated envs, same tools)
 

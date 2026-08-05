@@ -12,9 +12,8 @@ from typing import Any
 
 import pytest
 
-from parseforge.naming import CliContext, cli_name
+from parseforge.naming import CerebrasRegexBuilder, CliContext, cli_name
 from parseforge.naming.assemble import pattern_to_cli_name
-from parseforge.naming.providers.cerebras import CerebrasRegexBuilder
 
 pytestmark = pytest.mark.real
 

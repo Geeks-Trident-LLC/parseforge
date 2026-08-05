@@ -11,5 +11,5 @@
 # the CLI's own --provider vertexai vs. gemini distinction.
 
 -e .
-google-genai>=0.2.0
+anyask[vertexai]>=0.1.1
 textfsm-ai[vertexai]>=0.7.1

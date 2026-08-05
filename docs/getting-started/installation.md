@@ -41,8 +41,7 @@ pip install -e ".[dev,sampling]"
 pytest
 ```
 
-`dev` already includes the `anthropic`, `openai`, `mistralai`, `cohere`,
-`azure-ai-inference`, `google-genai`, `boto3`, and `oci` SDKs — tests
+`dev` already includes every provider SDK (via `anyask[all]`) — tests
 exercise all eighteen providers and should never silently skip. Add a
 specific `,<provider>` extra explicitly only if installing outside of `dev`.
 
@@ -61,7 +60,7 @@ itself, `pytest`/`pytest-cov`, and just that provider's SDK:
 git clone https://github.com/Geeks-Trident-LLC/parseforge.git
 cd parseforge
 pip install -r requirements/dev-oci.txt
-pytest tests/unit/naming/providers/test_oci.py
+pytest tests/unit/naming/providers/test_anyask_builder.py
 ```
 
 `requirements/requirements-<provider>.txt` is the leaner counterpart — just
