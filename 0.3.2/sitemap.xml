@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/changelog/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/getting-started/installation/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/getting-started/quickstart/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/guides/cli/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/guides/providers/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/guides/python-api/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+    <url>
+         <loc>https://geeks-trident-llc.github.io/parseforge/0.3.2/reference/api/</loc>
+         <lastmod>2026-08-06</lastmod>
+    </url>
+</urlset>

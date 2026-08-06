@@ -1,0 +1,988 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://geeks-trident-llc.github.io/parseforge/0.3.2/reference/api/">
+      
+      
+        <link rel="prev" href="../../guides/python-api/">
+      
+      
+        <link rel="next" href="../../changelog/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>API Reference - parseforge</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#api-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="parseforge" class="md-header__button md-logo" aria-label="parseforge" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            parseforge
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              API Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/Geeks-Trident-LLC/parseforge" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Geeks-Trident-LLC/parseforge
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="parseforge" class="md-nav__button md-logo" aria-label="parseforge" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    parseforge
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/Geeks-Trident-LLC/parseforge" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    Geeks-Trident-LLC/parseforge
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI Guide
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/python-api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Python API
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#naming-specmd-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Naming — SPEC.md §2
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sampling-specmd-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sampling — SPEC.md §3
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#generation-specmd-5-steps-5-6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generation — SPEC.md §5 steps 5-6
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-specmd-5-step-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation — SPEC.md §5 step 7
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline-orchestration-specmd-5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline orchestration — SPEC.md §5
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-specmd-5-step-8" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration — SPEC.md §5 step 8
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#promotion-specmd-5-step-9" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Promotion — SPEC.md §5 step 9
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#drift-monitoring-specmd-5-step-11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Drift monitoring — SPEC.md §5 step 11
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#store-root-layout-helpers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Store-root layout helpers
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h1>
+<p>Everything below is exported from <a href="https://github.com/Geeks-Trident-LLC/parseforge/blob/main/parseforge/api.py"><code>parseforge.api</code></a>
+and re-exported at the package root (<code>from parseforge import ...</code>).
+Anything not listed here — module-internal helpers, provider
+implementation details, CLI plumbing — isn't part of the public API and
+may change without notice. See the <a href="../../guides/python-api/">Python API guide</a>
+for worked examples.</p>
+<h2 id="naming-specmd-2">Naming — SPEC.md §2<a class="headerlink" href="#naming-specmd-2" title="Permanent link">&para;</a></h2>
+<p>Resolve a raw CLI command to its canonical, indexed cli-name.</p>
+<p><code>cli_name(command, context, builder=UnimplementedRegexBuilder(), index_path=DEFAULT_INDEX_PATH, **kwargs) -&gt; str</code>
+: Look up (or resolve and cache) a command's cli-name. <code>**kwargs</code> (e.g.
+  <code>max_tokens</code>) pass through to the builder's underlying API call.</p>
+<p><code>resolve_cli_name(command, context, builder=..., index_path=..., **kwargs) -&gt; NamingResolution</code>
+: Same as <code>cli_name()</code>, but returns the full resolution — including the
+  raw LLM response, if any — instead of just the name.</p>
+<p><code>NamingResolution</code>
+: <code>name: str</code>, <code>response: LLMCLIResponse | None</code> — <code>response</code> is <code>None</code>
+  on a cache hit, since no LLM call happens at all in that case.</p>
+<p><code>CliContext</code>
+: <code>vendor: str</code>, <code>family: str</code>, <code>os: str</code>, <code>version: str</code> — the device
+  context every naming/generation call needs.</p>
+<p><code>RegexBuilder</code>
+: <code>Protocol</code> every naming provider implements —
+  <code>build_pattern(command, context, **kwargs) -&gt; LLMCLIResponse</code>. See
+  <a href="../../guides/providers/">Providers</a> for the eighteen concrete builder
+  classes (<code>AnthropicRegexBuilder</code>, <code>OCIRegexBuilder</code>, ...), importable
+  from <code>parseforge.naming</code> — not re-exported at the root.</p>
+<p><code>LLMCLIResponse</code>
+: <code>content: str</code>, <code>raw: Any</code>, <code>usage: NamingTokenUsage</code>,
+  <code>duration_ms: float</code>, <code>reason: str</code>, <code>ready: bool</code> — <code>ready=False</code> means
+  the response was cut off before completing (e.g. hit <code>max_tokens</code>).</p>
+<p><code>NamingTokenUsage</code>
+: <code>input_tokens: int</code>, <code>output_tokens: int</code>, <code>total_tokens: int</code> — one
+  naming LLM call's usage. Aliased from <code>naming.llm.TokenUsage</code> to avoid
+  colliding with <code>GenerationTokenUsage</code> (a separate class with the same
+  shape).</p>
+<h2 id="sampling-specmd-3">Sampling — SPEC.md §3<a class="headerlink" href="#sampling-specmd-3" title="Permanent link">&para;</a></h2>
+<p>Capture raw command output from a device.</p>
+<p><code>sample(sampler, connection, command) -&gt; str</code>
+: Run <code>command</code> over <code>connection</code> using <code>sampler</code> and return the raw
+  output.</p>
+<p><code>DeviceConnection</code>
+: <code>host: str</code>, <code>username: str</code>, <code>password: str</code>, <code>device_type: str</code>
+  (e.g. <code>"cisco_ios"</code>).</p>
+<p><code>Sampler</code>
+: <code>Protocol</code> a connector backend implements —
+  <code>run_command(connection, command) -&gt; str</code>. <code>NetmikoSampler</code>
+  (<code>parseforge.sampling.backends</code>, needs the <code>sampling</code> extra) is the
+  only backend today.</p>
+<h2 id="generation-specmd-5-steps-5-6">Generation — SPEC.md §5 steps 5-6<a class="headerlink" href="#generation-specmd-5-steps-5-6" title="Permanent link">&para;</a></h2>
+<p>Sample → candidate TextFSM template, via textfsm-ai's delivery pipeline.</p>
+<p><code>generate(sample, provider, api_key, model, **kwargs) -&gt; GenerationResult</code>
+: Run textfsm-ai's full sample → template → DSL-compiled pipeline.
+  Never raises for a failed <em>generation</em> (check <code>.ready</code>); does raise
+  <code>ImportError</code> if <code>provider</code>'s SDK isn't installed. <code>**kwargs</code> forwards
+  to textfsm-ai's <code>run_pipeline()</code> (<code>endpoint</code>, <code>region</code>,
+  <code>compartment_id</code>, <code>max_tries</code>, ...).</p>
+<p><code>GenerationResult</code>
+: <code>template: str</code> (canonical, DSL-compiled), <code>raw_template: str</code>
+  (pre-cleanup, as the LLM returned it), <code>readable_dsl: str</code>,
+  <code>recognizers: list[str]</code>, <code>records: list[dict[str, str]]</code>,
+  <code>usage: GenerationTokenUsage</code>, <code>duration_ms: float</code>, <code>ready: bool</code>,
+  <code>reason: str</code>, <code>raw: dict[str, Any]</code> (full debug payload, credentials
+  redacted).</p>
+<p><code>GenerationTokenUsage</code>
+: <code>input_tokens: int</code>, <code>output_tokens: int</code>, <code>total_tokens: int</code> —
+  already accumulated across every LLM call in the generation pipeline
+  (every base-prompt attempt and correction-prompt retry), courtesy of
+  textfsm-ai's own <code>accumulate_usage()</code>. Aliased from
+  <code>generation.TokenUsage</code>.</p>
+<h2 id="validation-specmd-5-step-7">Validation — SPEC.md §5 step 7<a class="headerlink" href="#validation-specmd-5-step-7" title="Permanent link">&para;</a></h2>
+<p>Self-validate a template against its own sample.</p>
+<p><code>parse(template_text, input_text) -&gt; ParseResult</code>
+: Run <code>template_text</code> against <code>input_text</code> and report what parsed.</p>
+<p><code>ParseResult</code>
+: <code>records: list[dict]</code>, <code>errors: list[str]</code>, and a <code>passed</code> property
+  (<code>True</code> iff <code>errors</code> is empty).</p>
+<h2 id="pipeline-orchestration-specmd-5">Pipeline orchestration — SPEC.md §5<a class="headerlink" href="#pipeline-orchestration-specmd-5" title="Permanent link">&para;</a></h2>
+<p>One call runs steps 1-7 (naming → sampling → generation → validation)
+for a single trial, writing the result under a trial directory.</p>
+<p><code>run_command_pipeline(command, context, connection, naming_builder, sampler, generation_config, *, store_root=DEFAULT_STORE_ROOT, naming_index_path=DEFAULT_INDEX_PATH, metadata=TrialMetadata(), mode=Mode.LOOP) -&gt; TrialResult</code>
+: The full pipeline, one call. Writes <code>samples/sample.txt</code>,
+  <code>derive/*.textfsm</code>/<code>.txt</code>, and <code>summary.json</code> under
+  <code>&lt;store_root&gt;/trials/&lt;vendor&gt;/&lt;family&gt;/&lt;os&gt;/&lt;cli-name&gt;/&lt;run-id&gt;/</code>.</p>
+<p><code>LLMProviderConfig</code>
+: <code>provider: str</code>, <code>api_key: str</code>, <code>model: str</code>, plus provider-specific
+  optional fields: <code>endpoint</code>/<code>api_version</code> (azure), <code>project</code>/<code>location</code>
+  (vertexai), <code>region</code> (bedrock/oci), <code>compartment_id</code> (oci). Each is
+  ignored by every provider it doesn't apply to.</p>
+<p><code>TrialMetadata</code>
+: <code>project: str | None</code>, <code>username: str | None</code>, <code>email: str | None</code>,
+  <code>description: str | None</code>, <code>note: str | None</code> — optional context
+  recorded in <code>summary.json</code>, never used for path resolution.</p>
+<p><code>TrialResult</code>
+: <code>run_dir: Path</code>, <code>cli_name: str</code>, <code>passed: bool</code>, <code>duration_ms: int</code>,
+  <code>total_usage: dict[str, int]</code> (<code>input_tokens</code>/<code>output_tokens</code>/
+  <code>total_tokens</code>, naming + generation combined).</p>
+<p><code>Mode</code>
+: <code>LOOP</code> (sample → generate, per command — the only mode implemented)
+  or <code>BATCH</code> (collect N samples per command before generating — designed
+  in SPEC.md §4, not built).</p>
+<h2 id="integration-specmd-5-step-8">Integration — SPEC.md §5 step 8<a class="headerlink" href="#integration-specmd-5-step-8" title="Permanent link">&para;</a></h2>
+<p>Cluster every passed trial for a cli-name by output schema.</p>
+<p><code>build_integration(store_root, key) -&gt; Reference</code>
+: Rebuild <code>integration/&lt;...&gt;/reference.json</code> for one <code>DeviceKey</code> from
+  every trial currently under <code>trials/</code>.</p>
+<p><code>build_reference_summary(store_root) -&gt; dict[str, Any]</code>
+: Aggregate every <code>reference.json</code> into one cross-cli-name match-rate
+  report — a read-only transform, no filesystem rescan of <code>trials/</code>.</p>
+<p><code>write_reference_summary(store_root) -&gt; Path</code>
+: <code>build_reference_summary()</code>, written to
+  <code>integration/reference-summary.json</code>; returns the path written.</p>
+<p><code>Reference</code>
+: <code>dict[str, ReferenceGroup]</code> — a cli-name's clustered output-schema
+  groups.</p>
+<p><code>ReferenceGroup</code>
+: <code>keys: list[str]</code>, <code>sample_path: str</code>,
+  <code>variants: dict[str, ReferenceVariant]</code>.</p>
+<p><code>ReferenceVariant</code>
+: <code>template_path: str</code>, <code>exact_template_count: int</code>,
+  <code>exact_records_count: int</code>.</p>
+<h2 id="promotion-specmd-5-step-9">Promotion — SPEC.md §5 step 9<a class="headerlink" href="#promotion-specmd-5-step-9" title="Permanent link">&para;</a></h2>
+<p>Auto-promote every group that clears its gate; queue everything else
+for human review.</p>
+<p><code>promote_auto(store_root, metadata, default_gate=PromotionGate(), case_gates=None) -&gt; PromotionRunResult</code>
+: Refreshes integration first, then promotes every group across every
+  case that clears <code>default_gate</code> (or its per-case override in
+  <code>case_gates</code>) into <code>authoritative/</code>.</p>
+<p><code>promote_user_reviewed(store_root, metadata, requests, default_gate=PromotionGate(), case_gates=None) -&gt; PromotionRunResult</code>
+: Same, but only for the specific <code>(case_key, suffix)</code> pairs in
+  <code>requests</code> — a human-reviewed promotion, recorded as a named snapshot
+  alongside whatever's currently live rather than overwriting it.</p>
+<p><code>decide_promotion(match_rate, sample_count, gate) -&gt; PromotionDecision</code>
+: Pure decision: <code>AUTO_PROMOTED</code> if both thresholds in <code>gate</code> are met,
+  else <code>QUEUED_FOR_REVIEW</code>.</p>
+<p><code>evaluate_cases(references, summary, default_gate, case_gates=None, only_cases=None) -&gt; list[GroupEvaluation]</code>
+: Pure decision pass over every group in <code>references</code> — no I/O. One
+  <code>decide_promotion()</code> call per group, per case.</p>
+<p><code>PromotionGate</code>
+: <code>match_rate_threshold: float = 1.0</code>, <code>min_sample_count: int = 1</code>.</p>
+<p><code>PromotionMetadata</code>
+: <code>user: str</code>, <code>email: str | None</code>, <code>description: str | None</code>,
+  <code>note: str | None</code> — recorded into every <code>artifact.json</code>/
+  <code>authoritative-log.json</code> entry a promotion run writes.</p>
+<p><code>UserReviewedRequest</code>
+: <code>case_key: str</code>, <code>suffix: str | None</code>, <code>gate: PromotionGate | None</code> —
+  one human-reviewed case, tagged with a minor revision marker (e.g.
+  <code>"2"</code>, <code>"beta"</code>) combined with the group's own major version tag.</p>
+<p><code>GroupEvaluation</code>
+: <code>case_key: str</code>, <code>group_id: str</code>, <code>decision: PromotionDecision</code>,
+  <code>match_rate: float</code>, <code>sample_count: int</code>.</p>
+<p><code>PromotionRunResult</code>
+: <code>promoted: list[Path]</code>, <code>unqualified: list[GroupEvaluation]</code>,
+  <code>unmatched_cases: list[str]</code>, <code>invalid_requests: list[str]</code>
+  (<code>USER_REVIEWED</code> requests with no usable suffix).</p>
+<p><code>PromotionDecision</code>
+: <code>AUTO_PROMOTED</code> or <code>QUEUED_FOR_REVIEW</code>.</p>
+<p><code>PromotionMode</code>
+: <code>AUTO_PROMOTED</code> or <code>USER_REVIEWED</code>.</p>
+<h2 id="drift-monitoring-specmd-5-step-11">Drift monitoring — SPEC.md §5 step 11<a class="headerlink" href="#drift-monitoring-specmd-5-step-11" title="Permanent link">&para;</a></h2>
+<p>Check an authoritative template against new production samples.</p>
+<p><code>check_drift(store_root, key, sample_text, *, suffix=None, gate=DriftGate()) -&gt; DriftCheckResult</code>
+: Run the authoritative template for <code>(key, suffix)</code> against
+  <code>sample_text</code>, append the result to that cli-name's <code>drift-log.json</code>,
+  and return the rolling match rate + status.</p>
+<p><code>DriftGate</code>
+: <code>match_rate_threshold: float = 1.0</code>, <code>window: int = 20</code>.</p>
+<p><code>DriftCheckResult</code>
+: <code>case_key: str</code>, <code>suffix: str | None</code>, <code>passed: bool</code>,
+  <code>match_rate: float</code>, <code>status: str</code> (<code>"ok"</code> or <code>"drifting"</code>),
+  <code>checked_at: str</code>, <code>requeued_to: str | None</code>.</p>
+<h2 id="store-root-layout-helpers">Store-root layout helpers<a class="headerlink" href="#store-root-layout-helpers" title="Permanent link">&para;</a></h2>
+<p><code>DEFAULT_STORE_ROOT</code>
+: <code>Path</code> — <code>~/.parseforge/tests</code>, the default root every workflow
+  command reads/writes under.</p>
+<p><code>DeviceKey</code>
+: <code>vendor: str</code>, <code>family: str</code>, <code>os: str</code>, <code>cli_name: str</code> — identifies
+  a template family within a store root.</p>
+<p><code>discover_device_keys(store_root) -&gt; list[DeviceKey]</code>
+: Every <code>DeviceKey</code> that has at least one trial on disk under
+  <code>store_root</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.sections", "navigation.expand", "content.code.copy", "content.code.annotate", "toc.integrate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
