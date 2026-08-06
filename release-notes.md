@@ -39,6 +39,9 @@ doesn't need to shell out to Python at all for this step anymore.
 ## 📦 Version
 `0.3.1 → 0.3.2`
 
+## 🏁 Milestone
+[v0.3.2](https://github.com/Geeks-Trident-LLC/parseforge/milestone/1) — closed, tracking #76 and #77.
+
 # v0.3.1 — Docs That Actually Cover Everything
 
 ## 📖 Five New Pages, One Front Door
